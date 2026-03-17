@@ -4,8 +4,6 @@
  * Manages connection state transitions with valid transition enforcement.
  */
 
-import type { ConnectionState } from '../protocol/types.js';
-
 // ============================================================================
 // Types
 // ============================================================================

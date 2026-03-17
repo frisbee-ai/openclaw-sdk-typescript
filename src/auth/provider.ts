@@ -6,7 +6,6 @@
  */
 
 import type { ConnectParams } from '../protocol/types.js';
-import type { AuthError, AuthErrorCode } from '../errors.js';
 
 // ============================================================================
 // Types
@@ -111,7 +110,7 @@ export class StaticCredentialsProvider implements CredentialsProvider {
         token: null,
         success: false,
         errorCode: 'REFRESH_FAILED',
-        retryAfterMs: (error as any)?.retryAfterMs,
+        retryAfterMs: (error as { retryAfterMs?: number } | undefined)?.retryAfterMs,
       };
     }
   }

@@ -12,7 +12,6 @@ import type {
   HelloOk,
   GatewayFrame,
   ResponseFrame,
-  ErrorShape,
 } from "../protocol/types.js";
 
 // ============================================================================
@@ -332,7 +331,7 @@ export class ConnectionManager {
    */
   private handleDisconnect(): void {
     // Clear all pending requests
-    for (const [id, pending] of this.pendingRequests) {
+    for (const pending of this.pendingRequests.values()) {
       clearTimeout(pending.timeoutId);
       pending.reject(new Error("Connection closed"));
     }

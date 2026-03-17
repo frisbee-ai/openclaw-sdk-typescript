@@ -125,7 +125,7 @@ export function validateFrame(data: unknown): GatewayFrame {
   }
 
   const validTypes = ['req', 'res', 'event'] as const;
-  if (!validTypes.includes(frame.type as any)) {
+  if (!validTypes.includes(frame.type as 'req' | 'res' | 'event')) {
     throw new ValidationError(
       `Invalid frame type: ${frame.type}. Must be one of: ${validTypes.join(', ')}`,
       'INVALID_FRAME_TYPE',

@@ -124,7 +124,7 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
           }
         };
 
-        this.ws.onerror = (event: Event) => {
+        this.ws.onerror = (_event: Event) => {
           if (this._readyState === ReadyState.CONNECTING) {
             reject(new Error("WebSocket connection failed"));
           }

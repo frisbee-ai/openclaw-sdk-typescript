@@ -42,6 +42,7 @@
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "test": "vitest",
     "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\"",
     "prepublishOnly": "npm run build"
   },

@@ -234,7 +234,6 @@ export class WebSocketTransport implements IWebSocketTransport {
 
     // Node.js environment - require 'ws' dynamically
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const ws = require("ws");
       return ws.WebSocket || ws.default;
     } catch {

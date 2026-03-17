@@ -31,6 +31,8 @@ export default [
         afterEach: "readonly",
         beforeAll: "readonly",
         afterAll: "readonly",
+        // Node.js global
+        global: "readonly",
         // AbortController
         AbortController: "readonly",
         // Browser globals

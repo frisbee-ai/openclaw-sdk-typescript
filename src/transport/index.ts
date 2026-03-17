@@ -35,6 +35,10 @@ const platform: "node" | "browser" =
 // Re-export types from websocket.ts
 export type { IWebSocketTransport, ReadyState, ReadyStateString } from "./websocket.js";
 
+// Import types for use in function signatures
+import type { NodeWebSocketTransportConfig } from "./node.js";
+import type { BrowserWebSocketTransportConfig } from "./browser.js";
+
 // Re-export types from node.ts (used by both transports)
 export type {
   NodeWebSocketTransportConfig,
@@ -69,13 +73,15 @@ export type { BrowserWebSocketTransportConfig } from "./browser.js";
  * });
  * ```
  */
-export async function createWebSocketTransport(config: any): Promise<any> {
+export async function createWebSocketTransport(
+  config: NodeWebSocketTransportConfig | BrowserWebSocketTransportConfig
+): Promise<unknown> {
   if (platform === "node") {
     const { createNodeWebSocketTransport } = await import("./node.js");
-    return createNodeWebSocketTransport(config);
+    return createNodeWebSocketTransport(config as NodeWebSocketTransportConfig);
   } else {
     const { createBrowserWebSocketTransport } = await import("./browser.js");
-    return createBrowserWebSocketTransport(config);
+    return createBrowserWebSocketTransport(config as BrowserWebSocketTransportConfig);
   }
 }
 
@@ -87,7 +93,9 @@ export async function createWebSocketTransport(config: any): Promise<any> {
  * @param config - Node.js transport configuration
  * @returns Promise resolving to a new NodeWebSocketTransport instance
  */
-export async function createNodeWebSocketTransport(config: any): Promise<any> {
+export async function createNodeWebSocketTransport(
+  config: NodeWebSocketTransportConfig
+): Promise<unknown> {
   const { createNodeWebSocketTransport: factory } = await import("./node.js");
   return factory(config);
 }
@@ -100,7 +108,9 @@ export async function createNodeWebSocketTransport(config: any): Promise<any> {
  * @param config - Browser transport configuration
  * @returns Promise resolving to a new BrowserWebSocketTransport instance
  */
-export async function createBrowserWebSocketTransport(config: any): Promise<any> {
+export async function createBrowserWebSocketTransport(
+  config: BrowserWebSocketTransportConfig
+): Promise<unknown> {
   const { createBrowserWebSocketTransport: factory } = await import("./browser.js");
   return factory(config);
 }

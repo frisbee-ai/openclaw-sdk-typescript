@@ -2,7 +2,7 @@
  * Request Cancellation Tests
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { AbortError, isAbortError } from "./errors";
 import type { RequestOptions } from "./client";
 

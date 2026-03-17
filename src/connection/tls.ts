@@ -66,7 +66,6 @@ export class TlsValidator {
   static get isSupported(): boolean {
     // Check if we're in Node.js by verifying tls module exists
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('tls');
       return true;
     } catch {

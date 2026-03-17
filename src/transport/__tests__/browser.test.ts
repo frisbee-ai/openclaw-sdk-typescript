@@ -95,9 +95,9 @@ class MockWebSocket {
   }
 }
 
-global.WebSocket = MockWebSocket as any;
+(global as any).WebSocket = MockWebSocket;
 
-Object.assign(global.WebSocket, {
+Object.assign((global as any).WebSocket, {
   CONNECTING: 0,
   OPEN: 1,
   CLOSING: 2,
