@@ -193,8 +193,9 @@ This plan covers the complete implementation of the OpenClaw TypeScript SDK acro
   - Send signed connect response
   - Receive hello-ok and transition to ready
 - **Tests**: Integration tests for handshake flow
+- **Implementation Status**: ⏳ Pending
 
-#### 3.1a Protocol Version Negotiation
+#### 3.1a Protocol Version Negotiation ⚠️ IN PROGRESS
 - **File**: `src/connection/protocol.ts`
 - **Description**: Handle protocol version negotiation with server
 - **Dependencies**: 3.1
@@ -204,8 +205,9 @@ This plan covers the complete implementation of the OpenClaw TypeScript SDK acro
   - Client handles version mismatch gracefully
   - Exposes `protocolVersion` property
 - **Tests**: Unit tests for version negotiation
+- **Implementation Status**: ✅ Mostly complete - verify and enhance
 
-#### 3.2 Connection State Machine
+#### 3.2 Connection State Machine ⚠️ IN PROGRESS
 - **File**: `src/connection/state.ts`
 - **Description**: Implement connection state machine with transitions
 - **Dependencies**: 3.1
@@ -214,48 +216,85 @@ This plan covers the complete implementation of the OpenClaw TypeScript SDK acro
   - Valid state transitions enforced
   - Events emitted on state change
 - **Tests**: Unit tests for state transitions
+- **Implementation Status**: ✅ Mostly complete - verify and enhance
 
-#### 3.3 Policy Handling
+#### 3.3 Policy Handling ⭐ PRIORITY
 - **File**: `src/connection/policies.ts`
 - **Description**: Handle policies received in hello-ok
 - **Dependencies**: 3.1
 - **Acceptance Criteria**:
-  - Parse policies from hello-ok
-  - Expose policy accessors
-- **Tests**: Unit tests for policy parsing
+  - `PolicyManager` class with methods:
+    - `setPolicies(policy)` - Store policies from hello-ok (replace operation)
+    - `getMaxPayload()` - Returns max payload size
+    - `getMaxBufferedBytes()` - Returns max buffered bytes
+    - `getTickIntervalMs()` - Returns tick interval in ms
+    - `getTickIntervalSeconds()` - Returns tick interval in seconds
+    - `hasPolicy()` - Check if policy is set
+  - Type `Policy` extracted from HelloOk policy field
+  - **Default Values** (used when server doesn't send policy):
+    - `maxPayload`: 1048576 (1MB)
+    - `maxBufferedBytes`: 65536 (64KB)
+    - `tickIntervalMs`: 30000 (30 seconds)
+- **Tests**: Unit tests for policy parsing and defaults
+- **Implementation Status**: ⏳ Pending
 
 #### 3.4 TLS Fingerprint Validation
 - **File**: `src/connection/tls.ts`
 - **Description**: Implement TLS certificate fingerprint validation
 - **Dependencies**: 3.1
 - **Acceptance Criteria**:
-  - `TlsValidator` class with `validate(socket)` method
-  - Computes SPKI fingerprint from certificate
-  - Compares against expected fingerprints from config
-  - Throws `ConnectionError` on mismatch
-- **Tests**: Unit tests with mock TLS sockets
+  - `TlsValidator` class with:
+    - `constructor(config)` - Accept expected fingerprints
+    - `validate(socket)` - Validate certificate (Node.js only)
+    - `addExpectedFingerprint(fingerprint)` - Add expected fingerprint
+    - `clearExpectedFingerprints()` - Clear all expected fingerprints
+    - `isSupported` - Static property indicating platform support
+  - SHA-256 SPKI fingerprint format
+  - Constant-time comparison for security (timing-attack resistant)
+  - **Platform handling**:
+    - Node.js: Full validation with socket inspection
+    - Browser: TLS handled by browser - `isSupported` returns false, validation skipped
+  - Throws `ConnectionError` with code `TLS_FINGERPRINT_MISMATCH` on mismatch
+- **Tests**: Unit tests with mock TLS sockets + browser platform test (mock)
+- **Implementation Status**: ⏳ Pending
 
-#### 3.5 Tick/Heartbeat Monitor
+#### 3.5 Tick/Heartbeat Monitor ⭐ PRIORITY
 - **File**: `src/events/tick.ts`
 - **Description**: Implement tick (heartbeat) monitoring
-- **Dependencies**: 3.2
+- **Dependencies**: 3.1 (handshake completion), tickIntervalMs from hello-ok or defaults
 - **Acceptance Criteria**:
-  - `TickMonitor` class tracks last tick timestamp
-  - `isStale()` detects stale connection
-  - Configurable stale multiplier
-  - Emits stale event
+  - `TickMonitor` class with:
+    - `constructor(config)` - Configure monitor
+    - `start()` / `stop()` - Start/stop monitoring
+    - `recordTick(ts)` - Record incoming tick timestamp (client time)
+    - `isStale()` - Check if connection is stale
+    - `getTimeSinceLastTick()` - Get ms since last tick
+    - `getStaleDuration()` - Get ms in stale state
+  - Configurable stale multiplier (default: **2** - matching design doc)
+  - `onStale` / `onRecovered` callbacks
+  - Stale detection: lastTickTime + (tickIntervalMs * staleMultiplier) < now
 - **Tests**: Unit tests for tick monitoring
+- **Implementation Status**: ⏳ Pending
 
-#### 3.6 Sequence Gap Detection
+#### 3.6 Sequence Gap Detection ⭐ PRIORITY
 - **File**: `src/events/gap.ts`
 - **Description**: Detect gaps in event sequence numbers
 - **Dependencies**: 3.5
 - **Acceptance Criteria**:
-  - `GapDetector` tracks last sequence number
-  - Detects gaps when seq > lastSeq + 1
-  - Emits `gap` event with gap info
-  - `reset()` clears sequence tracking
+  - `GapDetector` class with:
+    - `recordSequence(seq)` - Record incoming sequence number
+    - `hasGap()` - Check if gaps exist
+    - `getGaps()` - Get list of detected gaps
+    - `getLastSequence()` - Get last recorded sequence
+    - `reset()` - Reset sequence tracking
+  - `GapInfo` interface: expected, received, detectedAt
+  - `GapRecoveryMode`: 'reconnect' | 'snapshot' | 'skip'
+- **Coordination with TickMonitor**:
+  - Both emit events rather than triggering actions directly
+  - Gap detection has higher priority than stale detection
+  - Consumer coordinates recovery actions via event handlers
 - **Tests**: Unit tests for gap detection
+- **Implementation Status**: ⏳ Pending
 
 #### 3.6a Gap Recovery Modes
 - **File**: `src/events/gap.ts` (extend)

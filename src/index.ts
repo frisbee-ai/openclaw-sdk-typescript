@@ -116,5 +116,21 @@ export type { EventHandler, UnsubscribeFn, EventPattern } from "./managers/event
 export { ReconnectManager, createReconnectManager } from "./managers/reconnect.js";
 export type { ReconnectConfig, ReconnectState, ReconnectEvent } from "./managers/reconnect.js";
 
+// Connection
+export { ProtocolNegotiator, createProtocolNegotiator } from "./connection/protocol.js";
+export type { ProtocolVersionRange, NegotiatedProtocol } from "./connection/protocol.js";
+export { ConnectionStateMachine, createConnectionStateMachine } from "./connection/state.js";
+export type { StateChangeEvent, StateChangeListener } from "./connection/state.js";
+export { PolicyManager, createPolicyManager, DEFAULT_POLICY } from "./connection/policies.js";
+export type { Policy } from "./connection/policies.js";
+export { TlsValidator, createTlsValidator } from "./connection/tls.js";
+export type { TlsValidatorConfig, TlsValidationResult, TLSSocket } from "./connection/tls.js";
+
+// Events
+export { TickMonitor, createTickMonitor } from "./events/tick.js";
+export type { TickMonitorConfig, TickStatus } from "./events/tick.js";
+export { GapDetector, createGapDetector } from "./events/gap.js";
+export type { GapInfo, GapRecoveryMode, GapRecoveryConfig, GapDetectorConfig } from "./events/gap.js";
+
 // Re-export default
 export { default } from "./client.js";
