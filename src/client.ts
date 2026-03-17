@@ -68,6 +68,18 @@ export interface ClientConfig {
   reconnectDelayMs?: number;
 }
 
+/**
+ * Options for requests.
+ */
+export interface RequestOptions {
+  /** Abort signal for request cancellation */
+  signal?: AbortSignal;
+  /** Wait for final response (no progress updates) */
+  expectFinal?: boolean;
+  /** Timeout for expectFinal in milliseconds */
+  expectFinalTimeoutMs?: number;
+}
+
 // ============================================================================
 // Main Client Class
 // ============================================================================
@@ -199,10 +211,20 @@ export class OpenClawClient {
    *
    * @param method - The method name to invoke
    * @param params - Optional parameters for the method
+   * @param options - Optional request options
    * @returns Promise that resolves with the response payload
    * @throws Error if the request fails or times out
    */
-  async request<T = unknown>(method: string, params?: unknown): Promise<T> {
+  async request<T = unknown>(
+    method: string,
+    params?: unknown,
+    options?: RequestOptions
+  ): Promise<T> {
+    // Check if signal is already aborted
+    if (options?.signal?.aborted) {
+      throw new Error("Request aborted");
+    }
+
     // Generate a unique request ID
     const requestId = this.generateRequestId();
 
@@ -214,24 +236,55 @@ export class OpenClawClient {
       params,
     };
 
+    // Determine timeout
+    let timeout = this.config.requestTimeoutMs ?? 30000;
+    if (options?.expectFinal && options.expectFinalTimeoutMs) {
+      timeout = options.expectFinalTimeoutMs;
+    }
+
     // Add pending request
     const responsePromise = this.requestManager.addRequest(requestId, {
-      timeout: this.config.requestTimeoutMs ?? 30000,
+      timeout,
     });
+
+    // Set up abort handler
+    let abortHandler: (() => void) | undefined;
+    if (options?.signal) {
+      abortHandler = () => {
+        this.requestManager.abortRequest(requestId);
+      };
+      options.signal.addEventListener("abort", abortHandler);
+    }
 
     // Send the request
     this.connectionManager.send(requestFrame);
 
-    // Wait for response
-    const response = await responsePromise;
+    try {
+      // Wait for response
+      const response = await responsePromise;
 
-    if (!response.ok) {
-      throw new Error(
-        `Request failed: ${response.error?.code ?? "UNKNOWN"} - ${response.error?.message ?? "Unknown error"}`
-      );
+      if (!response.ok) {
+        throw new Error(
+          `Request failed: ${response.error?.code ?? "UNKNOWN"} - ${response.error?.message ?? "Unknown error"}`
+        );
+      }
+
+      return response.payload as T;
+    } finally {
+      // Clean up abort handler
+      if (abortHandler && options?.signal) {
+        options.signal.removeEventListener("abort", abortHandler);
+      }
     }
+  }
 
-    return response.payload as T;
+  /**
+   * Abort a pending request by ID.
+   *
+   * @param requestId - The request ID to abort
+   */
+  abort(requestId: string): void {
+    this.requestManager.abortRequest(requestId);
   }
 
   /**

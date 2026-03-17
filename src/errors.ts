@@ -209,6 +209,21 @@ export class CancelledError extends RequestError {
   }
 }
 
+/**
+ * Request aborted error (AbortController).
+ */
+export class AbortError extends RequestError {
+  constructor(message: string = 'Request was aborted', details?: unknown) {
+    super({
+      code: 'REQUEST_ABORTED',
+      message,
+      retryable: false,
+      details,
+    });
+    this.name = 'AbortError';
+  }
+}
+
 // ============================================================================
 // Gateway Errors (Business Logic Errors)
 // ============================================================================
@@ -364,6 +379,13 @@ export function isTimeoutError(error: unknown): error is TimeoutError {
  */
 export function isCancelledError(error: unknown): error is CancelledError {
   return error instanceof CancelledError;
+}
+
+/**
+ * Type guard for AbortError
+ */
+export function isAbortError(error: unknown): error is AbortError {
+  return error instanceof AbortError;
 }
 
 // ============================================================================
