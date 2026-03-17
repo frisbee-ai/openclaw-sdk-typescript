@@ -1,38 +1,97 @@
 /**
  * OpenClaw SDK
- * TypeScript SDK for interacting with OpenClaw services
+ *
+ * TypeScript SDK for connecting to OpenClaw Gateway via WebSocket.
+ * Provides a high-level client interface with connection management,
+ * request/response handling, and event emission.
  */
 
-export interface ClientConfig {
-  apiKey: string;
-  baseUrl?: string;
-  timeout?: number;
-}
+// Main client exports
+export { OpenClawClient, createClient } from "./client.js";
+export type { ClientConfig } from "./client.js";
 
-export class OpenClawClient {
-  private config: ClientConfig;
+// Protocol types
+export type {
+  // Frame types
+  GatewayFrame,
+  RequestFrame,
+  ResponseFrame,
+  EventFrame,
 
-  constructor(config: ClientConfig) {
-    this.config = {
-      baseUrl: config.baseUrl ?? 'https://api.openclaw.example.com',
-      timeout: config.timeout ?? 30000,
-      ...config,
-    };
-  }
+  // Connection types
+  ConnectionState,
+  ConnectParams,
+  HelloOk,
 
-  /**
-   * Get the current configuration
-   */
-  getConfig(): Readonly<ClientConfig> {
-    return this.config;
-  }
+  // Error types
+  ErrorShape,
 
-  /**
-   * Check if the client is properly configured
-   */
-  isReady(): boolean {
-    return !!this.config.apiKey;
-  }
-}
+  // Snapshot types
+  Snapshot,
+} from "./protocol/types.js";
 
-export default OpenClawClient;
+// API parameter types (selectively exported)
+export type {
+  AgentIdentityParams,
+  AgentIdentityResult,
+  AgentWaitParams,
+  NodePairRequestParams,
+  NodePairListParams,
+  NodePairApproveParams,
+  NodePairRejectParams,
+  NodePairVerifyParams,
+  DevicePairListParams,
+  DevicePairApproveParams,
+  DevicePairRejectParams,
+  AgentsCreateParams,
+  AgentsCreateResult,
+  AgentsUpdateParams,
+  AgentsUpdateResult,
+  AgentsDeleteParams,
+  AgentsDeleteResult,
+  AgentsFilesListParams,
+  AgentsFilesListResult,
+  AgentsFilesGetParams,
+  AgentsFilesGetResult,
+  AgentsFilesSetParams,
+  AgentsFilesSetResult,
+  AgentsListParams,
+  AgentsListResult,
+  CronListParams,
+  CronStatusParams,
+  CronAddParams,
+  CronUpdateParams,
+  CronRemoveParams,
+  CronRunParams,
+  CronRunsParams,
+  NodeListParams,
+  NodeInvokeParams,
+  NodeInvokeResultParams,
+  NodeEventParams,
+  NodePendingDrainParams,
+  NodePendingDrainResult,
+  NodePendingEnqueueParams,
+  NodePendingEnqueueResult,
+} from "./protocol/types.js";
+
+// Validation functions
+export {
+  ValidationError,
+  validateRequestId,
+  validateFrame,
+  validateRequestFrame,
+  validateResponseFrame,
+  validateEventFrame,
+  validateErrorShape,
+  validateConnectParams,
+
+  // Type guards
+  isRequestFrame,
+  isResponseFrame,
+  isEventFrame,
+  isSuccessfulResponse,
+  isErrorResponse,
+} from "./protocol/validation.js";
+
+// Re-export default
+export { default } from "./client.js";

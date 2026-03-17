@@ -2,14 +2,40 @@
   "name": "openclaw-sdk",
   "version": "2026.3.13",
   "description": "OpenClaw SDK for TypeScript/JavaScript",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./protocol": {
+      "types": "./dist/esm/protocol.d.ts",
+      "import": "./dist/esm/protocol.js",
+      "require": "./dist/cjs/protocol.js",
+      "default": "./dist/esm/protocol.js"
+    },
+    "./browser": {
+      "default": "./dist/browser/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "esm": ["dist/esm/index.d.ts"],
+      "default": ["dist/esm/index.d.ts"]
+    }
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
     "test": "vitest",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
