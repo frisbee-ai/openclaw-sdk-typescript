@@ -44,6 +44,7 @@
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\"",
+    "docs": "typedoc",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

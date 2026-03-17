@@ -10,7 +10,50 @@
 export { OpenClawClient, createClient } from "./client.js";
 export type { ClientConfig } from "./client.js";
 
-// Protocol types
+// ============================================================================
+// Error Types
+// ============================================================================
+
+// Error classes
+export {
+  OpenClawError,
+  AuthError,
+  ConnectionError,
+  ProtocolError,
+  RequestError,
+  TimeoutError,
+  CancelledError,
+  AbortError,
+  GatewayError,
+  ReconnectError,
+} from "./errors.js";
+
+// Error code types
+export type {
+  AuthErrorCode,
+  ConnectionErrorCode,
+  ProtocolErrorCode,
+  RequestErrorCode,
+  GatewayErrorCode,
+  ReconnectErrorCode,
+} from "./errors.js";
+
+// Error type guards
+export {
+  isOpenClawError,
+  isAuthError,
+  isConnectionError,
+  isTimeoutError,
+  isCancelledError,
+  isAbortError,
+} from "./errors.js";
+
+// Error factory
+export { createErrorFromResponse } from "./errors.js";
+
+// ============================================================================
+// Protocol Types
+// ============================================================================
 export type {
   // Frame types
   GatewayFrame,
@@ -112,7 +155,46 @@ export type {
 export { EventManager, createEventManager, MAX_EVENT_NAME_LENGTH } from "./managers/event.js";
 export type { EventHandler, UnsubscribeFn, EventPattern } from "./managers/event.js";
 
-// Reconnection Manager
+// ============================================================================
+// Reconnection Manager (Advanced/Stand-alone)
+// ============================================================================
+
+/**
+ * Reconnection Manager - Advanced Stand-alone Reconnection Control
+ *
+ * **Use this when you need custom reconnection behavior** outside of
+ * ConnectionManager's built-in reconnection.
+ *
+ * ### Decision Guide: Which Reconnection Approach?
+ *
+ * **Use ConnectionManager's built-in reconnection if you need:**
+ * - Simple automatic reconnection on disconnect
+ * - Configurable max attempts and delay
+ * - Standard Fibonacci backoff
+ * - Integration with connection lifecycle
+ *
+ * **Use ReconnectManager stand-alone if you need:**
+ * - Custom reconnection logic separate from ConnectionManager
+ * - Reconnection state tracking for external management
+ * - Event-driven reconnection workflows
+ * - Advanced retry strategies beyond standard backoff
+ *
+ * @example
+ * ```ts
+ * // Stand-alone usage for custom reconnection flow
+ * const reconnectMgr = createReconnectManager({
+ *   maxAttempts: 10,
+ *   initialDelayMs: 1000,
+ *   maxDelayMs: 30000,
+ * });
+ *
+ * reconnectMgr.on("stateChange", (state) => {
+ *   if (state.phase === "waiting") {
+ *     console.log(`Reconnecting in ${state.delayMs}ms...`);
+ *   }
+ * });
+ * ```
+ */
 export { ReconnectManager, createReconnectManager } from "./managers/reconnect.js";
 export type { ReconnectConfig, ReconnectState, ReconnectEvent } from "./managers/reconnect.js";
 
@@ -131,6 +213,22 @@ export { TickMonitor, createTickMonitor } from "./events/tick.js";
 export type { TickMonitorConfig, TickStatus } from "./events/tick.js";
 export { GapDetector, createGapDetector } from "./events/gap.js";
 export type { GapInfo, GapRecoveryMode, GapRecoveryConfig, GapDetectorConfig } from "./events/gap.js";
+
+// ============================================================================
+// Logger Types (Reserved for Future Use)
+// ============================================================================
+
+/**
+ * Logger types reserved for future use.
+ *
+ * @beta
+ *
+ * The SDK currently uses `console.log()` directly. A full logging
+ * implementation violates YAGNI at this stage. These types are
+ * reserved for when logging needs grow.
+ */
+export type { Logger, LogLevel } from "./types/logger.js";
+export { isLogger } from "./types/logger.js";
 
 // Re-export default
 export { default } from "./client.js";
