@@ -93,5 +93,28 @@ export {
   isErrorResponse,
 } from "./protocol/validation.js";
 
+// Authentication
+export {
+  CredentialsProvider,
+  StaticCredentialsProvider,
+  AuthHandler,
+  createAuthHandler,
+} from "./auth/provider.js";
+export type {
+  DeviceCredentials,
+  RefreshResult,
+  AuthMethod,
+  StaticCredentialsConfig,
+  AuthConfig,
+} from "./auth/provider.js";
+
+// Event Manager
+export { EventManager, createEventManager, MAX_EVENT_NAME_LENGTH } from "./managers/event.js";
+export type { EventHandler, UnsubscribeFn, EventPattern } from "./managers/event.js";
+
+// Reconnection Manager
+export { ReconnectManager, createReconnectManager } from "./managers/reconnect.js";
+export type { ReconnectConfig, ReconnectState, ReconnectEvent } from "./managers/reconnect.js";
+
 // Re-export default
 export { default } from "./client.js";

@@ -591,3 +591,59 @@ openclaw-sdk-typescript/
 - [ ] Both Node.js and browser builds work
 - [ ] Documentation complete
 - [ ] All public APIs have type definitions
+
+---
+
+## Change Log
+
+### 2026-03-18
+
+#### Phase 1 Completed
+- **Status**: ✅ COMPLETE
+- **Commit**: `bad4d07` - feat: implement Phase 1 core SDK architecture
+- **Summary**: Core foundation implemented including protocol types, validation, WebSocket transport, request/connection managers, and main client facade
+
+#### Phase 2 Planning Revisions (Ralplan Workflow)
+
+**Original Plan**:
+- Phase 2: Authentication only
+
+**Revised Plan** (based on Planner/Architect/Critic loop):
+- Phase 2: Authentication + Event System + Reconnection Enhancement
+
+**Key Changes**:
+
+1. **Authentication System** (Priority: HIGH)
+   - CredentialsProvider interface with async methods
+   - Added `refreshToken()` method for token refresh on reconnection
+   - Challenge handling with retry logic
+   - Error types: AuthError, ConnectionError
+
+2. **Event System** (Priority: HIGH)
+   - EventManager with wildcard support (`*` and `prefix:*`)
+   - Two-tier lookup for O(1) exact matches, O(n) prefix matches
+   - Event name length validation (max 256 chars)
+   - Namespace isolation for handler groups
+   - Extends existing event handlers (not replaces)
+
+3. **Auto-Reconnection Enhancement** (Priority: HIGH)
+   - Fibonacci backoff algorithm with jitter
+   - Auth-aware reconnection (terminal vs retryable errors)
+   - Token refresh before reconnect
+   - Max attempts and pause configuration
+
+4. **Typed Request Methods** (Priority: MEDIUM - Deferred)
+   - Code generator from protocol types
+   - Namespace classes (AgentsNamespace, CronNamespace, etc.)
+   - Deferred to later phase
+
+**Critic-identified Issues Addressed**:
+- ✅ EventManager: Added event name length limit (256 chars) to prevent ReDoS
+- ✅ CredentialsProvider: Added `refreshToken()` for token refresh on reconnection
+- ✅ Challenge Handler: Defined integration point with ConnectionManager.performHandshake()
+- ✅ EventManager vs existing: Decided to extend (not replace) existing event handlers
+- ✅ Naming: Unified `reconnectDelayMs` (not `baseInterval`)
+
+**Open Questions**:
+- Server-side `connect.challenge` support status (may affect ChallengeHandler implementation)
+- Whether to implement event subscription persistence for post-reconnect recovery
