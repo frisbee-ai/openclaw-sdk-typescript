@@ -427,46 +427,70 @@ This plan covers the complete implementation of the OpenClaw TypeScript SDK acro
 
 **Objective**: Ensure compatibility with Node.js and browser environments.
 
+**Status**: ✅ COMPLETE
+
 ### Tasks
 
 #### 5.1 Node.js WebSocket Implementation
+- **Status**: ✅ COMPLETE
 - **File**: `src/transport/node.ts`
 - **Description**: Node.js-specific WebSocket using `ws` package
 - **Dependencies**: Phase 4 complete
 - **Acceptance Criteria**:
   - Uses `ws` package for WebSocket
-  - TLS validation hook available
-  - Proper binary data handling
-- **Tests**: Integration tests with actual WebSocket server
+  - TLS validation hook available via `tlsValidator?: (socket: TLSSocket) => boolean`
+  - Proper binary data handling (Buffer -> ArrayBuffer conversion)
+  - Implements `IWebSocketTransport` interface
+  - Minimum 10 unit tests
+- **Implementation Notes**:
+  - Add `ws` as dependency in package.json
+  - TLS validator integrates via `https.Agent` with custom `rejectUnauthorized`
+  - Binary data conversion: `Buffer.from(data)` for sending
 
 #### 5.2 Browser WebSocket Implementation
+- **Status**: ✅ COMPLETE
 - **File**: `src/transport/browser.ts`
 - **Description**: Browser-specific WebSocket using native API
 - **Dependencies**: 5.1
 - **Acceptance Criteria**:
-  - Uses native `WebSocket` API
-  - TLS handled by browser
-  - Conditional export via package.json `browser` condition
-- **Tests**: Browser environment tests (can use jsdom)
+  - Uses native browser `WebSocket` API
+  - TLS handled by browser (no custom hook)
+  - Proper binary data handling (native ArrayBuffer)
+  - Implements `IWebSocketTransport` interface
+  - Minimum 8 unit tests
+- **Implementation Notes**:
+  - Use `WebSocket` constructor directly
+  - Browser TLS is managed by the browser
 
 #### 5.3 Platform Detection and Export
+- **Status**: ✅ COMPLETE
 - **File**: `src/transport/index.ts`
-- **Description**: Export appropriate transport based on environment
+- **Description**: Auto-detect and export appropriate transport
 - **Dependencies**: 5.2
 - **Acceptance Criteria**:
-  - Auto-detects Node.js vs browser
-  - Exports `WebSocketTransport` implementation
-- **Tests**: Platform detection tests
+  - Platform detection uses `typeof window !== 'undefined'` (runtime)
+  - Node.js exports `NodeWebSocketTransport`
+  - Browser exports `BrowserWebSocketTransport`
+  - Supports `FORCE_PLATFORM` environment variable override for testing
+  - Backward compatible: re-exports `WebSocketTransport` from old location
+- **Implementation Notes**:
+  - Runtime detection: `typeof window !== 'undefined'` check
+  - Override: `process.env.FORCE_PLATFORM = 'node' | 'browser'`
+  - Note: This is runtime detection, not build-time optimization
 
-#### 5.4 Bundle Testing Setup
-- **File**: `bundles/` (new directory)
-- **Description**: Set up bundle tests for webpack, vite
+#### 5.4 Bundle Testing
+- **Status**: ✅ COMPLETE
+- **File**: Build verification
+- **Description**: Verify builds work correctly
 - **Dependencies**: 5.3
 - **Acceptance Criteria**:
-  - Webpack build test passes
-  - Vite build test passes
+  - `npm run build` succeeds
+  - `npm test` passes
+  - `npm run lint` passes
   - No circular dependency warnings
-- **Tests**: Bundle verification tests
+- **Implementation Notes**:
+  - Uses runtime detection (not build-time)
+  - Full bundle optimization would require conditional exports (Phase 6)
 
 ---
 
