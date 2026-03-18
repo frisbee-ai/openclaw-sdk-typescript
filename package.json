@@ -44,6 +44,7 @@
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\"",
+    "check:circular": "madge src/ --circular --extensions ts",
     "docs": "typedoc",
     "prepublishOnly": "npm run build",
     "changelog": "git-cliff --output CHANGELOG.md",
@@ -53,10 +54,10 @@
   },
   "dependencies": {
     "openclaw": "2026.3.13",
-    "ws": "^8.19.0"
+    "ws": "8.19.0"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "10.0.1",
     "@types/node": "24.12.0",
     "@typescript-eslint/eslint-plugin": "8.57.1",
     "@typescript-eslint/parser": "8.57.1",
@@ -86,5 +87,11 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   }
 }
