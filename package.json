@@ -46,6 +46,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "check:circular": "madge src/ --circular --extensions ts",
     "docs": "typedoc",
+    "docs:check": "typedoc --help > /dev/null && echo '✓ TypeDoc configuration valid'",
     "prepublishOnly": "npm run build",
     "changelog": "git-cliff --output CHANGELOG.md",
     "changelog:unreleased": "git-cliff --unreleased",
@@ -53,12 +54,13 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "openclaw": "2026.3.13",
+    "openclaw": "^0.0.1",
     "ws": "8.19.0"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@types/node": "24.12.0",
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "8.57.1",
     "@typescript-eslint/parser": "8.57.1",
     "@vitest/coverage-v8": "4.1.0",
@@ -69,6 +71,7 @@
     "madge": "8.0.0",
     "prettier": "3.8.1",
     "typedoc": "0.28.17",
+    "typedoc-plugin-markdown": "4.10.0",
     "typescript": "5.9.3",
     "vitest": "4.1.0"
   },

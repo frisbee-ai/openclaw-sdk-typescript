@@ -13,7 +13,7 @@ export class OpenClawError extends Error {
     message: string,
     public readonly code: string,
     public readonly retryable: boolean = false,
-    public readonly details?: unknown
+    public readonly details?: unknown,
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -39,15 +39,15 @@ export class OpenClawError extends Error {
 // ============================================================================
 
 export type AuthErrorCode =
-  | 'CHALLENGE_EXPIRED'
-  | 'CHALLENGE_FAILED'
-  | 'AUTH_TOKEN_EXPIRED'
-  | 'AUTH_TOKEN_MISMATCH'
-  | 'AUTH_RATE_LIMITED'
-  | 'AUTH_DEVICE_REJECTED'
-  | 'AUTH_PASSWORD_INVALID'
-  | 'AUTH_NOT_SUPPORTED'
-  | 'AUTH_CONFIGURATION_ERROR';
+  | "CHALLENGE_EXPIRED"
+  | "CHALLENGE_FAILED"
+  | "AUTH_TOKEN_EXPIRED"
+  | "AUTH_TOKEN_MISMATCH"
+  | "AUTH_RATE_LIMITED"
+  | "AUTH_DEVICE_REJECTED"
+  | "AUTH_PASSWORD_INVALID"
+  | "AUTH_NOT_SUPPORTED"
+  | "AUTH_CONFIGURATION_ERROR";
 
 /**
  * Authentication error.
@@ -63,9 +63,9 @@ export class AuthError extends OpenClawError {
       config.message,
       config.code,
       config.retryable ?? isAuthErrorRetryable(config.code),
-      config.details
+      config.details,
     );
-    this.name = 'AuthError';
+    this.name = "AuthError";
   }
 }
 
@@ -74,9 +74,9 @@ export class AuthError extends OpenClawError {
  */
 function isAuthErrorRetryable(code: AuthErrorCode): boolean {
   const retryableCodes: AuthErrorCode[] = [
-    'CHALLENGE_EXPIRED',
-    'AUTH_TOKEN_EXPIRED',
-    'AUTH_RATE_LIMITED',
+    "CHALLENGE_EXPIRED",
+    "AUTH_TOKEN_EXPIRED",
+    "AUTH_RATE_LIMITED",
   ];
   return retryableCodes.includes(code);
 }
@@ -86,13 +86,13 @@ function isAuthErrorRetryable(code: AuthErrorCode): boolean {
 // ============================================================================
 
 export type ConnectionErrorCode =
-  | 'TLS_FINGERPRINT_MISMATCH'
-  | 'CONNECTION_STALE'
-  | 'CONNECTION_CLOSED'
-  | 'CONNECT_TIMEOUT'
-  | 'CONNECTION_REFUSED'
-  | 'NETWORK_ERROR'
-  | 'PROTOCOL_ERROR';
+  | "TLS_FINGERPRINT_MISMATCH"
+  | "CONNECTION_STALE"
+  | "CONNECTION_CLOSED"
+  | "CONNECT_TIMEOUT"
+  | "CONNECTION_REFUSED"
+  | "NETWORK_ERROR"
+  | "PROTOCOL_ERROR";
 
 /**
  * Connection error.
@@ -108,9 +108,9 @@ export class ConnectionError extends OpenClawError {
       config.message,
       config.code,
       config.retryable ?? true, // Most connection errors are retryable
-      config.details
+      config.details,
     );
-    this.name = 'ConnectionError';
+    this.name = "ConnectionError";
   }
 }
 
@@ -119,10 +119,10 @@ export class ConnectionError extends OpenClawError {
 // ============================================================================
 
 export type ProtocolErrorCode =
-  | 'PROTOCOL_UNSUPPORTED'
-  | 'PROTOCOL_NEGOTIATION_FAILED'
-  | 'INVALID_FRAME'
-  | 'FRAME_TOO_LARGE';
+  | "PROTOCOL_UNSUPPORTED"
+  | "PROTOCOL_NEGOTIATION_FAILED"
+  | "INVALID_FRAME"
+  | "FRAME_TOO_LARGE";
 
 /**
  * Protocol error.
@@ -134,8 +134,13 @@ export class ProtocolError extends OpenClawError {
     retryable?: boolean;
     details?: unknown;
   }) {
-    super(config.message, config.code, config.retryable ?? false, config.details);
-    this.name = 'ProtocolError';
+    super(
+      config.message,
+      config.code,
+      config.retryable ?? false,
+      config.details,
+    );
+    this.name = "ProtocolError";
   }
 }
 
@@ -144,12 +149,12 @@ export class ProtocolError extends OpenClawError {
 // ============================================================================
 
 export type RequestErrorCode =
-  | 'METHOD_NOT_FOUND'
-  | 'INVALID_PARAMS'
-  | 'INTERNAL_ERROR'
-  | 'REQUEST_TIMEOUT'
-  | 'REQUEST_CANCELLED'
-  | 'REQUEST_ABORTED';
+  | "METHOD_NOT_FOUND"
+  | "INVALID_PARAMS"
+  | "INTERNAL_ERROR"
+  | "REQUEST_TIMEOUT"
+  | "REQUEST_CANCELLED"
+  | "REQUEST_ABORTED";
 
 /**
  * Request error.
@@ -165,16 +170,16 @@ export class RequestError extends OpenClawError {
       config.message,
       config.code,
       config.retryable ?? isRequestErrorRetryable(config.code),
-      config.details
+      config.details,
     );
-    this.name = 'RequestError';
+    this.name = "RequestError";
   }
 }
 
 function isRequestErrorRetryable(code: RequestErrorCode): boolean {
   const retryableCodes: RequestErrorCode[] = [
-    'REQUEST_TIMEOUT',
-    'INTERNAL_ERROR',
+    "REQUEST_TIMEOUT",
+    "INTERNAL_ERROR",
   ];
   return retryableCodes.includes(code);
 }
@@ -183,14 +188,14 @@ function isRequestErrorRetryable(code: RequestErrorCode): boolean {
  * Timeout error (shorthand for request timeout).
  */
 export class TimeoutError extends RequestError {
-  constructor(message: string = 'Request timed out', details?: unknown) {
+  constructor(message: string = "Request timed out", details?: unknown) {
     super({
-      code: 'REQUEST_TIMEOUT',
+      code: "REQUEST_TIMEOUT",
       message,
       retryable: true,
       details,
     });
-    this.name = 'TimeoutError';
+    this.name = "TimeoutError";
   }
 }
 
@@ -198,14 +203,14 @@ export class TimeoutError extends RequestError {
  * Request cancelled error.
  */
 export class CancelledError extends RequestError {
-  constructor(message: string = 'Request was cancelled', details?: unknown) {
+  constructor(message: string = "Request was cancelled", details?: unknown) {
     super({
-      code: 'REQUEST_CANCELLED',
+      code: "REQUEST_CANCELLED",
       message,
       retryable: false,
       details,
     });
-    this.name = 'CancelledError';
+    this.name = "CancelledError";
   }
 }
 
@@ -213,14 +218,14 @@ export class CancelledError extends RequestError {
  * Request aborted error (AbortController).
  */
 export class AbortError extends RequestError {
-  constructor(message: string = 'Request was aborted', details?: unknown) {
+  constructor(message: string = "Request was aborted", details?: unknown) {
     super({
-      code: 'REQUEST_ABORTED',
+      code: "REQUEST_ABORTED",
       message,
       retryable: false,
       details,
     });
-    this.name = 'AbortError';
+    this.name = "AbortError";
   }
 }
 
@@ -229,14 +234,14 @@ export class AbortError extends RequestError {
 // ============================================================================
 
 export type GatewayErrorCode =
-  | 'AGENT_NOT_FOUND'
-  | 'AGENT_BUSY'
-  | 'NODE_NOT_FOUND'
-  | 'NODE_OFFLINE'
-  | 'SESSION_NOT_FOUND'
-  | 'SESSION_EXPIRED'
-  | 'PERMISSION_DENIED'
-  | 'QUOTA_EXCEEDED';
+  | "AGENT_NOT_FOUND"
+  | "AGENT_BUSY"
+  | "NODE_NOT_FOUND"
+  | "NODE_OFFLINE"
+  | "SESSION_NOT_FOUND"
+  | "SESSION_EXPIRED"
+  | "PERMISSION_DENIED"
+  | "QUOTA_EXCEEDED";
 
 /**
  * Gateway business logic error.
@@ -248,8 +253,13 @@ export class GatewayError extends OpenClawError {
     retryable?: boolean;
     details?: unknown;
   }) {
-    super(config.message, config.code, config.retryable ?? false, config.details);
-    this.name = 'GatewayError';
+    super(
+      config.message,
+      config.code,
+      config.retryable ?? false,
+      config.details,
+    );
+    this.name = "GatewayError";
   }
 }
 
@@ -258,9 +268,9 @@ export class GatewayError extends OpenClawError {
 // ============================================================================
 
 export type ReconnectErrorCode =
-  | 'MAX_RECONNECT_ATTEMPTS'
-  | 'MAX_AUTH_RETRIES'
-  | 'RECONNECT_DISABLED';
+  | "MAX_RECONNECT_ATTEMPTS"
+  | "MAX_AUTH_RETRIES"
+  | "RECONNECT_DISABLED";
 
 /**
  * Reconnection error.
@@ -272,8 +282,13 @@ export class ReconnectError extends OpenClawError {
     retryable?: boolean;
     details?: unknown;
   }) {
-    super(config.message, config.code, config.retryable ?? false, config.details);
-    this.name = 'ReconnectError';
+    super(
+      config.message,
+      config.code,
+      config.retryable ?? false,
+      config.details,
+    );
+    this.name = "ReconnectError";
   }
 }
 
@@ -284,13 +299,16 @@ export class ReconnectError extends OpenClawError {
 /**
  * Create an error from a response frame error shape.
  */
-export function createErrorFromResponse(
-  error: { code: string; message: string; retryable?: boolean; details?: unknown }
-): OpenClawError {
+export function createErrorFromResponse(error: {
+  code: string;
+  message: string;
+  retryable?: boolean;
+  details?: unknown;
+}): OpenClawError {
   const code = error.code.toUpperCase();
 
   // Auth errors
-  if (code.startsWith('AUTH_') || code.startsWith('CHALLENGE_')) {
+  if (code.startsWith("AUTH_") || code.startsWith("CHALLENGE_")) {
     return new AuthError({
       code: code as AuthErrorCode,
       message: error.message,
@@ -300,7 +318,7 @@ export function createErrorFromResponse(
   }
 
   // Connection errors
-  if (code.startsWith('CONNECTION_') || code === 'TLS_FINGERPRINT_MISMATCH') {
+  if (code.startsWith("CONNECTION_") || code === "TLS_FINGERPRINT_MISMATCH") {
     return new ConnectionError({
       code: code as ConnectionErrorCode,
       message: error.message,
@@ -310,7 +328,7 @@ export function createErrorFromResponse(
   }
 
   // Protocol errors
-  if (code.startsWith('PROTOCOL_')) {
+  if (code.startsWith("PROTOCOL_")) {
     return new ProtocolError({
       code: code as ProtocolErrorCode,
       message: error.message,
@@ -321,9 +339,9 @@ export function createErrorFromResponse(
 
   // Request errors
   if (
-    code === 'METHOD_NOT_FOUND' ||
-    code === 'INVALID_PARAMS' ||
-    code === 'INTERNAL_ERROR'
+    code === "METHOD_NOT_FOUND" ||
+    code === "INVALID_PARAMS" ||
+    code === "INTERNAL_ERROR"
   ) {
     return new RequestError({
       code: code as RequestErrorCode,
@@ -389,7 +407,7 @@ export function isAbortError(error: unknown): error is AbortError {
 }
 
 // ============================================================================
-// Re-exports
+// Default Export
 // ============================================================================
 
-export { OpenClawError as default } from './errors.js';
+export default OpenClawError;
