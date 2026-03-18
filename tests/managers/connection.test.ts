@@ -10,7 +10,11 @@ import {
 } from "../../src/managers/connection";
 import { WebSocketTransport, ReadyState } from "../../src/transport/websocket";
 import type { IWebSocketTransport } from "../../src/transport/websocket";
-import type { ConnectParams, GatewayFrame, HelloOk } from "../../src/protocol/types";
+import type {
+  ConnectParams,
+  GatewayFrame,
+  HelloOk,
+} from "../../src/protocol/types";
 
 // Mock WebSocket class
 class MockWebSocket {
@@ -144,7 +148,10 @@ describe("ConnectionManager", () => {
         },
       });
 
-      const connectPromise = manager.connect("ws://localhost:8080", createConnectParams());
+      const connectPromise = manager.connect(
+        "ws://localhost:8080",
+        createConnectParams(),
+      );
 
       // Should transition to connecting
       expect(manager.getState()).toBe("connecting");
@@ -157,10 +164,13 @@ describe("ConnectionManager", () => {
     });
 
     it("should reject if already connecting", async () => {
-      const connectPromise = manager.connect("ws://localhost:8080", createConnectParams());
+      const connectPromise = manager.connect(
+        "ws://localhost:8080",
+        createConnectParams(),
+      );
 
       await expect(
-        manager.connect("ws://localhost:8081", createConnectParams())
+        manager.connect("ws://localhost:8081", createConnectParams()),
       ).rejects.toThrow("Already connecting");
 
       // Clean up
@@ -172,7 +182,7 @@ describe("ConnectionManager", () => {
       await manager.connect("ws://localhost:8080", createConnectParams());
 
       await expect(
-        manager.connect("ws://localhost:8081", createConnectParams())
+        manager.connect("ws://localhost:8081", createConnectParams()),
       ).rejects.toThrow("Already connected");
     });
 
@@ -203,10 +213,12 @@ describe("ConnectionManager", () => {
         } as typeof WebSocket,
       });
 
-      const errorManager = createConnectionManager(errorTransport, { autoReconnect: false });
+      const errorManager = createConnectionManager(errorTransport, {
+        autoReconnect: false,
+      });
 
       await expect(
-        errorManager.connect("ws://localhost:8080", createConnectParams())
+        errorManager.connect("ws://localhost:8080", createConnectParams()),
       ).rejects.toThrow();
 
       expect(errorManager.getState()).toBe("disconnected");
@@ -232,7 +244,10 @@ describe("ConnectionManager", () => {
         reconnectDelayMs: 100,
       });
 
-      await reconnectManager.connect("ws://localhost:8080", createConnectParams());
+      await reconnectManager.connect(
+        "ws://localhost:8080",
+        createConnectParams(),
+      );
 
       // Force disconnect
       transport.close();
@@ -251,7 +266,10 @@ describe("ConnectionManager", () => {
     it("should return the current state", async () => {
       expect(manager.getState()).toBe("disconnected");
 
-      const connectPromise = manager.connect("ws://localhost:8080", createConnectParams());
+      const connectPromise = manager.connect(
+        "ws://localhost:8080",
+        createConnectParams(),
+      );
       expect(manager.getState()).toBe("connecting");
 
       await connectPromise;
@@ -298,11 +316,17 @@ describe("ConnectionManager", () => {
 
   describe("event handlers", () => {
     it("should emit state change events", async () => {
-      const stateChanges: Array<{ previous: ConnectionState; new: ConnectionState }> = [];
+      const stateChanges: Array<{
+        previous: ConnectionState;
+        new: ConnectionState;
+      }> = [];
 
       manager.setHandlers({
         onStateChange: (event) => {
-          stateChanges.push({ previous: event.previousState, new: event.newState });
+          stateChanges.push({
+            previous: event.previousState,
+            new: event.newState,
+          });
         },
       });
 
@@ -313,11 +337,9 @@ describe("ConnectionManager", () => {
     });
 
     it("should emit message events", async () => {
-      let receivedMessage: GatewayFrame | undefined;
-
       manager.setHandlers({
-        onMessage: (frame) => {
-          receivedMessage = frame;
+        onMessage: () => {
+          // Message received
         },
       });
 
@@ -375,7 +397,9 @@ describe("ConnectionManager", () => {
       });
 
       let errorReceived = false;
-      const errorManager = createConnectionManager(errorTransport, { autoReconnect: false });
+      const errorManager = createConnectionManager(errorTransport, {
+        autoReconnect: false,
+      });
 
       errorManager.setHandlers({
         onError: () => {
@@ -384,7 +408,10 @@ describe("ConnectionManager", () => {
       });
 
       try {
-        await errorManager.connect("ws://localhost:8080", createConnectParams());
+        await errorManager.connect(
+          "ws://localhost:8080",
+          createConnectParams(),
+        );
       } catch {
         // Expected to fail
       }
@@ -403,6 +430,107 @@ describe("ConnectionManager", () => {
       expect(serverInfo).toBeDefined();
       expect(serverInfo?.type).toBe("hello-ok");
       expect(serverInfo?.server.version).toBeDefined();
+    });
+  });
+
+  describe("handleMessage - JSON parse errors", () => {
+    it("should handle invalid JSON with detailed error including data preview", async () => {
+      const errors: Array<{
+        message: string;
+        original?: Error;
+        recoverable: boolean;
+      }> = [];
+
+      manager.setHandlers({
+        onError: (event) => {
+          errors.push({
+            message: event.message,
+            original: event.original as Error,
+            recoverable: event.recoverable,
+          });
+        },
+      });
+
+      await manager.connect("ws://localhost:8080", createConnectParams());
+
+      // Simulate receiving invalid JSON
+      const transport = (manager as any).transport as IWebSocketTransport;
+      if (transport.onmessage) {
+        transport.onmessage("{invalid json");
+      }
+
+      expect(errors.length).toBe(1);
+      expect(errors[0].message).toContain("Failed to parse incoming message");
+      expect(errors[0].message).toContain("{invalid json"); // Should include data preview
+      expect(errors[0].recoverable).toBe(false);
+      // Original error should be a SyntaxError from JSON.parse
+      expect(errors[0].original).toBeInstanceOf(SyntaxError);
+    });
+
+    it("should handle empty data with specific error message", async () => {
+      const errors: Array<{ message: string }> = [];
+
+      manager.setHandlers({
+        onError: (event) => {
+          errors.push({ message: event.message });
+        },
+      });
+
+      await manager.connect("ws://localhost:8080", createConnectParams());
+
+      const transport = (manager as any).transport as IWebSocketTransport;
+      if (transport.onmessage) {
+        transport.onmessage("");
+      }
+
+      expect(errors.length).toBe(1);
+      expect(errors[0].message).toContain("empty");
+    });
+
+    it("should truncate very long invalid JSON in error message", async () => {
+      const errors: Array<{ message: string }> = [];
+
+      manager.setHandlers({
+        onError: (event) => {
+          errors.push({ message: event.message });
+        },
+      });
+
+      await manager.connect("ws://localhost:8080", createConnectParams());
+
+      // Create a very long invalid JSON string (longer than typical preview)
+      const longInvalidJson = '{"data": "' + "x".repeat(500) + " broken";
+
+      const transport = (manager as any).transport as IWebSocketTransport;
+      if (transport.onmessage) {
+        transport.onmessage(longInvalidJson);
+      }
+
+      expect(errors.length).toBe(1);
+      expect(errors[0].message).toContain("...");
+      // Message should be much shorter than original
+      expect(errors[0].message.length).toBeLessThan(longInvalidJson.length);
+    });
+
+    it("should handle non-JSON text data", async () => {
+      const errors: Array<{ message: string }> = [];
+
+      manager.setHandlers({
+        onError: (event) => {
+          errors.push({ message: event.message });
+        },
+      });
+
+      await manager.connect("ws://localhost:8080", createConnectParams());
+
+      const transport = (manager as any).transport as IWebSocketTransport;
+      if (transport.onmessage) {
+        transport.onmessage("plain text message");
+      }
+
+      expect(errors.length).toBe(1);
+      expect(errors[0].message).toContain("Failed to parse");
+      expect(errors[0].message).toContain("plain text");
     });
   });
 });
