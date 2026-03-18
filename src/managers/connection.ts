@@ -115,6 +115,18 @@ export class ConnectionManager {
     }
   > = new Map();
 
+  /** Connection parameters for handshake */
+  private connectParams?: ConnectParams;
+
+  /** Handshake completion resolvers */
+  private handshakeCompleters?: {
+    resolve: () => void;
+    reject: (error: Error) => void;
+  };
+
+  /** Server info from handshake */
+  private serverInfo?: HelloOk;
+
   /**
    * Create a new connection manager
    *
@@ -188,13 +200,11 @@ export class ConnectionManager {
 
     try {
       // Store connection params for handshake
-      (this as { connectParams?: ConnectParams }).connectParams = params;
+      this.connectParams = params;
 
       // Create a promise that resolves when handshake completes
       const handshakeComplete = new Promise<void>((resolve, reject) => {
-        (this as { handshakeResolve?: () => void }).handshakeResolve = resolve;
-        (this as { handshakeReject?: (error: Error) => void }).handshakeReject =
-          reject;
+        this.handshakeCompleters = { resolve, reject };
       });
 
       // Connect using the transport
@@ -213,7 +223,7 @@ export class ConnectionManager {
    */
   private async performHandshake(): Promise<void> {
     try {
-      const params = (this as { connectParams?: ConnectParams }).connectParams;
+      const params = this.connectParams;
       if (!params) {
         throw new Error("No connection parameters available");
       }
@@ -234,18 +244,14 @@ export class ConnectionManager {
       }
 
       // Store server info
-      (this as { serverInfo?: HelloOk }).serverInfo = helloOk;
+      this.serverInfo = helloOk;
 
       // Transition to ready state
       this.setState("ready");
       this.reconnectAttempts = 0;
 
       // Resolve the handshake promise
-      const resolve = (this as { handshakeResolve?: () => void })
-        .handshakeResolve;
-      if (resolve) {
-        resolve();
-      }
+      this.handshakeCompleters?.resolve();
     } catch (error) {
       this.handleError(
         error instanceof Error ? error.message : "Handshake failed",
@@ -254,11 +260,9 @@ export class ConnectionManager {
       );
 
       // Reject the handshake promise
-      const reject = (this as { handshakeReject?: (error: Error) => void })
-        .handshakeReject;
-      if (reject) {
-        reject(error instanceof Error ? error : new Error("Handshake failed"));
-      }
+      this.handshakeCompleters?.reject(
+        error instanceof Error ? error : new Error("Handshake failed"),
+      );
 
       this.handleDisconnect();
     }
@@ -404,7 +408,7 @@ export class ConnectionManager {
 
     this.reconnectTimerId = setTimeout(() => {
       this.reconnectAttempts++;
-      const params = (this as { connectParams?: ConnectParams }).connectParams;
+      const params = this.connectParams;
 
       if (params) {
         this.connect(this.currentUrl, params).catch((error) => {
@@ -532,7 +536,7 @@ export class ConnectionManager {
    * @returns The server info or undefined if not connected
    */
   getServerInfo(): HelloOk | undefined {
-    return (this as { serverInfo?: HelloOk }).serverInfo;
+    return this.serverInfo;
   }
 }
 
