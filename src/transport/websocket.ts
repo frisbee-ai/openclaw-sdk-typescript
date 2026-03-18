@@ -3,6 +3,8 @@
  *
  * This module provides a WebSocket transport abstraction that works across
  * different environments (Node.js and browser) with a type-safe event emitter pattern.
+ *
+ * @module
  */
 
 import { TimeoutManager } from '../utils/timeoutManager.js';
@@ -28,6 +30,16 @@ export type ReadyStateString = 'connecting' | 'open' | 'closing' | 'closed';
 
 /**
  * Convert numeric ready state to string representation
+ *
+ * @param state - Numeric ready state
+ * @returns String representation of the ready state
+ *
+ * @example
+ * ```ts
+ * import { readyStateToString, ReadyState } from './transport/websocket.js';
+ *
+ * console.log(readyStateToString(ReadyState.OPEN)); // "open"
+ * ```
  */
 export function readyStateToString(state: ReadyState): ReadyStateString {
   switch (state) {
@@ -457,6 +469,15 @@ export class WebSocketTransport implements IWebSocketTransport {
  *
  * @param config - Optional configuration
  * @returns A new WebSocket transport instance
+ *
+ * @example
+ * ```ts
+ * import { createWebSocketTransport } from './transport/websocket.js';
+ *
+ * const transport = createWebSocketTransport({
+ *   connectTimeoutMs: 30000
+ * });
+ * ```
  */
 export function createWebSocketTransport(config?: WebSocketTransportConfig): IWebSocketTransport {
   return new WebSocketTransport(config);

@@ -2,6 +2,8 @@
  * Reconnection Manager
  *
  * Handles automatic reconnection with exponential backoff and auth-aware retry logic.
+ *
+ * @module
  */
 
 import { ReconnectError } from '../errors.js';
@@ -344,6 +346,32 @@ export class ReconnectManager {
 
 /**
  * Create a reconnect manager.
+ *
+ * @param config - Optional reconnection configuration
+ * @returns A new ReconnectManager instance
+ *
+ * @example
+ * ```ts
+ * import { createReconnectManager } from './managers/reconnect.js';
+ *
+ * const reconnectMgr = createReconnectManager({
+ *   maxAttempts: 10,
+ *   initialDelayMs: 1000,
+ *   maxDelayMs: 30000,
+ *   pauseOnAuthError: true
+ * });
+ *
+ * // Listen to reconnection events
+ * reconnectMgr.onEvent((event) => {
+ *   console.log(`Reconnect ${event.state} (attempt ${event.attempt})`);
+ * });
+ *
+ * // Start reconnection
+ * await reconnectMgr.reconnect(
+ *   () => client.connect(),
+ *   () => authHandler.refreshToken()
+ * );
+ * ```
  */
 export function createReconnectManager(config?: Partial<ReconnectConfig>): ReconnectManager {
   return new ReconnectManager(config);

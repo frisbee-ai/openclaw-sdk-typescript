@@ -2,6 +2,8 @@
  * Gap Detector
  *
  * Detects gaps in event sequence numbers.
+ *
+ * @module
  */
 
 import { EventEmitter } from 'events';
@@ -140,6 +142,25 @@ export class GapDetector extends EventEmitter {
 
 /**
  * Create a gap detector.
+ *
+ * @param config - Gap detector configuration
+ * @returns A new GapDetector instance
+ *
+ * @example
+ * ```ts
+ * import { createGapDetector } from './events/gap.js';
+ *
+ * const gapDetector = createGapDetector({
+ *   expectedSequence: 1,
+ *   onGap: (gapInfo) => {
+ *     console.log(`Gap detected: expected ${gapInfo.expected}, got ${gapInfo.received}`);
+ *   }
+ * });
+ *
+ * // Process incoming event frames
+ * gapDetector.processSequence(1); // ok
+ * gapDetector.processSequence(3); // gap! (missed 2)
+ * ```
  */
 export function createGapDetector(config: GapDetectorConfig): GapDetector {
   return new GapDetector(config);

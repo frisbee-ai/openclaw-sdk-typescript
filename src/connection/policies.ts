@@ -2,6 +2,8 @@
  * Policy Manager
  *
  * Handles server policies received in hello-ok response.
+ *
+ * @module
  */
 
 import type { HelloOk } from '../protocol/types.js';
@@ -15,9 +17,9 @@ export type Policy = HelloOk['policy'];
 
 /** Default policy values */
 export const DEFAULT_POLICY: Policy = {
-  maxPayload: 1048576,     // 1MB
+  maxPayload: 1048576, // 1MB
   maxBufferedBytes: 65536, // 64KB
-  tickIntervalMs: 30000,   // 30 seconds
+  tickIntervalMs: 30000, // 30 seconds
 };
 
 // ============================================================================
@@ -86,6 +88,17 @@ export class PolicyManager {
 
 /**
  * Create a policy manager.
+ *
+ * @returns A new PolicyManager instance
+ *
+ * @example
+ * ```ts
+ * import { createPolicyManager, DEFAULT_POLICY } from './connection/policies.js';
+ *
+ * const policyMgr = createPolicyManager();
+ * const policy = policyMgr.getPolicy();
+ * console.log("Max frame size:", policy.maxFrameSize);
+ * ```
  */
 export function createPolicyManager(): PolicyManager {
   return new PolicyManager();

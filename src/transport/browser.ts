@@ -2,15 +2,13 @@
  * Browser WebSocket Transport
  *
  * WebSocket transport implementation for browsers using the native `WebSocket` API.
+ *
+ * @module
  */
 
-import type { IWebSocketTransport, ReadyStateString } from "./websocket.js";
-import { ReadyState, readyStateToString } from "./websocket.js";
-import type {
-  WebSocketOpenEvent,
-  WebSocketClose,
-  WebSocketError,
-} from "./node.js";
+import type { IWebSocketTransport, ReadyStateString } from './websocket.js';
+import { ReadyState, readyStateToString } from './websocket.js';
+import type { WebSocketOpenEvent, WebSocketClose, WebSocketError } from './node.js';
 
 // ============================================================================
 // Types
@@ -88,7 +86,7 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
    */
   async connect(url: string): Promise<void> {
     if (this._readyState !== ReadyState.CLOSED) {
-      throw new Error("Cannot connect: transport is not closed");
+      throw new Error('Cannot connect: transport is not closed');
     }
 
     this._readyState = ReadyState.CONNECTING;
@@ -119,12 +117,12 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
 
         this.ws.onerror = (_event: Event) => {
           if (this._readyState === ReadyState.CONNECTING) {
-            reject(new Error("WebSocket connection failed"));
+            reject(new Error('WebSocket connection failed'));
           }
           if (this.config.onerror) {
             this.config.onerror({
-              message: "WebSocket error",
-              error: new Error("WebSocket error"),
+              message: 'WebSocket error',
+              error: new Error('WebSocket error'),
             });
           }
         };
@@ -134,7 +132,7 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
             if (this.config.onbinary) {
               this.config.onbinary(event.data);
             }
-          } else if (typeof event.data === "string") {
+          } else if (typeof event.data === 'string') {
             if (this.config.onmessage) {
               this.config.onmessage(event.data);
             }
@@ -154,7 +152,7 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
    */
   send(data: string | ArrayBuffer): void {
     if (this._readyState !== ReadyState.OPEN || !this.ws) {
-      throw new Error("Cannot send: transport is not open");
+      throw new Error('Cannot send: transport is not open');
     }
 
     this.ws.send(data);
@@ -183,9 +181,18 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
  *
  * @param config - Transport configuration
  * @returns A new transport instance
+ *
+ * @example
+ * ```ts
+ * import { createBrowserWebSocketTransport } from './transport/browser.js';
+ *
+ * const transport = createBrowserWebSocketTransport({
+ *   url: "ws://localhost:8080"
+ * });
+ * ```
  */
 export function createBrowserWebSocketTransport(
-  config: BrowserWebSocketTransportConfig,
+  config: BrowserWebSocketTransportConfig
 ): BrowserWebSocketTransport {
   return new BrowserWebSocketTransport(config);
 }

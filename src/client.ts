@@ -3,6 +3,8 @@
  *
  * Main entry point for interacting with the OpenClaw Gateway via WebSocket.
  * This class provides a facade over the connection and request managers.
+ *
+ * @module
  */
 
 import type { ConnectionState } from './protocol/types.js';
@@ -233,6 +235,15 @@ export class OpenClawClient {
 
   /**
    * Check if the client is currently connected.
+   *
+   * @returns True if the connection state is 'ready'
+   *
+   * @example
+   * ```ts
+   * if (client.isConnected) {
+   *   console.log("Ready to send requests");
+   * }
+   * ```
    */
   get isConnected(): boolean {
     return this.connectionManager.getState() === 'ready';
@@ -240,6 +251,14 @@ export class OpenClawClient {
 
   /**
    * Get the current connection state.
+   *
+   * @returns The current ConnectionState ('disconnected' | 'connecting' | 'ready' | 'closing')
+   *
+   * @example
+   * ```ts
+   * console.log("State:", client.connectionState);
+   * // Output: State: ready
+   * ```
    */
   get connectionState(): ConnectionState {
     return this.connectionManager.getState();
@@ -250,6 +269,17 @@ export class OpenClawClient {
    *
    * @returns Promise that resolves when the connection is established
    * @throws Error if connection fails
+   *
+   * @example
+   * ```ts
+   * const client = createClient({
+   *   url: "ws://localhost:8080",
+   *   clientId: "my-app"
+   * });
+   *
+   * await client.connect();
+   * console.log("Connected:", client.isConnected);
+   * ```
    */
   async connect(): Promise<void> {
     // Build connection parameters
@@ -276,6 +306,12 @@ export class OpenClawClient {
 
   /**
    * Disconnect from the OpenClaw Gateway.
+   *
+   * @example
+   * ```ts
+   * client.disconnect();
+   * console.log("Disconnected:", client.isConnected);
+   * ```
    */
   disconnect(): void {
     this.connectionManager.disconnect();
@@ -372,6 +408,12 @@ export class OpenClawClient {
    * Abort a pending request by ID.
    *
    * @param requestId - The request ID to abort
+   *
+   * @example
+   * ```ts
+   * // Abort a specific request
+   * client.abort("req-123-456");
+   * ```
    */
   abort(requestId: string): void {
     this.requestManager.abortRequest(requestId);
@@ -391,6 +433,15 @@ export class OpenClawClient {
    *
    * @param handler - Function to call when connection state changes
    * @returns Unsubscribe function to remove the handler
+   *
+   * @example
+   * ```ts
+   * const unsub = client.onStateChange((state) => {
+   *   console.log("State changed to:", state);
+   * });
+   *
+   * // Later: unsub();
+   * ```
    */
   onStateChange(handler: (state: ConnectionState) => void): () => void {
     this.stateChangeHandlers.add(handler);
@@ -402,6 +453,13 @@ export class OpenClawClient {
    *
    * @param handler - Function to call when an error occurs
    * @returns Unsubscribe function to remove the handler
+   *
+   * @example
+   * ```ts
+   * const unsub = client.onError((error) => {
+   *   console.error("Connection error:", error.message);
+   * });
+   * ```
    */
   onError(handler: (error: Error) => void): () => void {
     this.errorHandlers.add(handler);
@@ -413,6 +471,13 @@ export class OpenClawClient {
    *
    * @param handler - Function to call when a frame is received
    * @returns Unsubscribe function to remove the handler
+   *
+   * @example
+   * ```ts
+   * const unsub = client.onMessage((frame) => {
+   *   console.log("Received frame:", frame.type);
+   * });
+   * ```
    */
   onMessage(handler: (frame: GatewayFrame) => void): () => void {
     this.messageHandlers.add(handler);
@@ -424,6 +489,13 @@ export class OpenClawClient {
    *
    * @param handler - Function to call when the connection closes
    * @returns Unsubscribe function to remove the handler
+   *
+   * @example
+   * ```ts
+   * const unsub = client.onClosed(() => {
+   *   console.log("Connection closed");
+   * });
+   * ```
    */
   onClosed(handler: () => void): () => void {
     this.closedHandlers.add(handler);

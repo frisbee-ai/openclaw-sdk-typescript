@@ -2,15 +2,13 @@
  * Node.js WebSocket Transport
  *
  * WebSocket transport implementation for Node.js using the `ws` package.
+ *
+ * @module
  */
 
-import { WebSocket as WS } from "ws";
-import type { TLSSocket } from "tls";
-import {
-  ReadyState,
-  readyStateToString,
-  type ReadyStateString,
-} from "./websocket.js";
+import { WebSocket as WS } from 'ws';
+import type { TLSSocket } from 'tls';
+import { ReadyState, readyStateToString, type ReadyStateString } from './websocket.js';
 
 // ============================================================================
 // Types
@@ -75,7 +73,7 @@ export interface WebSocketError {
 }
 
 // Re-export ReadyStateString from websocket module for consistency
-export type { ReadyStateString } from "./websocket.js";
+export type { ReadyStateString } from './websocket.js';
 
 // ============================================================================
 // Node.js WebSocket Transport
@@ -131,7 +129,7 @@ export class NodeWebSocketTransport {
    */
   async connect(url: string): Promise<void> {
     if (this._readyState !== ReadyState.CLOSED) {
-      throw new Error("Cannot connect: transport is not closed");
+      throw new Error('Cannot connect: transport is not closed');
     }
 
     this._readyState = ReadyState.CONNECTING;
@@ -149,7 +147,7 @@ export class NodeWebSocketTransport {
         this.ws = new WS(url, options);
 
         // Set up event handlers
-        this.ws.on("open", () => {
+        this.ws.on('open', () => {
           this._readyState = ReadyState.OPEN;
           if (this.config.onopen) {
             this.config.onopen({ target: url });
@@ -157,7 +155,7 @@ export class NodeWebSocketTransport {
           resolve();
         });
 
-        this.ws.on("close", (code: number, reason: Buffer) => {
+        this.ws.on('close', (code: number, reason: Buffer) => {
           this._readyState = ReadyState.CLOSED;
           if (this.config.onclose) {
             this.config.onclose({
@@ -168,7 +166,7 @@ export class NodeWebSocketTransport {
           }
         });
 
-        this.ws.on("error", (error: Error) => {
+        this.ws.on('error', (error: Error) => {
           if (this._readyState === ReadyState.CONNECTING) {
             reject(error);
           }
@@ -177,16 +175,16 @@ export class NodeWebSocketTransport {
           }
         });
 
-        this.ws.on("message", (data: Buffer, isBinary: boolean) => {
+        this.ws.on('message', (data: Buffer, isBinary: boolean) => {
           if (isBinary && this.config.onbinary) {
             // Convert Buffer to ArrayBuffer
             const arrayBuffer = data.buffer.slice(
               data.byteOffset,
-              data.byteOffset + data.byteLength,
+              data.byteOffset + data.byteLength
             ) as ArrayBuffer;
             this.config.onbinary(arrayBuffer);
           } else if (!isBinary && this.config.onmessage) {
-            this.config.onmessage(data.toString("utf-8"));
+            this.config.onmessage(data.toString('utf-8'));
           }
         });
       } catch (error) {
@@ -203,10 +201,10 @@ export class NodeWebSocketTransport {
    */
   send(data: string | ArrayBuffer): void {
     if (this._readyState !== ReadyState.OPEN || !this.ws) {
-      throw new Error("Cannot send: transport is not open");
+      throw new Error('Cannot send: transport is not open');
     }
 
-    if (typeof data === "string") {
+    if (typeof data === 'string') {
       this.ws.send(data);
     } else {
       // Convert ArrayBuffer to Buffer for ws package
@@ -237,9 +235,18 @@ export class NodeWebSocketTransport {
  *
  * @param config - Transport configuration
  * @returns A new transport instance
+ *
+ * @example
+ * ```ts
+ * import { createNodeWebSocketTransport } from './transport/node.js';
+ *
+ * const transport = createNodeWebSocketTransport({
+ *   url: "ws://localhost:8080"
+ * });
+ * ```
  */
 export function createNodeWebSocketTransport(
-  config: NodeWebSocketTransportConfig,
+  config: NodeWebSocketTransportConfig
 ): NodeWebSocketTransport {
   return new NodeWebSocketTransport(config);
 }

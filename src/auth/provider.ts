@@ -3,6 +3,8 @@
  *
  * Interface for secure credential access with support for multiple
  * authentication methods (token, device, password, bootstrap).
+ *
+ * @module
  */
 
 import type { ConnectParams } from '../protocol/types.js';
@@ -152,12 +154,7 @@ export interface AuthConfig {
   fallbackChain?: AuthMethod[];
 }
 
-const DEFAULT_AUTH_CHAIN: AuthMethod[] = [
-  'bootstrapToken',
-  'deviceToken',
-  'token',
-  'password',
-];
+const DEFAULT_AUTH_CHAIN: AuthMethod[] = ['bootstrapToken', 'deviceToken', 'token', 'password'];
 
 /**
  * Auth handler that integrates with ConnectionManager.
@@ -179,7 +176,7 @@ export class AuthHandler {
   } | null> {
     const methods = this.config.primaryAuth
       ? [this.config.primaryAuth]
-      : this.config.fallbackChain ?? DEFAULT_AUTH_CHAIN;
+      : (this.config.fallbackChain ?? DEFAULT_AUTH_CHAIN);
 
     for (const method of methods) {
       const data = await this.tryAuthMethod(method);
@@ -223,10 +220,7 @@ export class AuthHandler {
     }
 
     try {
-      const signature = await this.provider.signChallenge(
-        challenge.nonce,
-        challenge.timestamp
-      );
+      const signature = await this.provider.signChallenge(challenge.nonce, challenge.timestamp);
       return { signature, timestamp: challenge.timestamp };
     } catch (error) {
       const { AuthError } = await import('../errors.js');
@@ -253,16 +247,15 @@ export class AuthHandler {
       return null;
     }
 
-    const currentToken = this.currentMethod === 'token'
-      ? await this.provider.getToken?.() ?? undefined
-      : undefined;
+    const currentToken =
+      this.currentMethod === 'token'
+        ? ((await this.provider.getToken?.()) ?? undefined)
+        : undefined;
 
     return this.provider.refreshToken(currentToken ?? null);
   }
 
-  private async tryAuthMethod(
-    method: AuthMethod
-  ): Promise<ConnectParams['auth'] | null> {
+  private async tryAuthMethod(method: AuthMethod): Promise<ConnectParams['auth'] | null> {
     switch (method) {
       case 'bootstrapToken': {
         const token = await this.provider.getBootstrapToken?.();
@@ -298,10 +291,23 @@ export class AuthHandler {
 
 /**
  * Create an auth handler.
+ *
+ * @param provider - Credentials provider instance
+ * @param config - Optional auth configuration
+ * @returns AuthHandler instance
+ *
+ * @example
+ * ```ts
+ * const provider = new StaticCredentialsProvider({
+ *   token: "my-token"
+ * });
+ *
+ * const auth = createAuthHandler(provider, {
+ *   primaryAuth: "token",
+ *   fallbackChain: ["bootstrapToken", "password"]
+ * });
+ * ```
  */
-export function createAuthHandler(
-  provider: CredentialsProvider,
-  config?: AuthConfig
-): AuthHandler {
+export function createAuthHandler(provider: CredentialsProvider, config?: AuthConfig): AuthHandler {
   return new AuthHandler(provider, config);
 }

@@ -4,6 +4,8 @@
  * This module defines TypeScript types for the OpenClaw WebSocket protocol.
  * These types are derived from the TypeBox schemas in the openclaw package
  * but defined as native TypeScript types for better IDE support.
+ *
+ * @module
  */
 
 // ============================================================================
@@ -11,11 +13,11 @@
 // ============================================================================
 
 export const ErrorCodes = {
-  NOT_LINKED: "NOT_LINKED",
-  NOT_PAIRED: "NOT_PAIRED",
-  AGENT_TIMEOUT: "AGENT_TIMEOUT",
-  INVALID_REQUEST: "INVALID_REQUEST",
-  UNAVAILABLE: "UNAVAILABLE",
+  NOT_LINKED: 'NOT_LINKED',
+  NOT_PAIRED: 'NOT_PAIRED',
+  AGENT_TIMEOUT: 'AGENT_TIMEOUT',
+  INVALID_REQUEST: 'INVALID_REQUEST',
+  UNAVAILABLE: 'UNAVAILABLE',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -34,9 +36,9 @@ export interface ErrorShape {
 
 /** Frame type constants to avoid magic strings */
 export const FrameTypes = {
-  REQUEST: "req",
-  RESPONSE: "res",
-  EVENT: "event",
+  REQUEST: 'req',
+  RESPONSE: 'res',
+  EVENT: 'event',
 } as const;
 
 export type FrameType = (typeof FrameTypes)[keyof typeof FrameTypes];
@@ -46,14 +48,14 @@ export type FrameType = (typeof FrameTypes)[keyof typeof FrameTypes];
 // ============================================================================
 
 export interface RequestFrame {
-  type: "req";
+  type: 'req';
   id: string;
   method: string;
   params?: unknown;
 }
 
 export interface ResponseFrame {
-  type: "res";
+  type: 'res';
   id: string;
   ok: boolean;
   payload?: unknown;
@@ -65,7 +67,7 @@ export interface StateVersion {
 }
 
 export interface EventFrame {
-  type: "event";
+  type: 'event';
   event: string;
   payload?: unknown;
   seq?: number;
@@ -130,7 +132,7 @@ export interface ConnectParams {
 }
 
 export interface HelloOk {
-  type: "hello-ok";
+  type: 'hello-ok';
   protocol: number;
   server: {
     version: string;
@@ -470,10 +472,10 @@ export interface ChatInjectParams {
 // ============================================================================
 
 export type ConnectionState =
-  | "disconnected"
-  | "connecting"
-  | "handshaking"
-  | "authenticating"
-  | "ready"
-  | "reconnecting"
-  | "closed";
+  | 'disconnected'
+  | 'connecting'
+  | 'handshaking'
+  | 'authenticating'
+  | 'ready'
+  | 'reconnecting'
+  | 'closed';

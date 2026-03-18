@@ -186,6 +186,20 @@ export class TimeoutManager {
  *
  * @param config - Optional configuration
  * @returns A new TimeoutManager instance
+ *
+ * @example
+ * ```ts
+ * import { createTimeoutManager } from './utils/timeoutManager.js';
+ *
+ * const timeoutMgr = createTimeoutManager();
+ *
+ * // Delay helper
+ * await timeoutMgr.delay(5000);
+ *
+ * // Set custom timeout
+ * const id = timeoutMgr.setTimeout(() => console.log("Done!"), 3000);
+ * timeoutMgr.clearTimeout(id);
+ * ```
  */
 export function createTimeoutManager(config?: TimeoutManagerConfig): TimeoutManager {
   return new TimeoutManager(config);

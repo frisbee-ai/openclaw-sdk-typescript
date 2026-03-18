@@ -3,6 +3,8 @@
  *
  * This module provides a connection manager that handles the WebSocket connection
  * lifecycle, including state transitions, handshake, authentication, and event emission.
+ *
+ * @module
  */
 
 import type { IWebSocketTransport } from '../transport/websocket.js';
@@ -536,6 +538,23 @@ export class ConnectionManager {
  * @param transport - WebSocket transport instance
  * @param config - Optional configuration
  * @returns A new connection manager instance
+ *
+ * @example
+ * ```ts
+ * import { WebSocketTransport } from './transport/websocket.js';
+ * import { createConnectionManager } from './managers/connection.js';
+ *
+ * const transport = new WebSocketTransport({ connectTimeoutMs: 30000 });
+ * const manager = createConnectionManager(transport, {
+ *   autoReconnect: true,
+ *   maxReconnectAttempts: 5
+ * });
+ *
+ * manager.setHandlers({
+ *   onStateChange: (event) => console.log("State:", event.newState),
+ *   onError: (event) => console.error("Error:", event.message)
+ * });
+ * ```
  */
 export function createConnectionManager(
   transport: IWebSocketTransport,

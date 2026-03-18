@@ -2,6 +2,8 @@
  * Protocol Version Negotiation
  *
  * Handles protocol version negotiation with the server.
+ *
+ * @module
  */
 
 import type { HelloOk } from '../protocol/types.js';
@@ -110,6 +112,19 @@ export class ProtocolNegotiator {
 
 /**
  * Create a protocol negotiator.
+ *
+ * @param range - Optional protocol version range
+ * @returns A new ProtocolNegotiator instance
+ *
+ * @example
+ * ```ts
+ * import { createProtocolNegotiator } from './connection/protocol.js';
+ *
+ * const negotiator = createProtocolNegotiator({
+ *   minProtocol: 1,
+ *   maxProtocol: 2
+ * });
+ * ```
  */
 export function createProtocolNegotiator(
   range?: Partial<ProtocolVersionRange>

@@ -2,6 +2,8 @@
  * Tick Monitor
  *
  * Heartbeat monitoring to detect stale connections.
+ *
+ * @module
  */
 
 import { EventEmitter } from 'events';
@@ -175,6 +177,25 @@ export class TickMonitor extends EventEmitter {
 
 /**
  * Create a tick monitor.
+ *
+ * @param config - Tick monitor configuration
+ * @returns A new TickMonitor instance
+ *
+ * @example
+ * ```ts
+ * import { createTickMonitor } from './events/tick.js';
+ *
+ * const tickMonitor = createTickMonitor({
+ *   expectedIntervalMs: 5000,
+ *   maxMissedTicks: 3
+ * });
+ *
+ * tickMonitor.onTick((status) => {
+ *   console.log("Tick status:", status);
+ * });
+ *
+ * tickMonitor.start();
+ * ```
  */
 export function createTickMonitor(config: TickMonitorConfig): TickMonitor {
   return new TickMonitor(config);

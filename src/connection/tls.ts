@@ -3,6 +3,8 @@
  *
  * Validates TLS certificate fingerprints for secure connections.
  * Supports both Node.js (with socket inspection) and browser (skipped).
+ *
+ * @module
  */
 
 import { ConnectionError } from '../errors.js';
@@ -79,9 +81,7 @@ export class TlsValidator {
    * @param config Configuration with expected fingerprints
    */
   constructor(config: TlsValidatorConfig) {
-    this.expectedFingerprints = new Set(
-      config.expectedFingerprints.map(normalizeFingerprint)
-    );
+    this.expectedFingerprints = new Set(config.expectedFingerprints.map(normalizeFingerprint));
     this.requireValidation = config.requireValidation;
   }
 
@@ -106,9 +106,7 @@ export class TlsValidator {
     }
 
     const cert = socket.getPeerCertificate();
-    const fingerprint = cert.fingerprint256
-      ? normalizeFingerprint(cert.fingerprint256)
-      : undefined;
+    const fingerprint = cert.fingerprint256 ? normalizeFingerprint(cert.fingerprint256) : undefined;
 
     if (!fingerprint) {
       const error = 'Certificate has no fingerprint';
@@ -210,9 +208,20 @@ function constantTimeEqual(a: string, b: string): boolean {
 
 /**
  * Create a TLS validator.
+ *
+ * @param config - TLS validator configuration
+ * @returns A new TlsValidator instance
+ *
+ * @example
+ * ```ts
+ * import { createTlsValidator } from './connection/tls.js';
+ *
+ * const validator = createTlsValidator({
+ *   enabled: true,
+ *   expectedFingerprint: "sha256:..."
+ * });
+ * ```
  */
-export function createTlsValidator(
-  config: TlsValidatorConfig
-): TlsValidator {
+export function createTlsValidator(config: TlsValidatorConfig): TlsValidator {
   return new TlsValidator(config);
 }

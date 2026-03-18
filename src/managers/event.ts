@@ -2,9 +2,11 @@
  * Event Manager
  *
  * Event subscription system with wildcard support for server-sent events.
+ *
+ * @module
  */
 
-import type { EventFrame } from "../protocol/types.js";
+import type { EventFrame } from '../protocol/types.js';
 
 // ============================================================================
 // Types
@@ -54,7 +56,7 @@ interface SubscriptionEntry {
 export class EventManager {
   private subscriptions: Map<string, SubscriptionEntry[]> = new Map();
   private wildcardSubscriptions: SubscriptionEntry[] = [];
-  private defaultNamespace = "__default__";
+  private defaultNamespace = '__default__';
   private listenerErrorHandler: ListenerErrorHandler | null = null;
 
   /**
@@ -96,13 +98,11 @@ export class EventManager {
   on<T = unknown>(
     pattern: EventPattern,
     handler: EventHandler<T>,
-    namespace?: string,
+    namespace?: string
   ): UnsubscribeFn {
     // Validate event name
     if (pattern.length > MAX_EVENT_NAME_LENGTH) {
-      throw new Error(
-        `Event pattern exceeds max length of ${MAX_EVENT_NAME_LENGTH}`,
-      );
+      throw new Error(`Event pattern exceeds max length of ${MAX_EVENT_NAME_LENGTH}`);
     }
 
     const entry: SubscriptionEntry = {
@@ -112,9 +112,9 @@ export class EventManager {
       priority: 0,
     };
 
-    if (pattern === "*") {
+    if (pattern === '*') {
       this.wildcardSubscriptions.push(entry);
-    } else if (pattern.endsWith(":*")) {
+    } else if (pattern.endsWith(':*')) {
       // Prefix wildcard - store without the trailing *
       const prefix = pattern.slice(0, -2);
       const key = `wildcard:${prefix}`;
@@ -138,9 +138,9 @@ export class EventManager {
   once<T = unknown>(
     pattern: EventPattern,
     handler: EventHandler<T>,
-    namespace?: string,
+    namespace?: string
   ): UnsubscribeFn {
-    const wrapped: EventHandler<T> = (event) => {
+    const wrapped: EventHandler<T> = event => {
       handler(event);
       this.off(pattern, wrapped, namespace);
     };
@@ -150,11 +150,7 @@ export class EventManager {
   /**
    * Unsubscribe from events.
    */
-  off<T = unknown>(
-    pattern?: EventPattern,
-    handler?: EventHandler<T>,
-    namespace?: string,
-  ): void {
+  off<T = unknown>(pattern?: EventPattern, handler?: EventHandler<T>, namespace?: string): void {
     if (!pattern) {
       // Clear all
       if (namespace) {
@@ -182,10 +178,9 @@ export class EventManager {
         }
       : filterByNs;
 
-    if (pattern === "*") {
-      this.wildcardSubscriptions =
-        this.wildcardSubscriptions.filter(filterByHandler);
-    } else if (pattern.endsWith(":*")) {
+    if (pattern === '*') {
+      this.wildcardSubscriptions = this.wildcardSubscriptions.filter(filterByHandler);
+    } else if (pattern.endsWith(':*')) {
       const prefix = pattern.slice(0, -2);
       const key = `wildcard:${prefix}`;
       const existing = this.subscriptions.get(key);
@@ -206,9 +201,7 @@ export class EventManager {
   emit<T = unknown>(eventName: string, payload: T): void {
     // Validate incoming event name length
     if (eventName.length > MAX_EVENT_NAME_LENGTH) {
-      console.warn(
-        `Received event name exceeds max length (${eventName.length}), dropping`,
-      );
+      console.warn(`Received event name exceeds max length (${eventName.length}), dropping`);
       return;
     }
 
@@ -226,9 +219,9 @@ export class EventManager {
     // 2. Prefix wildcard matches
     // Find all wildcard subscriptions where eventName starts with prefix
     for (const [key, entries] of this.subscriptions) {
-      if (key.startsWith("wildcard:")) {
+      if (key.startsWith('wildcard:')) {
         const prefix = key.slice(9); // Remove 'wildcard:'
-        if (eventName.startsWith(prefix + ":")) {
+        if (eventName.startsWith(prefix + ':')) {
           for (const entry of entries) {
             if (!called.has(entry.handler)) {
               called.add(entry.handler);
@@ -269,22 +262,16 @@ export class EventManager {
       return count;
     }
 
-    if (pattern === "*") {
+    if (pattern === '*') {
       const handlers = this.wildcardSubscriptions;
-      return namespace
-        ? handlers.filter((h) => h.namespace === namespace).length
-        : handlers.length;
+      return namespace ? handlers.filter(h => h.namespace === namespace).length : handlers.length;
     }
 
-    const key = pattern.endsWith(":*")
-      ? `wildcard:${pattern.slice(0, -2)}`
-      : pattern;
+    const key = pattern.endsWith(':*') ? `wildcard:${pattern.slice(0, -2)}` : pattern;
     const handlers = this.subscriptions.get(key);
     if (!handlers) return 0;
 
-    return namespace
-      ? handlers.filter((h) => h.namespace === namespace).length
-      : handlers.length;
+    return namespace ? handlers.filter(h => h.namespace === namespace).length : handlers.length;
   }
 
   /**
@@ -294,12 +281,10 @@ export class EventManager {
     for (const [key, handlers] of this.subscriptions) {
       this.subscriptions.set(
         key,
-        handlers.filter((h) => h.namespace !== namespace),
+        handlers.filter(h => h.namespace !== namespace)
       );
     }
-    this.wildcardSubscriptions = this.wildcardSubscriptions.filter(
-      (h) => h.namespace !== namespace,
-    );
+    this.wildcardSubscriptions = this.wildcardSubscriptions.filter(h => h.namespace !== namespace);
   }
 
   /**
@@ -309,7 +294,7 @@ export class EventManager {
     handler: EventHandler<T>,
     payload: T,
     eventName: string,
-    pattern: EventPattern,
+    pattern: EventPattern
   ): void {
     try {
       handler(payload);
@@ -320,7 +305,7 @@ export class EventManager {
         // Default: log with context for debugging
         console.error(
           `Error in event handler for pattern "${pattern}" on event "${eventName}":`,
-          error,
+          error
         );
       }
     }
@@ -333,6 +318,24 @@ export class EventManager {
 
 /**
  * Create an event manager.
+ *
+ * @returns New EventManager instance
+ *
+ * @example
+ * ```ts
+ * const events = createEventManager();
+ *
+ * // Subscribe to events
+ * const unsub = events.on('tick', (payload) => {
+ *   console.log("Tick:", payload);
+ * });
+ *
+ * // Emit events
+ * events.emit('tick', { timestamp: Date.now() });
+ *
+ * // Unsubscribe
+ * unsub();
+ * ```
  */
 export function createEventManager(): EventManager {
   return new EventManager();

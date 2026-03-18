@@ -2,6 +2,8 @@
  * Connection State Machine
  *
  * Manages connection state transitions with valid transition enforcement.
+ *
+ * @module
  */
 
 // ============================================================================
@@ -9,33 +11,23 @@
 // ============================================================================
 
 export type ClientConnectionState =
-  | "disconnected"
-  | "connecting"
-  | "handshaking"
-  | "authenticating"
-  | "ready"
-  | "reconnecting"
-  | "closed";
+  | 'disconnected'
+  | 'connecting'
+  | 'handshaking'
+  | 'authenticating'
+  | 'ready'
+  | 'reconnecting'
+  | 'closed';
 
 /** Valid state transitions map */
-const VALID_TRANSITIONS: Record<
-  ClientConnectionState,
-  ClientConnectionState[]
-> = {
-  disconnected: ["connecting"],
-  connecting: ["handshaking", "disconnected", "closed"],
-  handshaking: ["authenticating", "reconnecting", "disconnected", "closed"],
-  authenticating: ["ready", "reconnecting", "disconnected", "closed"],
-  ready: ["reconnecting", "disconnected", "closed"],
-  reconnecting: [
-    "connecting",
-    "handshaking",
-    "authenticating",
-    "ready",
-    "disconnected",
-    "closed",
-  ],
-  closed: ["disconnected"],
+const VALID_TRANSITIONS: Record<ClientConnectionState, ClientConnectionState[]> = {
+  disconnected: ['connecting'],
+  connecting: ['handshaking', 'disconnected', 'closed'],
+  handshaking: ['authenticating', 'reconnecting', 'disconnected', 'closed'],
+  authenticating: ['ready', 'reconnecting', 'disconnected', 'closed'],
+  ready: ['reconnecting', 'disconnected', 'closed'],
+  reconnecting: ['connecting', 'handshaking', 'authenticating', 'ready', 'disconnected', 'closed'],
+  closed: ['disconnected'],
 };
 
 /** State change event */
@@ -70,7 +62,7 @@ export type StateChangeListenerErrorHandler = (error: {
  * - `closed`: Connection closed (terminal state)
  */
 export class ConnectionStateMachine {
-  private state: ClientConnectionState = "disconnected";
+  private state: ClientConnectionState = 'disconnected';
   private listeners: Set<StateChangeListener> = new Set();
   private listenerErrorHandler: StateChangeListenerErrorHandler | null = null;
 
@@ -86,10 +78,10 @@ export class ConnectionStateMachine {
    */
   isConnected(): boolean {
     return (
-      this.state === "connecting" ||
-      this.state === "handshaking" ||
-      this.state === "authenticating" ||
-      this.state === "ready"
+      this.state === 'connecting' ||
+      this.state === 'handshaking' ||
+      this.state === 'authenticating' ||
+      this.state === 'ready'
     );
   }
 
@@ -97,7 +89,7 @@ export class ConnectionStateMachine {
    * Check if ready for requests.
    */
   isReady(): boolean {
-    return this.state === "ready";
+    return this.state === 'ready';
   }
 
   /**
@@ -116,9 +108,7 @@ export class ConnectionStateMachine {
    */
   transitionTo(newState: ClientConnectionState): void {
     if (!this.canTransitionTo(newState)) {
-      throw new Error(
-        `Invalid state transition from '${this.state}' to '${newState}'`,
-      );
+      throw new Error(`Invalid state transition from '${this.state}' to '${newState}'`);
     }
 
     const previous = this.state;
@@ -130,56 +120,56 @@ export class ConnectionStateMachine {
    * Transition to connecting (convenience method).
    */
   connect(): void {
-    this.transitionTo("connecting");
+    this.transitionTo('connecting');
   }
 
   /**
    * Transition to handshaking (convenience method).
    */
   startHandshake(): void {
-    this.transitionTo("handshaking");
+    this.transitionTo('handshaking');
   }
 
   /**
    * Transition to authenticating (convenience method).
    */
   startAuth(): void {
-    this.transitionTo("authenticating");
+    this.transitionTo('authenticating');
   }
 
   /**
    * Transition to ready (convenience method).
    */
   ready(): void {
-    this.transitionTo("ready");
+    this.transitionTo('ready');
   }
 
   /**
    * Transition to reconnecting (convenience method).
    */
   startReconnect(): void {
-    this.transitionTo("reconnecting");
+    this.transitionTo('reconnecting');
   }
 
   /**
    * Transition to disconnected (convenience method).
    */
   disconnect(): void {
-    this.transitionTo("disconnected");
+    this.transitionTo('disconnected');
   }
 
   /**
    * Close connection (terminal state).
    */
   close(): void {
-    this.transitionTo("closed");
+    this.transitionTo('closed');
   }
 
   /**
    * Reset to disconnected state.
    */
   reset(): void {
-    this.state = "disconnected";
+    this.state = 'disconnected';
   }
 
   /**
@@ -228,6 +218,21 @@ export class ConnectionStateMachine {
 
 /**
  * Create a connection state machine.
+ *
+ * @returns A new ConnectionStateMachine instance
+ *
+ * @example
+ * ```ts
+ * import { createConnectionStateMachine } from './connection/state.js';
+ *
+ * const stateMachine = createConnectionStateMachine();
+ *
+ * stateMachine.onStateChange((event) => {
+ *   console.log(`State: ${event.previousState} -> ${event.newState}`);
+ * });
+ *
+ * stateMachine.transition('connecting');
+ * ```
  */
 export function createConnectionStateMachine(): ConnectionStateMachine {
   return new ConnectionStateMachine();

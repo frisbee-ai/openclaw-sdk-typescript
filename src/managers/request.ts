@@ -4,9 +4,11 @@
  * This module provides a request manager that tracks pending requests and correlates
  * responses with their corresponding requests. It handles timeouts and cleanup of
  * completed requests.
+ *
+ * @module
  */
 
-import type { ResponseFrame } from "../protocol/types.js";
+import type { ResponseFrame } from '../protocol/types.js';
 
 // ============================================================================
 // Types
@@ -205,6 +207,19 @@ export class RequestManager {
  * Create a request manager instance
  *
  * @returns A new request manager instance
+ *
+ * @example
+ * ```ts
+ * import { createRequestManager } from './managers/request.js';
+ *
+ * const requestMgr = createRequestManager();
+ *
+ * // Add a pending request
+ * const responsePromise = requestMgr.addRequest("req-1", { timeout: 30000 });
+ *
+ * // Later: resolve the request
+ * requestMgr.resolveRequest("req-1", { type: "res", id: "req-1", ok: true, payload: {} });
+ * ```
  */
 export function createRequestManager(): RequestManager {
   return new RequestManager();

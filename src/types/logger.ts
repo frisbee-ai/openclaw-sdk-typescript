@@ -27,13 +27,13 @@
  */
 export enum LogLevel {
   /** Detailed information for debugging purposes */
-  Debug = "debug",
+  Debug = 'debug',
   /** General informational messages */
-  Info = "info",
+  Info = 'info',
   /** Warning conditions that don't prevent operation */
-  Warn = "warn",
+  Warn = 'warn',
   /** Error events that might still allow the application to continue */
-  Error = "error",
+  Error = 'error',
 }
 
 /**
@@ -114,20 +114,38 @@ export interface Logger {
  * @returns True if value implements Logger interface
  *
  * @beta
+ *
+ * @example
+ * ```ts
+ * import { isLogger } from './types/logger.js';
+ *
+ * const customLogger = {
+ *   name: "myLogger",
+ *   level: "info",
+ *   debug: () => {},
+ *   info: () => {},
+ *   warn: () => {},
+ *   error: () => {}
+ * };
+ *
+ * if (isLogger(customLogger)) {
+ *   customLogger.info("Logger detected!");
+ * }
+ * ```
  */
 export function isLogger(value: unknown): value is Logger {
   return (
-    typeof value === "object" &&
+    typeof value === 'object' &&
     value !== null &&
-    "name" in value &&
-    "level" in value &&
-    "debug" in value &&
-    "info" in value &&
-    "warn" in value &&
-    "error" in value &&
-    typeof (value as Logger).debug === "function" &&
-    typeof (value as Logger).info === "function" &&
-    typeof (value as Logger).warn === "function" &&
-    typeof (value as Logger).error === "function"
+    'name' in value &&
+    'level' in value &&
+    'debug' in value &&
+    'info' in value &&
+    'warn' in value &&
+    'error' in value &&
+    typeof (value as Logger).debug === 'function' &&
+    typeof (value as Logger).info === 'function' &&
+    typeof (value as Logger).warn === 'function' &&
+    typeof (value as Logger).error === 'function'
   );
 }
