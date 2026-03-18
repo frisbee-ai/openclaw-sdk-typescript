@@ -14,6 +14,15 @@ import { ConnectionManager, createConnectionManager } from './managers/connectio
 import { RequestManager, createRequestManager } from './managers/request.js';
 
 // ============================================================================
+// Default Configuration Constants
+// ============================================================================
+
+const DEFAULT_REQUEST_TIMEOUT_MS = 30000;
+const DEFAULT_CONNECT_TIMEOUT_MS = 30000;
+const DEFAULT_MAX_RECONNECT_ATTEMPTS = 10;
+const DEFAULT_RECONNECT_DELAY_MS = 1000;
+
+// ============================================================================
 // Configuration Types
 // ============================================================================
 
@@ -158,11 +167,15 @@ export class OpenClawClient {
   private normalizeConnectionConfig(config: ClientConfig): Required<ConnectionConfig> {
     const conn = config.connection ?? {};
     return {
-      requestTimeoutMs: conn.requestTimeoutMs ?? config.requestTimeoutMs ?? 30000,
-      connectTimeoutMs: conn.connectTimeoutMs ?? config.connectTimeoutMs ?? 30000,
+      requestTimeoutMs:
+        conn.requestTimeoutMs ?? config.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS,
+      connectTimeoutMs:
+        conn.connectTimeoutMs ?? config.connectTimeoutMs ?? DEFAULT_CONNECT_TIMEOUT_MS,
       autoReconnect: conn.autoReconnect ?? config.autoReconnect ?? true,
-      maxReconnectAttempts: conn.maxReconnectAttempts ?? config.maxReconnectAttempts ?? 10,
-      reconnectDelayMs: conn.reconnectDelayMs ?? config.reconnectDelayMs ?? 1000,
+      maxReconnectAttempts:
+        conn.maxReconnectAttempts ?? config.maxReconnectAttempts ?? DEFAULT_MAX_RECONNECT_ATTEMPTS,
+      reconnectDelayMs:
+        conn.reconnectDelayMs ?? config.reconnectDelayMs ?? DEFAULT_RECONNECT_DELAY_MS,
     };
   }
 
