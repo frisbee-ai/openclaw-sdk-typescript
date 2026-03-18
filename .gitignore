@@ -47,3 +47,6 @@ coverage/
 
 # AI
 .omc/
+
+# Generated documentation
+docs/api/

@@ -11,6 +11,7 @@ on:
 permissions:
   contents: write
   id-token: write # Required for npm provenance
+  pages: write    # Required for GitHub Pages deployment
 
 jobs:
   publish:
@@ -60,6 +61,21 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Generate TypeDoc
+        run: npm run docs
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/api
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: Pack (dry-run)
         run: npm pack --dry-run

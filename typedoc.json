@@ -28,8 +28,5 @@
   ],
   "categorizeByGroup": true,
   "defaultCategory": "General",
-  "categoryOrder": ["*"],
-  "plugin": ["typedoc-plugin-markdown"],
-  "githubPages": false,
-  "hostedBaseUrl": "https://github.com/openclaw/openclaw-sdk-typescript"
+  "categoryOrder": ["*"]
 }
