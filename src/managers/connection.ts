@@ -5,14 +5,24 @@
  * lifecycle, including state transitions, handshake, authentication, and event emission.
  */
 
-import type { IWebSocketTransport } from "../transport/websocket.js";
+import type { IWebSocketTransport } from '../transport/websocket.js';
 import type {
   ConnectionState,
   ConnectParams,
   HelloOk,
   GatewayFrame,
   ResponseFrame,
-} from "../protocol/types.js";
+} from '../protocol/types.js';
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/**
+ * Maximum allowed size for incoming WebSocket messages (1MB)
+ * Prevents DoS attacks via large JSON payloads
+ */
+const MAX_MESSAGE_SIZE = 1024 * 1024;
 
 // ============================================================================
 // Types
@@ -85,7 +95,7 @@ export class ConnectionManager {
   private transport: IWebSocketTransport;
 
   /** Current connection state */
-  private state: ConnectionState = "disconnected";
+  private state: ConnectionState = 'disconnected';
 
   /** Connection configuration */
   private config: Required<ConnectionManagerConfig>;
@@ -100,7 +110,7 @@ export class ConnectionManager {
   private reconnectTimerId: ReturnType<typeof setTimeout> | null = null;
 
   /** Current connection URL */
-  private currentUrl: string = "";
+  private currentUrl: string = '';
 
   /** Pending request ID counter */
   private requestIdCounter: number = 0;
@@ -133,10 +143,7 @@ export class ConnectionManager {
    * @param transport - WebSocket transport instance
    * @param config - Optional configuration
    */
-  constructor(
-    transport: IWebSocketTransport,
-    config: ConnectionManagerConfig = {},
-  ) {
+  constructor(transport: IWebSocketTransport, config: ConnectionManagerConfig = {}) {
     this.transport = transport;
     this.config = {
       defaultRequestTimeout: config.defaultRequestTimeout ?? 30000,
@@ -154,7 +161,7 @@ export class ConnectionManager {
    */
   private setupTransportHandlers(): void {
     this.transport.onopen = () => {
-      this.setState("handshaking");
+      this.setState('handshaking');
       this.performHandshake();
     };
 
@@ -166,12 +173,8 @@ export class ConnectionManager {
       this.handleDisconnect();
     };
 
-    this.transport.onerror = (error) => {
-      this.handleError(
-        error.message,
-        error.original,
-        error.recoverable ?? false,
-      );
+    this.transport.onerror = error => {
+      this.handleError(error.message, error.original, error.recoverable ?? false);
     };
   }
 
@@ -184,19 +187,19 @@ export class ConnectionManager {
    */
   async connect(url: string, params: ConnectParams): Promise<void> {
     if (
-      this.state === "connecting" ||
-      this.state === "handshaking" ||
-      this.state === "authenticating"
+      this.state === 'connecting' ||
+      this.state === 'handshaking' ||
+      this.state === 'authenticating'
     ) {
       throw new Error(`Already connecting in state: ${this.state}`);
     }
 
-    if (this.state === "ready") {
-      throw new Error("Already connected. Call disconnect() first.");
+    if (this.state === 'ready') {
+      throw new Error('Already connected. Call disconnect() first.');
     }
 
     this.currentUrl = url;
-    this.setState("connecting");
+    this.setState('connecting');
 
     try {
       // Store connection params for handshake
@@ -213,7 +216,7 @@ export class ConnectionManager {
       // Wait for handshake to complete
       await handshakeComplete;
     } catch (error) {
-      this.setState("disconnected");
+      this.setState('disconnected');
       throw error;
     }
   }
@@ -225,43 +228,37 @@ export class ConnectionManager {
     try {
       const params = this.connectParams;
       if (!params) {
-        throw new Error("No connection parameters available");
+        throw new Error('No connection parameters available');
       }
 
       // Send connect request
-      const response = await this.sendRequest<HelloOk>("connect", params);
+      const response = await this.sendRequest<HelloOk>('connect', params);
 
       // Verify hello-ok response
-      if (response.type !== "res" || !response.ok) {
-        throw new Error(
-          "Handshake failed: " + (response.error?.message ?? "Unknown error"),
-        );
+      if (response.type !== 'res' || !response.ok) {
+        throw new Error('Handshake failed: ' + (response.error?.message ?? 'Unknown error'));
       }
 
       const helloOk = response.payload as HelloOk;
-      if (helloOk.type !== "hello-ok") {
-        throw new Error("Expected hello-ok response");
+      if (helloOk.type !== 'hello-ok') {
+        throw new Error('Expected hello-ok response');
       }
 
       // Store server info
       this.serverInfo = helloOk;
 
       // Transition to ready state
-      this.setState("ready");
+      this.setState('ready');
       this.reconnectAttempts = 0;
 
       // Resolve the handshake promise
       this.handshakeCompleters?.resolve();
     } catch (error) {
-      this.handleError(
-        error instanceof Error ? error.message : "Handshake failed",
-        error,
-        true,
-      );
+      this.handleError(error instanceof Error ? error.message : 'Handshake failed', error, true);
 
       // Reject the handshake promise
       this.handshakeCompleters?.reject(
-        error instanceof Error ? error : new Error("Handshake failed"),
+        error instanceof Error ? error : new Error('Handshake failed')
       );
 
       this.handleDisconnect();
@@ -279,7 +276,7 @@ export class ConnectionManager {
   private sendRequest<T = unknown>(
     method: string,
     params: unknown,
-    timeout?: number,
+    timeout?: number
   ): Promise<ResponseFrame & { payload: T }> {
     return new Promise((resolve, reject) => {
       const id = `req_${++this.requestIdCounter}`;
@@ -288,11 +285,7 @@ export class ConnectionManager {
       // Set up timeout
       const timeoutId = setTimeout(() => {
         this.pendingRequests.delete(id);
-        reject(
-          new Error(
-            `Request "${method}" (${id}) timed out after ${timeoutMs}ms`,
-          ),
-        );
+        reject(new Error(`Request "${method}" (${id}) timed out after ${timeoutMs}ms`));
       }, timeoutMs);
 
       // Store the pending request
@@ -304,7 +297,7 @@ export class ConnectionManager {
 
       // Send the request frame
       const frame: GatewayFrame = {
-        type: "req",
+        type: 'req',
         id,
         method,
         params,
@@ -329,13 +322,20 @@ export class ConnectionManager {
     try {
       // Check for empty data early
       if (!data || data.trim().length === 0) {
-        throw new Error("Cannot parse empty message data");
+        throw new Error('Cannot parse empty message data');
+      }
+
+      // Check message size to prevent DoS attacks
+      if (data.length > MAX_MESSAGE_SIZE) {
+        throw new Error(
+          `Incoming message exceeds maximum size of ${MAX_MESSAGE_SIZE} bytes (received: ${data.length} bytes)`
+        );
       }
 
       const frame: GatewayFrame = JSON.parse(data);
 
       // Handle response frames
-      if (frame.type === "res") {
+      if (frame.type === 'res') {
         const pending = this.pendingRequests.get(frame.id);
         if (pending) {
           clearTimeout(pending.timeoutId);
@@ -352,16 +352,14 @@ export class ConnectionManager {
     } catch (error) {
       // Create a data preview for debugging (max 100 chars)
       const dataPreview =
-        data.length > 100
-          ? `${data.slice(0, 100)}... (${data.length} bytes total)`
-          : data;
+        data.length > 100 ? `${data.slice(0, 100)}... (${data.length} bytes total)` : data;
 
       // Build detailed error message
-      let errorMessage = "Failed to parse incoming message";
+      let errorMessage = 'Failed to parse incoming message';
       if (error instanceof SyntaxError) {
-        errorMessage = "Failed to parse incoming message: Invalid JSON";
-      } else if (error instanceof Error && error.message.includes("empty")) {
-        errorMessage = "Failed to parse incoming message: empty data received";
+        errorMessage = 'Failed to parse incoming message: Invalid JSON';
+      } else if (error instanceof Error && error.message.includes('empty')) {
+        errorMessage = 'Failed to parse incoming message: empty data received';
       }
 
       // Keep original error intact but attach data preview
@@ -380,7 +378,7 @@ export class ConnectionManager {
     // Clear all pending requests
     for (const pending of this.pendingRequests.values()) {
       clearTimeout(pending.timeoutId);
-      pending.reject(new Error("Connection closed"));
+      pending.reject(new Error('Connection closed'));
     }
     this.pendingRequests.clear();
 
@@ -390,13 +388,10 @@ export class ConnectionManager {
     }
 
     // Attempt reconnection if enabled
-    if (
-      this.config.autoReconnect &&
-      this.reconnectAttempts < this.config.maxReconnectAttempts
-    ) {
+    if (this.config.autoReconnect && this.reconnectAttempts < this.config.maxReconnectAttempts) {
       this.scheduleReconnect();
     } else {
-      this.setState("closed");
+      this.setState('closed');
     }
   }
 
@@ -404,22 +399,18 @@ export class ConnectionManager {
    * Schedule a reconnection attempt
    */
   private scheduleReconnect(): void {
-    this.setState("reconnecting");
+    this.setState('reconnecting');
 
     this.reconnectTimerId = setTimeout(() => {
       this.reconnectAttempts++;
       const params = this.connectParams;
 
       if (params) {
-        this.connect(this.currentUrl, params).catch((error) => {
-          this.handleError(
-            `Reconnection attempt ${this.reconnectAttempts} failed`,
-            error,
-            true,
-          );
+        this.connect(this.currentUrl, params).catch(error => {
+          this.handleError(`Reconnection attempt ${this.reconnectAttempts} failed`, error, true);
         });
       } else {
-        this.setState("disconnected");
+        this.setState('disconnected');
       }
     }, this.config.reconnectDelayMs);
   }
@@ -431,11 +422,7 @@ export class ConnectionManager {
    * @param original - Original error
    * @param recoverable - Whether the error is recoverable
    */
-  private handleError(
-    message: string,
-    original?: Error | unknown,
-    recoverable = false,
-  ): void {
+  private handleError(message: string, original?: Error | unknown, recoverable = false): void {
     const event: ConnectionErrorEvent = {
       message,
       original,
@@ -484,7 +471,7 @@ export class ConnectionManager {
     this.transport.close();
 
     // Update state
-    this.setState("disconnected");
+    this.setState('disconnected');
   }
 
   /**
@@ -502,7 +489,7 @@ export class ConnectionManager {
    * @returns True if the connection is ready
    */
   isReady(): boolean {
-    return this.state === "ready";
+    return this.state === 'ready';
   }
 
   /**
@@ -513,9 +500,7 @@ export class ConnectionManager {
    */
   send(frame: GatewayFrame): void {
     if (!this.isReady()) {
-      throw new Error(
-        `Cannot send: connection is ${this.state} (expected: ready)`,
-      );
+      throw new Error(`Cannot send: connection is ${this.state} (expected: ready)`);
     }
 
     this.transport.send(JSON.stringify(frame));
@@ -553,7 +538,7 @@ export class ConnectionManager {
  */
 export function createConnectionManager(
   transport: IWebSocketTransport,
-  config?: ConnectionManagerConfig,
+  config?: ConnectionManagerConfig
 ): ConnectionManager {
   return new ConnectionManager(transport, config);
 }
