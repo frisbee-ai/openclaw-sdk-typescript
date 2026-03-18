@@ -1,0 +1,122 @@
+# Release Workflow - Publish to npm
+# Triggered by version tags (e.g., v2026.3.13)
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  id-token: write # Required for npm provenance
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_REF: ${{ github.ref }}
+
+      - name: Validate package.json version
+        run: |
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Error: Tag version ($TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)"
+            exit 1
+          fi
+          echo "✓ Version matches: $TAG_VERSION"
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test -- --run
+
+      - name: Build
+        run: npm run build
+
+      - name: Pack (dry-run)
+        run: npm pack --dry-run
+
+      - name: Publish to npm
+        run: |
+          # Extract tag name from git ref
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          # Determine the appropriate tag based on version type
+          if [[ "$TAG_NAME" =~ -alpha\.|-beta\.|-rc\. ]]; then
+            # Pre-release versions publish to 'next' tag
+            npm publish --tag next
+          else
+            # Stable versions publish to 'latest' tag
+            npm publish --tag latest
+          fi
+
+      - name: Determine previous tag for changelog
+        id: determine-tag
+        run: |
+          # Extract tag from git ref
+          CURRENT_TAG="${GITHUB_REF#refs/tags/}"
+
+          # Check if current tag is a prerelease version (alpha, beta, rc)
+          if [[ "$CURRENT_TAG" =~ -alpha\.|-beta\.|-rc\. ]]; then
+            # For prerelease: find the previous tag (any type)
+            PREV_TAG=$(git describe --tags --abbrev=0 "${CURRENT_TAG}^" 2>/dev/null || echo "")
+            echo "current_type=prerelease" >> $GITHUB_OUTPUT
+          else
+            # For stable: find the previous stable tag
+            PREV_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -v "$CURRENT_TAG" | head -n 1 || echo "")
+            echo "current_type=stable" >> $GITHUB_OUTPUT
+          fi
+
+          echo "previous_tag=${PREV_TAG}" >> $GITHUB_OUTPUT
+          echo "Current tag: ${CURRENT_TAG}, Previous tag: ${PREV_TAG}"
+
+      - name: Install git-cliff
+        uses: taiki-e/install-action@git-cliff
+        
+      - name: Generate a changelog
+        run: |
+          # Generate changelog using commit range
+          PREV_TAG="${{ steps.determine-tag.outputs.previous_tag }}"
+          CURRENT_TAG="${GITHUB_REF#refs/tags/}"
+          git-cliff --config cliff.toml --strip all -- ${PREV_TAG}..${CURRENT_TAG} > RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        run: |
+          # Extract tag name from git ref
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          # Check if it's a prerelease version
+          PRERELEASE=false
+          if [[ "$TAG_NAME" =~ -alpha\.|-beta\.|-rc\. ]]; then
+            PRERELEASE=true
+          fi
+          # Create release using GitHub CLI
+          gh release create "$TAG_NAME" --title "$TAG_NAME" --notes-file RELEASE_NOTES.md --draft=false --prerelease=$PRERELEASE
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,72 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Tests
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+test/
+tests/
+__tests__/
+
+# Development files
+.tsconfig.*
+.eslintrc.*
+.prettierrc.*
+.eslintcache
+vitest.config.ts
+
+# Documentation
+docs/
+*.md
+!README.md
+!LICENSE
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+
+# Build artifacts (keep only dist/)
+*.tgz
+.npm_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+node_modules/
+
+# Misc
+.pnp.*
+.yarn/
+.yarn-integrity
+
+# Project-specific
+.omc/
+memory/
