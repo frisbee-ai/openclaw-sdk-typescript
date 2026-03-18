@@ -1,6 +1,11 @@
 # OpenClaw SDK (TypeScript)
+[![OpenClaw SDK](https://img.shields.io/badge/OpenClaw-SDK-orange?logo=github)](https://openclaw.ai)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178c6?logo=typescript&color=yellow)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-TypeScript SDK for connecting to OpenClaw Gateway via WebSocket.
+> Feature-complete WebSocket SDK for TypeScript with automatic reconnection, event handling, and request/response correlation.
+
+TypeScript SDK for connecting to OpenClaw Gateway via WebSocket, providing a fully-featured WebSocket client with connection management, event handling, request/response patterns, and automatic reconnection.
 
 ## Installation
 
