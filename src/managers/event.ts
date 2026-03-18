@@ -4,7 +4,7 @@
  * Event subscription system with wildcard support for server-sent events.
  */
 
-import type { EventFrame } from '../protocol/types.js';
+import type { EventFrame } from "../protocol/types.js";
 
 // ============================================================================
 // Types
@@ -21,6 +21,13 @@ export type UnsubscribeFn = () => void;
 
 /** Event pattern */
 export type EventPattern = string;
+
+/** Error handler for listener errors */
+export type ListenerErrorHandler = (error: {
+  error: unknown;
+  eventName: string;
+  pattern: EventPattern;
+}) => void;
 
 /**
  * Subscription entry
@@ -47,7 +54,29 @@ interface SubscriptionEntry {
 export class EventManager {
   private subscriptions: Map<string, SubscriptionEntry[]> = new Map();
   private wildcardSubscriptions: SubscriptionEntry[] = [];
-  private defaultNamespace = '__default__';
+  private defaultNamespace = "__default__";
+  private listenerErrorHandler: ListenerErrorHandler | null = null;
+
+  /**
+   * Set a callback for handling errors thrown by event listeners.
+   *
+   * By default, listener errors are logged to console.error. Use this method
+   * to customize error handling (e.g., send to error tracking service).
+   *
+   * @param handler - Callback function to handle listener errors
+   *
+   * @example
+   * ```ts
+   * events.onListenerError(({ error, eventName, pattern }) => {
+   *   console.error(`Handler for pattern "${pattern}" failed on event "${eventName}":`, error);
+   *   // Send to error tracking service
+   *   Sentry.captureException(error);
+   * });
+   * ```
+   */
+  onListenerError(handler: ListenerErrorHandler | null): void {
+    this.listenerErrorHandler = handler;
+  }
 
   /**
    * Subscribe to events.
@@ -67,12 +96,12 @@ export class EventManager {
   on<T = unknown>(
     pattern: EventPattern,
     handler: EventHandler<T>,
-    namespace?: string
+    namespace?: string,
   ): UnsubscribeFn {
     // Validate event name
     if (pattern.length > MAX_EVENT_NAME_LENGTH) {
       throw new Error(
-        `Event pattern exceeds max length of ${MAX_EVENT_NAME_LENGTH}`
+        `Event pattern exceeds max length of ${MAX_EVENT_NAME_LENGTH}`,
       );
     }
 
@@ -83,9 +112,9 @@ export class EventManager {
       priority: 0,
     };
 
-    if (pattern === '*') {
+    if (pattern === "*") {
       this.wildcardSubscriptions.push(entry);
-    } else if (pattern.endsWith(':*')) {
+    } else if (pattern.endsWith(":*")) {
       // Prefix wildcard - store without the trailing *
       const prefix = pattern.slice(0, -2);
       const key = `wildcard:${prefix}`;
@@ -109,7 +138,7 @@ export class EventManager {
   once<T = unknown>(
     pattern: EventPattern,
     handler: EventHandler<T>,
-    namespace?: string
+    namespace?: string,
   ): UnsubscribeFn {
     const wrapped: EventHandler<T> = (event) => {
       handler(event);
@@ -124,7 +153,7 @@ export class EventManager {
   off<T = unknown>(
     pattern?: EventPattern,
     handler?: EventHandler<T>,
-    namespace?: string
+    namespace?: string,
   ): void {
     if (!pattern) {
       // Clear all
@@ -137,31 +166,36 @@ export class EventManager {
       return;
     }
 
-    const filterByNs = (e: SubscriptionEntry) =>
-      !namespace || e.namespace === namespace;
+    // Determine target namespace: use provided namespace or default to '__default__'
+    // This ensures entries stored with default namespace can be removed when no namespace specified
+    const targetNs = namespace ?? this.defaultNamespace;
+
+    const filterByNs = (e: SubscriptionEntry) => {
+      // Keep entries NOT in the target namespace (remove entries in target namespace)
+      return e.namespace !== targetNs;
+    };
+
     const filterByHandler = handler
-      ? (e: SubscriptionEntry) => e.handler === handler && filterByNs(e)
+      ? (e: SubscriptionEntry) => {
+          // Keep entries where handler OR namespace doesn't match (remove matching entries)
+          return !(e.handler === handler && e.namespace === targetNs);
+        }
       : filterByNs;
 
-    if (pattern === '*') {
-      this.wildcardSubscriptions = this.wildcardSubscriptions.filter(filterByHandler);
-    } else if (pattern.endsWith(':*')) {
+    if (pattern === "*") {
+      this.wildcardSubscriptions =
+        this.wildcardSubscriptions.filter(filterByHandler);
+    } else if (pattern.endsWith(":*")) {
       const prefix = pattern.slice(0, -2);
       const key = `wildcard:${prefix}`;
       const existing = this.subscriptions.get(key);
       if (existing) {
-        this.subscriptions.set(
-          key,
-          existing.filter(filterByHandler)
-        );
+        this.subscriptions.set(key, existing.filter(filterByHandler));
       }
     } else {
       const existing = this.subscriptions.get(pattern);
       if (existing) {
-        this.subscriptions.set(
-          pattern,
-          existing.filter(filterByHandler)
-        );
+        this.subscriptions.set(pattern, existing.filter(filterByHandler));
       }
     }
   }
@@ -173,7 +207,7 @@ export class EventManager {
     // Validate incoming event name length
     if (eventName.length > MAX_EVENT_NAME_LENGTH) {
       console.warn(
-        `Received event name exceeds max length (${eventName.length}), dropping`
+        `Received event name exceeds max length (${eventName.length}), dropping`,
       );
       return;
     }
@@ -185,20 +219,20 @@ export class EventManager {
     if (exactHandlers) {
       for (const entry of exactHandlers) {
         called.add(entry.handler);
-        this.safeCall(entry.handler, payload);
+        this.safeCall(entry.handler, payload, eventName, entry.pattern);
       }
     }
 
     // 2. Prefix wildcard matches
     // Find all wildcard subscriptions where eventName starts with prefix
     for (const [key, entries] of this.subscriptions) {
-      if (key.startsWith('wildcard:')) {
+      if (key.startsWith("wildcard:")) {
         const prefix = key.slice(9); // Remove 'wildcard:'
-        if (eventName.startsWith(prefix + ':')) {
+        if (eventName.startsWith(prefix + ":")) {
           for (const entry of entries) {
             if (!called.has(entry.handler)) {
               called.add(entry.handler);
-              this.safeCall(entry.handler, payload);
+              this.safeCall(entry.handler, payload, eventName, entry.pattern);
             }
           }
         }
@@ -208,7 +242,7 @@ export class EventManager {
     // 3. Global wildcard
     for (const entry of this.wildcardSubscriptions) {
       if (!called.has(entry.handler)) {
-        this.safeCall(entry.handler, payload);
+        this.safeCall(entry.handler, payload, eventName, entry.pattern);
       }
     }
   }
@@ -235,14 +269,14 @@ export class EventManager {
       return count;
     }
 
-    if (pattern === '*') {
+    if (pattern === "*") {
       const handlers = this.wildcardSubscriptions;
       return namespace
         ? handlers.filter((h) => h.namespace === namespace).length
         : handlers.length;
     }
 
-    const key = pattern.endsWith(':*')
+    const key = pattern.endsWith(":*")
       ? `wildcard:${pattern.slice(0, -2)}`
       : pattern;
     const handlers = this.subscriptions.get(key);
@@ -260,22 +294,35 @@ export class EventManager {
     for (const [key, handlers] of this.subscriptions) {
       this.subscriptions.set(
         key,
-        handlers.filter((h) => h.namespace !== namespace)
+        handlers.filter((h) => h.namespace !== namespace),
       );
     }
     this.wildcardSubscriptions = this.wildcardSubscriptions.filter(
-      (h) => h.namespace !== namespace
+      (h) => h.namespace !== namespace,
     );
   }
 
   /**
    * Safely call handler, catching errors.
    */
-  private safeCall<T>(handler: EventHandler<T>, payload: T): void {
+  private safeCall<T>(
+    handler: EventHandler<T>,
+    payload: T,
+    eventName: string,
+    pattern: EventPattern,
+  ): void {
     try {
       handler(payload);
     } catch (error) {
-      console.error('Error in event handler:', error);
+      if (this.listenerErrorHandler) {
+        this.listenerErrorHandler({ error, eventName, pattern });
+      } else {
+        // Default: log with context for debugging
+        console.error(
+          `Error in event handler for pattern "${pattern}" on event "${eventName}":`,
+          error,
+        );
+      }
     }
   }
 }

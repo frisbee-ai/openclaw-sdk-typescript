@@ -152,8 +152,17 @@ export type {
 } from "./auth/provider.js";
 
 // Event Manager
-export { EventManager, createEventManager, MAX_EVENT_NAME_LENGTH } from "./managers/event.js";
-export type { EventHandler, UnsubscribeFn, EventPattern } from "./managers/event.js";
+export {
+  EventManager,
+  createEventManager,
+  MAX_EVENT_NAME_LENGTH,
+} from "./managers/event.js";
+export type {
+  EventHandler,
+  UnsubscribeFn,
+  EventPattern,
+  ListenerErrorHandler,
+} from "./managers/event.js";
 
 // ============================================================================
 // Reconnection Manager (Advanced/Stand-alone)
@@ -195,24 +204,58 @@ export type { EventHandler, UnsubscribeFn, EventPattern } from "./managers/event
  * });
  * ```
  */
-export { ReconnectManager, createReconnectManager } from "./managers/reconnect.js";
-export type { ReconnectConfig, ReconnectState, ReconnectEvent } from "./managers/reconnect.js";
+export {
+  ReconnectManager,
+  createReconnectManager,
+} from "./managers/reconnect.js";
+export type {
+  ReconnectConfig,
+  ReconnectState,
+  ReconnectEvent,
+  ReconnectListenerErrorHandler,
+} from "./managers/reconnect.js";
 
 // Connection
-export { ProtocolNegotiator, createProtocolNegotiator } from "./connection/protocol.js";
-export type { ProtocolVersionRange, NegotiatedProtocol } from "./connection/protocol.js";
-export { ConnectionStateMachine, createConnectionStateMachine } from "./connection/state.js";
-export type { StateChangeEvent, StateChangeListener } from "./connection/state.js";
-export { PolicyManager, createPolicyManager, DEFAULT_POLICY } from "./connection/policies.js";
+export {
+  ProtocolNegotiator,
+  createProtocolNegotiator,
+} from "./connection/protocol.js";
+export type {
+  ProtocolVersionRange,
+  NegotiatedProtocol,
+} from "./connection/protocol.js";
+export {
+  ConnectionStateMachine,
+  createConnectionStateMachine,
+} from "./connection/state.js";
+export type {
+  StateChangeEvent,
+  StateChangeListener,
+  StateChangeListenerErrorHandler,
+} from "./connection/state.js";
+export {
+  PolicyManager,
+  createPolicyManager,
+  DEFAULT_POLICY,
+} from "./connection/policies.js";
 export type { Policy } from "./connection/policies.js";
 export { TlsValidator, createTlsValidator } from "./connection/tls.js";
-export type { TlsValidatorConfig, TlsValidationResult, TLSSocket } from "./connection/tls.js";
+export type {
+  TlsValidatorConfig,
+  TlsValidationResult,
+  TLSSocket,
+} from "./connection/tls.js";
 
 // Events
 export { TickMonitor, createTickMonitor } from "./events/tick.js";
 export type { TickMonitorConfig, TickStatus } from "./events/tick.js";
 export { GapDetector, createGapDetector } from "./events/gap.js";
-export type { GapInfo, GapRecoveryMode, GapRecoveryConfig, GapDetectorConfig } from "./events/gap.js";
+export type {
+  GapInfo,
+  GapRecoveryMode,
+  GapRecoveryConfig,
+  GapDetectorConfig,
+} from "./events/gap.js";
 
 // ============================================================================
 // Logger Types (Reserved for Future Use)

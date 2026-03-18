@@ -4,9 +4,9 @@
  * Handles automatic reconnection with exponential backoff and auth-aware retry logic.
  */
 
-import { ReconnectError } from '../errors.js';
-import type { AuthErrorCode } from '../errors.js';
-import type { RefreshResult } from '../auth/provider.js';
+import { ReconnectError } from "../errors.js";
+import type { AuthErrorCode } from "../errors.js";
+import type { RefreshResult } from "../auth/provider.js";
 
 // ============================================================================
 // Types
@@ -39,17 +39,17 @@ export const DEFAULT_RECONNECT_CONFIG: ReconnectConfig = {
 
 /** Terminal auth errors that should stop reconnection immediately */
 const TERMINAL_AUTH_ERRORS: AuthErrorCode[] = [
-  'AUTH_DEVICE_REJECTED',
-  'AUTH_PASSWORD_INVALID',
-  'AUTH_NOT_SUPPORTED',
-  'AUTH_CONFIGURATION_ERROR',
+  "AUTH_DEVICE_REJECTED",
+  "AUTH_PASSWORD_INVALID",
+  "AUTH_NOT_SUPPORTED",
+  "AUTH_CONFIGURATION_ERROR",
 ];
 
 /** Retryable auth errors that can be retried after token refresh */
 const RETRYABLE_AUTH_ERRORS: AuthErrorCode[] = [
-  'AUTH_TOKEN_EXPIRED',
-  'CHALLENGE_EXPIRED',
-  'AUTH_RATE_LIMITED',
+  "AUTH_TOKEN_EXPIRED",
+  "CHALLENGE_EXPIRED",
+  "AUTH_RATE_LIMITED",
 ];
 
 // ============================================================================
@@ -57,11 +57,11 @@ const RETRYABLE_AUTH_ERRORS: AuthErrorCode[] = [
 // ============================================================================
 
 export type ReconnectState =
-  | 'idle'
-  | 'connecting'
-  | 'reconnecting'
-  | 'failed'
-  | 'success';
+  | "idle"
+  | "connecting"
+  | "reconnecting"
+  | "failed"
+  | "success";
 
 export interface ReconnectEvent {
   state: ReconnectState;
@@ -70,6 +70,12 @@ export interface ReconnectEvent {
 }
 
 export type ReconnectListener = (event: ReconnectEvent) => void;
+
+/** Error handler for listener errors */
+export type ReconnectListenerErrorHandler = (error: {
+  error: unknown;
+  event: ReconnectEvent;
+}) => void;
 
 /**
  * Reconnection manager with Fibonacci backoff and auth-aware retry logic.
@@ -82,12 +88,13 @@ export type ReconnectListener = (event: ReconnectEvent) => void;
  */
 export class ReconnectManager {
   private config: ReconnectConfig;
-  private state: ReconnectState = 'idle';
+  private state: ReconnectState = "idle";
   private attempt = 0;
   private authRetries = 0;
   private listeners: Set<ReconnectListener> = new Set();
   private aborted = false;
   private currentTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private listenerErrorHandler: ReconnectListenerErrorHandler | null = null;
 
   constructor(config: Partial<ReconnectConfig> = {}) {
     this.config = { ...DEFAULT_RECONNECT_CONFIG, ...config };
@@ -111,7 +118,7 @@ export class ReconnectManager {
    * Check if reconnection is in progress.
    */
   isReconnecting(): boolean {
-    return this.state === 'reconnecting' || this.state === 'connecting';
+    return this.state === "reconnecting" || this.state === "connecting";
   }
 
   /**
@@ -120,6 +127,19 @@ export class ReconnectManager {
   onEvent(listener: ReconnectListener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  /**
+   * Set a callback for handling errors thrown by reconnection event listeners.
+   *
+   * By default, listener errors are silently ignored to prevent one buggy
+   * listener from breaking the entire reconnection flow. Use this method to
+   * customize error handling (e.g., logging to error tracking service).
+   *
+   * @param handler - Callback function to handle listener errors
+   */
+  onListenerError(handler: ReconnectListenerErrorHandler | null): void {
+    this.listenerErrorHandler = handler;
   }
 
   /**
@@ -134,8 +154,13 @@ export class ReconnectManager {
     for (const listener of this.listeners) {
       try {
         listener(event);
-      } catch {
-        // Ignore listener errors
+      } catch (error) {
+        if (this.listenerErrorHandler) {
+          this.listenerErrorHandler({ error, event });
+        } else {
+          // Default: silent to prevent cascading failures during reconnection
+          // Users can set onListenerError to capture these
+        }
       }
     }
   }
@@ -147,7 +172,8 @@ export class ReconnectManager {
     // Fibonacci: 1, 1, 2, 3, 5, 8, 13, 21, 34, 55...
     const fib = (n: number): number => {
       if (n <= 1) return 1;
-      let a = 1, b = 1;
+      let a = 1,
+        b = 1;
       for (let i = 2; i <= n; i++) {
         const temp = a + b;
         a = b;
@@ -193,32 +219,32 @@ export class ReconnectManager {
    */
   async reconnect(
     connectFn: () => Promise<void>,
-    refreshTokenFn?: () => Promise<RefreshResult | null>
+    refreshTokenFn?: () => Promise<RefreshResult | null>,
   ): Promise<void> {
     this.aborted = false;
     this.attempt = 0;
     this.authRetries = 0;
-    this.state = 'reconnecting';
+    this.state = "reconnecting";
 
     while (!this.aborted && this.attempt < this.config.maxAttempts) {
       this.attempt++;
-      this.state = 'connecting';
-      this.emit('connecting');
+      this.state = "connecting";
+      this.emit("connecting");
 
       try {
         await connectFn();
-        this.state = 'success';
-        this.emit('success');
+        this.state = "success";
+        this.emit("success");
         return;
       } catch (error) {
         const err = error as Error;
 
         // Check for terminal auth errors - stop immediately
         if (this.isTerminalAuthError(err)) {
-          this.state = 'failed';
-          this.emit('failed', err);
+          this.state = "failed";
+          this.emit("failed", err);
           throw new ReconnectError({
-            code: 'MAX_AUTH_RETRIES',
+            code: "MAX_AUTH_RETRIES",
             message: `Terminal auth error: ${err.message}`,
             retryable: false,
             details: { originalError: err.message },
@@ -231,10 +257,10 @@ export class ReconnectManager {
             this.authRetries++;
 
             if (this.authRetries > this.config.maxAuthRetries) {
-              this.state = 'failed';
-              this.emit('failed', err);
+              this.state = "failed";
+              this.emit("failed", err);
               throw new ReconnectError({
-                code: 'MAX_AUTH_RETRIES',
+                code: "MAX_AUTH_RETRIES",
                 message: `Max auth retries (${this.config.maxAuthRetries}) exceeded`,
                 retryable: false,
                 details: { originalError: err.message },
@@ -245,11 +271,11 @@ export class ReconnectManager {
             const refreshResult = await refreshTokenFn();
             if (!refreshResult?.success) {
               // Token refresh failed - stop reconnecting
-              this.state = 'failed';
-              this.emit('failed', err);
+              this.state = "failed";
+              this.emit("failed", err);
               throw new ReconnectError({
-                code: 'MAX_AUTH_RETRIES',
-                message: 'Token refresh failed, cannot reconnect',
+                code: "MAX_AUTH_RETRIES",
+                message: "Token refresh failed, cannot reconnect",
                 retryable: false,
                 details: { originalError: err.message },
               });
@@ -259,10 +285,10 @@ export class ReconnectManager {
 
         // Check if we've exceeded max attempts
         if (this.attempt >= this.config.maxAttempts) {
-          this.state = 'failed';
-          this.emit('failed', err);
+          this.state = "failed";
+          this.emit("failed", err);
           throw new ReconnectError({
-            code: 'MAX_RECONNECT_ATTEMPTS',
+            code: "MAX_RECONNECT_ATTEMPTS",
             message: `Max reconnection attempts (${this.config.maxAttempts}) exceeded`,
             retryable: false,
             details: { originalError: err.message },
@@ -270,8 +296,8 @@ export class ReconnectManager {
         }
 
         // Calculate delay for next attempt
-        this.state = 'reconnecting';
-        this.emit('reconnecting', err);
+        this.state = "reconnecting";
+        this.emit("reconnecting", err);
 
         const delay = this.calculateDelay(this.attempt);
         await this.delay(delay);
@@ -281,8 +307,8 @@ export class ReconnectManager {
     // Should not reach here, but handle edge case
     if (this.aborted) {
       throw new ReconnectError({
-        code: 'RECONNECT_DISABLED',
-        message: 'Reconnection aborted',
+        code: "RECONNECT_DISABLED",
+        message: "Reconnection aborted",
         retryable: false,
       });
     }
@@ -297,8 +323,8 @@ export class ReconnectManager {
       clearTimeout(this.currentTimeoutId);
       this.currentTimeoutId = null;
     }
-    this.state = 'idle';
-    this.emit('idle');
+    this.state = "idle";
+    this.emit("idle");
   }
 
   /**
@@ -308,7 +334,7 @@ export class ReconnectManager {
     this.abort();
     this.attempt = 0;
     this.authRetries = 0;
-    this.state = 'idle';
+    this.state = "idle";
   }
 
   /**
@@ -329,7 +355,7 @@ export class ReconnectManager {
  * Create a reconnect manager.
  */
 export function createReconnectManager(
-  config?: Partial<ReconnectConfig>
+  config?: Partial<ReconnectConfig>,
 ): ReconnectManager {
   return new ReconnectManager(config);
 }

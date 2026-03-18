@@ -9,23 +9,33 @@
 // ============================================================================
 
 export type ClientConnectionState =
-  | 'disconnected'
-  | 'connecting'
-  | 'handshaking'
-  | 'authenticating'
-  | 'ready'
-  | 'reconnecting'
-  | 'closed';
+  | "disconnected"
+  | "connecting"
+  | "handshaking"
+  | "authenticating"
+  | "ready"
+  | "reconnecting"
+  | "closed";
 
 /** Valid state transitions map */
-const VALID_TRANSITIONS: Record<ClientConnectionState, ClientConnectionState[]> = {
-  disconnected: ['connecting'],
-  connecting: ['handshaking', 'disconnected', 'closed'],
-  handshaking: ['authenticating', 'reconnecting', 'disconnected', 'closed'],
-  authenticating: ['ready', 'reconnecting', 'disconnected', 'closed'],
-  ready: ['reconnecting', 'disconnected', 'closed'],
-  reconnecting: ['connecting', 'handshaking', 'authenticating', 'ready', 'disconnected', 'closed'],
-  closed: ['disconnected'],
+const VALID_TRANSITIONS: Record<
+  ClientConnectionState,
+  ClientConnectionState[]
+> = {
+  disconnected: ["connecting"],
+  connecting: ["handshaking", "disconnected", "closed"],
+  handshaking: ["authenticating", "reconnecting", "disconnected", "closed"],
+  authenticating: ["ready", "reconnecting", "disconnected", "closed"],
+  ready: ["reconnecting", "disconnected", "closed"],
+  reconnecting: [
+    "connecting",
+    "handshaking",
+    "authenticating",
+    "ready",
+    "disconnected",
+    "closed",
+  ],
+  closed: ["disconnected"],
 };
 
 /** State change event */
@@ -36,6 +46,12 @@ export interface StateChangeEvent {
 
 /** State change listener */
 export type StateChangeListener = (event: StateChangeEvent) => void;
+
+/** Error handler for listener errors */
+export type StateChangeListenerErrorHandler = (error: {
+  error: unknown;
+  event: StateChangeEvent;
+}) => void;
 
 // ============================================================================
 // State Machine
@@ -54,8 +70,9 @@ export type StateChangeListener = (event: StateChangeEvent) => void;
  * - `closed`: Connection closed (terminal state)
  */
 export class ConnectionStateMachine {
-  private state: ClientConnectionState = 'disconnected';
+  private state: ClientConnectionState = "disconnected";
   private listeners: Set<StateChangeListener> = new Set();
+  private listenerErrorHandler: StateChangeListenerErrorHandler | null = null;
 
   /**
    * Get current state.
@@ -69,10 +86,10 @@ export class ConnectionStateMachine {
    */
   isConnected(): boolean {
     return (
-      this.state === 'connecting' ||
-      this.state === 'handshaking' ||
-      this.state === 'authenticating' ||
-      this.state === 'ready'
+      this.state === "connecting" ||
+      this.state === "handshaking" ||
+      this.state === "authenticating" ||
+      this.state === "ready"
     );
   }
 
@@ -80,7 +97,7 @@ export class ConnectionStateMachine {
    * Check if ready for requests.
    */
   isReady(): boolean {
-    return this.state === 'ready';
+    return this.state === "ready";
   }
 
   /**
@@ -100,7 +117,7 @@ export class ConnectionStateMachine {
   transitionTo(newState: ClientConnectionState): void {
     if (!this.canTransitionTo(newState)) {
       throw new Error(
-        `Invalid state transition from '${this.state}' to '${newState}'`
+        `Invalid state transition from '${this.state}' to '${newState}'`,
       );
     }
 
@@ -113,56 +130,56 @@ export class ConnectionStateMachine {
    * Transition to connecting (convenience method).
    */
   connect(): void {
-    this.transitionTo('connecting');
+    this.transitionTo("connecting");
   }
 
   /**
    * Transition to handshaking (convenience method).
    */
   startHandshake(): void {
-    this.transitionTo('handshaking');
+    this.transitionTo("handshaking");
   }
 
   /**
    * Transition to authenticating (convenience method).
    */
   startAuth(): void {
-    this.transitionTo('authenticating');
+    this.transitionTo("authenticating");
   }
 
   /**
    * Transition to ready (convenience method).
    */
   ready(): void {
-    this.transitionTo('ready');
+    this.transitionTo("ready");
   }
 
   /**
    * Transition to reconnecting (convenience method).
    */
   startReconnect(): void {
-    this.transitionTo('reconnecting');
+    this.transitionTo("reconnecting");
   }
 
   /**
    * Transition to disconnected (convenience method).
    */
   disconnect(): void {
-    this.transitionTo('disconnected');
+    this.transitionTo("disconnected");
   }
 
   /**
    * Close connection (terminal state).
    */
   close(): void {
-    this.transitionTo('closed');
+    this.transitionTo("closed");
   }
 
   /**
    * Reset to disconnected state.
    */
   reset(): void {
-    this.state = 'disconnected';
+    this.state = "disconnected";
   }
 
   /**
@@ -174,14 +191,32 @@ export class ConnectionStateMachine {
   }
 
   /**
+   * Set a callback for handling errors thrown by state change listeners.
+   *
+   * By default, listener errors are silently ignored to prevent one buggy
+   * listener from breaking the entire state machine flow. Use this method to
+   * customize error handling (e.g., logging to error tracking service).
+   *
+   * @param handler - Callback function to handle listener errors
+   */
+  onListenerError(handler: StateChangeListenerErrorHandler | null): void {
+    this.listenerErrorHandler = handler;
+  }
+
+  /**
    * Emit state change event.
    */
   private emit(event: StateChangeEvent): void {
     for (const listener of this.listeners) {
       try {
         listener(event);
-      } catch {
-        // Ignore listener errors
+      } catch (error) {
+        if (this.listenerErrorHandler) {
+          this.listenerErrorHandler({ error, event });
+        } else {
+          // Default: silent to prevent cascading failures during state transitions
+          // Users can set onListenerError to capture these
+        }
       }
     }
   }
