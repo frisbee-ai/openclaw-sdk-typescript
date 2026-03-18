@@ -52,6 +52,16 @@ const RETRYABLE_AUTH_ERRORS: AuthErrorCode[] = [
   "AUTH_RATE_LIMITED",
 ];
 
+/**
+ * Pre-computed Fibonacci sequence for backoff calculation.
+ * F(n): 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987...
+ * Sufficient for reasonable reconnection limits (up to 15+ attempts).
+ */
+const FIBONACCI_TABLE = [
+  1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584,
+  4181, 6765,
+] as const;
+
 // ============================================================================
 // Reconnection Manager
 // ============================================================================
@@ -167,23 +177,15 @@ export class ReconnectManager {
 
   /**
    * Calculate Fibonacci backoff delay with jitter.
+   * Uses pre-computed Fibonacci table for O(1) lookup.
    */
   private calculateDelay(attempt: number): number {
-    // Fibonacci: 1, 1, 2, 3, 5, 8, 13, 21, 34, 55...
-    const fib = (n: number): number => {
-      if (n <= 1) return 1;
-      let a = 1,
-        b = 1;
-      for (let i = 2; i <= n; i++) {
-        const temp = a + b;
-        a = b;
-        b = temp;
-      }
-      return b;
-    };
+    // Get Fibonacci value from table (default to last value if attempt exceeds table)
+    const fibValue =
+      FIBONACCI_TABLE[Math.min(attempt, FIBONACCI_TABLE.length - 1)];
 
     // Base delay grows with Fibonacci
-    const baseDelay = this.config.initialDelayMs * fib(attempt);
+    const baseDelay = this.config.initialDelayMs * fibValue;
     const delay = Math.min(baseDelay, this.config.maxDelayMs);
 
     // Add jitter
