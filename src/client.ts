@@ -5,23 +5,34 @@
  * This class provides a facade over the connection and request managers.
  */
 
-import type { ConnectionState } from "./protocol/types.js";
-import type {
-  ConnectParams,
-  GatewayFrame,
-  ResponseFrame,
-} from "./protocol/types.js";
-import type { IWebSocketTransport } from "./transport/websocket.js";
-import { WebSocketTransport } from "./transport/websocket.js";
-import type { ConnectionEventHandlers } from "./managers/connection.js";
-import {
-  ConnectionManager,
-  createConnectionManager,
-} from "./managers/connection.js";
-import { RequestManager, createRequestManager } from "./managers/request.js";
+import type { ConnectionState } from './protocol/types.js';
+import type { ConnectParams, GatewayFrame, ResponseFrame } from './protocol/types.js';
+import type { IWebSocketTransport } from './transport/websocket.js';
+import { WebSocketTransport } from './transport/websocket.js';
+import type { ConnectionEventHandlers } from './managers/connection.js';
+import { ConnectionManager, createConnectionManager } from './managers/connection.js';
+import { RequestManager, createRequestManager } from './managers/request.js';
 
 // ============================================================================
 // Configuration Types
+// ============================================================================
+
+/**
+ * Connection behavior configuration
+ */
+export interface ConnectionConfig {
+  /** Request timeout in milliseconds */
+  requestTimeoutMs?: number;
+  /** Connection timeout in milliseconds */
+  connectTimeoutMs?: number;
+  /** Whether to automatically reconnect on disconnect */
+  autoReconnect?: boolean;
+  /** Maximum reconnection attempts */
+  maxReconnectAttempts?: number;
+  /** Reconnection delay in milliseconds */
+  reconnectDelayMs?: number;
+}
+
 // ============================================================================
 
 /**
@@ -63,6 +74,8 @@ export interface ClientConfig {
     signedAt: number;
     nonce: string;
   };
+  /** Connection behavior configuration (nested form) */
+  connection?: ConnectionConfig;
   /** Default request timeout in milliseconds (default: 30000) */
   requestTimeoutMs?: number;
   /** Connection timeout in milliseconds (default: 30000) */
@@ -103,8 +116,7 @@ export class OpenClawClient {
   private config: ClientConfig;
 
   // Event handler storage - using Set for O(1) add/remove
-  private stateChangeHandlers: Set<(state: ConnectionState) => void> =
-    new Set();
+  private stateChangeHandlers: Set<(state: ConnectionState) => void> = new Set();
   private errorHandlers: Set<(error: Error) => void> = new Set();
   private messageHandlers: Set<(frame: GatewayFrame) => void> = new Set();
   private closedHandlers: Set<() => void> = new Set();
@@ -115,19 +127,21 @@ export class OpenClawClient {
    * @param config - Client configuration
    */
   constructor(config: ClientConfig) {
+    // Normalize connection config - supports both flat and nested style
+    const normalizedConfig = this.normalizeConnectionConfig(config);
     this.config = config;
 
     // Create WebSocket transport
     const transport: IWebSocketTransport = new WebSocketTransport({
-      connectTimeoutMs: config.connectTimeoutMs,
+      connectTimeoutMs: normalizedConfig.connectTimeoutMs,
     });
 
     // Create connection manager with event handlers
     this.connectionManager = createConnectionManager(transport, {
-      defaultRequestTimeout: config.requestTimeoutMs ?? 30000,
-      autoReconnect: config.autoReconnect ?? true,
-      reconnectDelayMs: config.reconnectDelayMs ?? 1000,
-      maxReconnectAttempts: config.maxReconnectAttempts ?? 10,
+      defaultRequestTimeout: normalizedConfig.requestTimeoutMs,
+      autoReconnect: normalizedConfig.autoReconnect,
+      reconnectDelayMs: normalizedConfig.reconnectDelayMs,
+      maxReconnectAttempts: normalizedConfig.maxReconnectAttempts,
     });
 
     // Set up connection manager event handlers
@@ -138,49 +152,64 @@ export class OpenClawClient {
   }
 
   /**
+   * Normalize connection config - supports both flat and nested style.
+   * Nested config takes precedence over flat config.
+   */
+  private normalizeConnectionConfig(config: ClientConfig): Required<ConnectionConfig> {
+    const conn = config.connection ?? {};
+    return {
+      requestTimeoutMs: conn.requestTimeoutMs ?? config.requestTimeoutMs ?? 30000,
+      connectTimeoutMs: conn.connectTimeoutMs ?? config.connectTimeoutMs ?? 30000,
+      autoReconnect: conn.autoReconnect ?? config.autoReconnect ?? true,
+      maxReconnectAttempts: conn.maxReconnectAttempts ?? config.maxReconnectAttempts ?? 10,
+      reconnectDelayMs: conn.reconnectDelayMs ?? config.reconnectDelayMs ?? 1000,
+    };
+  }
+
+  /**
    * Set up connection manager event handlers.
    */
   private setupConnectionHandlers(): void {
     const handlers: ConnectionEventHandlers = {
-      onStateChange: (event) => {
-        this.stateChangeHandlers.forEach((handler) => {
+      onStateChange: event => {
+        this.stateChangeHandlers.forEach(handler => {
           try {
             handler(event.newState);
           } catch (error) {
             // Silently ignore handler errors to prevent cascading failures
-            console.error("Error in stateChange handler:", error);
+            console.error('Error in stateChange handler:', error);
           }
         });
       },
-      onError: (event) => {
+      onError: event => {
         const error = new Error(event.message);
-        this.errorHandlers.forEach((handler) => {
+        this.errorHandlers.forEach(handler => {
           try {
             handler(error);
           } catch (err) {
-            console.error("Error in error handler:", err);
+            console.error('Error in error handler:', err);
           }
         });
       },
-      onMessage: (frame) => {
-        this.messageHandlers.forEach((handler) => {
+      onMessage: frame => {
+        this.messageHandlers.forEach(handler => {
           try {
             handler(frame);
           } catch (error) {
-            console.error("Error in message handler:", error);
+            console.error('Error in message handler:', error);
           }
         });
         // Also handle request responses
-        if (frame.type === "res") {
+        if (frame.type === 'res') {
           this.requestManager.resolveRequest(frame.id, frame as ResponseFrame);
         }
       },
       onClosed: () => {
-        this.closedHandlers.forEach((handler) => {
+        this.closedHandlers.forEach(handler => {
           try {
             handler();
           } catch (error) {
-            console.error("Error in closed handler:", error);
+            console.error('Error in closed handler:', error);
           }
         });
       },
@@ -193,7 +222,7 @@ export class OpenClawClient {
    * Check if the client is currently connected.
    */
   get isConnected(): boolean {
-    return this.connectionManager.getState() === "ready";
+    return this.connectionManager.getState() === 'ready';
   }
 
   /**
@@ -217,11 +246,11 @@ export class OpenClawClient {
       client: {
         id: this.config.clientId,
         displayName: this.config.clientId,
-        version: this.config.clientVersion ?? "1.0.0",
-        platform: this.config.platform ?? "typescript-sdk",
+        version: this.config.clientVersion ?? '1.0.0',
+        platform: this.config.platform ?? 'typescript-sdk',
         deviceFamily: this.config.deviceFamily,
         modelIdentifier: this.config.modelIdentifier,
-        mode: (this.config.mode ?? "node") as string,
+        mode: (this.config.mode ?? 'node') as string,
         instanceId: this.config.instanceId,
       },
       auth: this.config.auth,
@@ -251,11 +280,11 @@ export class OpenClawClient {
   async request<T = unknown>(
     method: string,
     params?: unknown,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): Promise<T> {
     // Check if signal is already aborted
     if (options?.signal?.aborted) {
-      throw new Error("Request aborted");
+      throw new Error('Request aborted');
     }
 
     // Generate a unique request ID
@@ -263,7 +292,7 @@ export class OpenClawClient {
 
     // Create the request frame
     const requestFrame: GatewayFrame = {
-      type: "req",
+      type: 'req',
       id: requestId,
       method,
       params,
@@ -289,18 +318,18 @@ export class OpenClawClient {
         abortHandler = () => {
           this.requestManager.abortRequest(requestId);
         };
-        options.signal.addEventListener("abort", abortHandler);
+        options.signal.addEventListener('abort', abortHandler);
 
         // Store cleanup function
         cleanupAbortHandler = () => {
           if (abortHandler && options.signal) {
-            options.signal.removeEventListener("abort", abortHandler);
+            options.signal.removeEventListener('abort', abortHandler);
             abortHandler = undefined;
           }
         };
 
         // Also clean up on abort
-        options.signal.addEventListener("abort", cleanupAbortHandler, {
+        options.signal.addEventListener('abort', cleanupAbortHandler, {
           once: true,
         });
       }
@@ -313,7 +342,7 @@ export class OpenClawClient {
 
       if (!response.ok) {
         throw new Error(
-          `Request failed: ${response.error?.code ?? "UNKNOWN"} - ${response.error?.message ?? "Unknown error"}`,
+          `Request failed: ${response.error?.code ?? 'UNKNOWN'} - ${response.error?.message ?? 'Unknown error'}`
         );
       }
 
@@ -321,7 +350,7 @@ export class OpenClawClient {
     } finally {
       // Always clean up abort handler
       if (abortHandler && options?.signal) {
-        options.signal.removeEventListener("abort", abortHandler);
+        options.signal.removeEventListener('abort', abortHandler);
       }
     }
   }
