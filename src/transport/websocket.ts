@@ -5,9 +5,7 @@
  * different environments (Node.js and browser) with a type-safe event emitter pattern.
  */
 
-// ============================================================================
-// Types
-// ============================================================================
+import { TimeoutManager } from '../utils/timeoutManager.js';
 
 /**
  * WebSocket ready states as defined in the WebSocket specification
@@ -26,7 +24,7 @@ export enum ReadyState {
 /**
  * String representation of ready states for easier debugging
  */
-export type ReadyStateString = "connecting" | "open" | "closing" | "closed";
+export type ReadyStateString = 'connecting' | 'open' | 'closing' | 'closed';
 
 /**
  * Convert numeric ready state to string representation
@@ -34,13 +32,13 @@ export type ReadyStateString = "connecting" | "open" | "closing" | "closed";
 export function readyStateToString(state: ReadyState): ReadyStateString {
   switch (state) {
     case ReadyState.CONNECTING:
-      return "connecting";
+      return 'connecting';
     case ReadyState.OPEN:
-      return "open";
+      return 'open';
     case ReadyState.CLOSING:
-      return "closing";
+      return 'closing';
     case ReadyState.CLOSED:
-      return "closed";
+      return 'closed';
   }
 }
 
@@ -199,10 +197,10 @@ export interface IWebSocketTransport {
  */
 export class WebSocketTransport implements IWebSocketTransport {
   private ws: WebSocket | null = null;
-  private _url: string = "";
+  private _url: string = '';
   private _readyState: ReadyState = ReadyState.CLOSED;
   private config: Required<WebSocketTransportConfig>;
-  private connectTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private timeoutManager = new TimeoutManager();
 
   // Event handlers
   public onopen: ((event: WebSocketOpenEvent) => void) | null = null;
@@ -224,17 +222,17 @@ export class WebSocketTransport implements IWebSocketTransport {
    */
   private getDefaultWebSocket(): typeof WebSocket {
     // Browser environment
-    if (typeof WebSocket !== "undefined") {
+    if (typeof WebSocket !== 'undefined') {
       return WebSocket;
     }
 
     // Node.js environment - require 'ws' dynamically
     try {
-      const ws = require("ws");
+      const ws = require('ws');
       return ws.WebSocket || ws.default;
     } catch {
       throw new Error(
-        "WebSocket is not available. Please install the 'ws' package for Node.js environments.",
+        "WebSocket is not available. Please install the 'ws' package for Node.js environments."
       );
     }
   }
@@ -267,10 +265,7 @@ export class WebSocketTransport implements IWebSocketTransport {
    * @returns Promise that resolves when the connection is established
    */
   async connect(url: string): Promise<void> {
-    if (
-      this._readyState === ReadyState.OPEN ||
-      this._readyState === ReadyState.CONNECTING
-    ) {
+    if (this._readyState === ReadyState.OPEN || this._readyState === ReadyState.CONNECTING) {
       throw new Error(`Already connected or connecting to ${this._url}`);
     }
 
@@ -284,24 +279,25 @@ export class WebSocketTransport implements IWebSocketTransport {
         this.ws = new WebSocketImpl(url);
 
         // Set up connection timeout
-        this.connectTimeoutId = setTimeout(() => {
-          if (this._readyState === ReadyState.CONNECTING) {
-            this.cleanup();
-            const error: WebSocketError = {
-              message: `Connection timeout after ${this.config.connectTimeoutMs}ms`,
-              recoverable: true,
-            };
-            this.handleError(error);
-            reject(new Error(error.message));
-          }
-        }, this.config.connectTimeoutMs);
+        this.timeoutManager.set(
+          () => {
+            if (this._readyState === ReadyState.CONNECTING) {
+              this.cleanup();
+              const error: WebSocketError = {
+                message: `Connection timeout after ${this.config.connectTimeoutMs}ms`,
+                recoverable: true,
+              };
+              this.handleError(error);
+              reject(new Error(error.message));
+            }
+          },
+          this.config.connectTimeoutMs,
+          'ws-connect'
+        );
 
         // Set up event handlers
         this.ws.onopen = () => {
-          if (this.connectTimeoutId) {
-            clearTimeout(this.connectTimeoutId);
-            this.connectTimeoutId = null;
-          }
+          this.timeoutManager.clear('ws-connect');
 
           this._readyState = ReadyState.OPEN;
 
@@ -316,10 +312,7 @@ export class WebSocketTransport implements IWebSocketTransport {
         };
 
         this.ws.onclose = (event: CloseEvent) => {
-          if (this.connectTimeoutId) {
-            clearTimeout(this.connectTimeoutId);
-            this.connectTimeoutId = null;
-          }
+          this.timeoutManager.clear('ws-connect');
 
           // Check if we were still connecting before updating state
           const wasConnecting = this._readyState === ReadyState.CONNECTING;
@@ -338,20 +331,15 @@ export class WebSocketTransport implements IWebSocketTransport {
 
           // If we were still connecting, reject the promise
           if (wasConnecting) {
-            reject(
-              new Error(`Connection closed: ${event.reason} (${event.code})`),
-            );
+            reject(new Error(`Connection closed: ${event.reason} (${event.code})`));
           }
         };
 
         this.ws.onerror = (event: Event) => {
-          if (this.connectTimeoutId) {
-            clearTimeout(this.connectTimeoutId);
-            this.connectTimeoutId = null;
-          }
+          this.timeoutManager.clear('ws-connect');
 
           const error: WebSocketError = {
-            message: "WebSocket error occurred",
+            message: 'WebSocket error occurred',
             original: event,
             recoverable: true,
           };
@@ -367,14 +355,11 @@ export class WebSocketTransport implements IWebSocketTransport {
         };
 
         this.ws.onmessage = (event: MessageEvent) => {
-          if (typeof event.data === "string") {
+          if (typeof event.data === 'string') {
             if (this.onmessage) {
               this.onmessage(event.data);
             }
-          } else if (
-            event.data instanceof ArrayBuffer ||
-            ArrayBuffer.isView(event.data)
-          ) {
+          } else if (event.data instanceof ArrayBuffer || ArrayBuffer.isView(event.data)) {
             let buffer: ArrayBuffer;
             if (event.data instanceof ArrayBuffer) {
               buffer = event.data;
@@ -383,7 +368,7 @@ export class WebSocketTransport implements IWebSocketTransport {
               const sourceBuffer = event.data.buffer;
               buffer = sourceBuffer.slice(
                 event.data.byteOffset,
-                event.data.byteOffset + event.data.byteLength,
+                event.data.byteOffset + event.data.byteLength
               ) as ArrayBuffer;
             }
             if (this.onbinary) {
@@ -395,8 +380,8 @@ export class WebSocketTransport implements IWebSocketTransport {
         this.cleanup();
         reject(
           new Error(
-            `Failed to create WebSocket: ${err instanceof Error ? err.message : String(err)}`,
-          ),
+            `Failed to create WebSocket: ${err instanceof Error ? err.message : String(err)}`
+          )
         );
       }
     });
@@ -410,9 +395,7 @@ export class WebSocketTransport implements IWebSocketTransport {
    */
   send(data: string | ArrayBuffer): void {
     if (this._readyState !== ReadyState.OPEN || !this.ws) {
-      throw new Error(
-        `Cannot send data: connection is ${this.readyStateString} (expected: open)`,
-      );
+      throw new Error(`Cannot send data: connection is ${this.readyStateString} (expected: open)`);
     }
 
     try {
@@ -439,14 +422,11 @@ export class WebSocketTransport implements IWebSocketTransport {
       return;
     }
 
-    if (this.connectTimeoutId) {
-      clearTimeout(this.connectTimeoutId);
-      this.connectTimeoutId = null;
-    }
+    this.timeoutManager.clear('ws-connect');
 
     if (this.ws) {
       this._readyState = ReadyState.CLOSING;
-      this.ws.close(code ?? 1000, reason ?? "");
+      this.ws.close(code ?? 1000, reason ?? '');
     }
   }
 
@@ -478,9 +458,7 @@ export class WebSocketTransport implements IWebSocketTransport {
  * @param config - Optional configuration
  * @returns A new WebSocket transport instance
  */
-export function createWebSocketTransport(
-  config?: WebSocketTransportConfig,
-): IWebSocketTransport {
+export function createWebSocketTransport(config?: WebSocketTransportConfig): IWebSocketTransport {
   return new WebSocketTransport(config);
 }
 
