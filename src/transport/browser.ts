@@ -5,8 +5,12 @@
  */
 
 import type { IWebSocketTransport, ReadyStateString } from "./websocket.js";
-import { ReadyState } from "./websocket.js";
-import type { WebSocketOpenEvent, WebSocketClose, WebSocketError } from "./node.js";
+import { ReadyState, readyStateToString } from "./websocket.js";
+import type {
+  WebSocketOpenEvent,
+  WebSocketClose,
+  WebSocketError,
+} from "./node.js";
 
 // ============================================================================
 // Types
@@ -73,18 +77,7 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
    * Get the ready state as a string.
    */
   get readyStateString(): ReadyStateString {
-    switch (this._readyState) {
-      case ReadyState.CONNECTING:
-        return "connecting";
-      case ReadyState.OPEN:
-        return "open";
-      case ReadyState.CLOSING:
-        return "closing";
-      case ReadyState.CLOSED:
-        return "closed";
-      default:
-        return "connecting";
-    }
+    return readyStateToString(this._readyState);
   }
 
   /**
@@ -192,7 +185,7 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
  * @returns A new transport instance
  */
 export function createBrowserWebSocketTransport(
-  config: BrowserWebSocketTransportConfig
+  config: BrowserWebSocketTransportConfig,
 ): BrowserWebSocketTransport {
   return new BrowserWebSocketTransport(config);
 }

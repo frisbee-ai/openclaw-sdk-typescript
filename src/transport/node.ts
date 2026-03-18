@@ -6,6 +6,11 @@
 
 import { WebSocket as WS } from "ws";
 import type { TLSSocket } from "tls";
+import {
+  ReadyState,
+  readyStateToString,
+  type ReadyStateString,
+} from "./websocket.js";
 
 // ============================================================================
 // Types
@@ -69,24 +74,8 @@ export interface WebSocketError {
   error: Error;
 }
 
-/**
- * Ready state enum.
- */
-export const enum ReadyState {
-  CONNECTING = 0,
-  OPEN = 1,
-  CLOSING = 2,
-  CLOSED = 3,
-}
-
-/**
- * Ready state string values.
- */
-export type ReadyStateString =
-  | "CONNECTING"
-  | "OPEN"
-  | "CLOSING"
-  | "CLOSED";
+// Re-export ReadyStateString from websocket module for consistency
+export type { ReadyStateString } from "./websocket.js";
 
 // ============================================================================
 // Node.js WebSocket Transport
@@ -131,18 +120,7 @@ export class NodeWebSocketTransport {
    * Get the ready state as a string.
    */
   get readyStateString(): ReadyStateString {
-    switch (this._readyState) {
-      case ReadyState.CONNECTING:
-        return "CONNECTING";
-      case ReadyState.OPEN:
-        return "OPEN";
-      case ReadyState.CLOSING:
-        return "CLOSING";
-      case ReadyState.CLOSED:
-        return "CLOSED";
-      default:
-        return "CONNECTING";
-    }
+    return readyStateToString(this._readyState);
   }
 
   /**
@@ -204,7 +182,7 @@ export class NodeWebSocketTransport {
             // Convert Buffer to ArrayBuffer
             const arrayBuffer = data.buffer.slice(
               data.byteOffset,
-              data.byteOffset + data.byteLength
+              data.byteOffset + data.byteLength,
             ) as ArrayBuffer;
             this.config.onbinary(arrayBuffer);
           } else if (!isBinary && this.config.onmessage) {
@@ -261,7 +239,7 @@ export class NodeWebSocketTransport {
  * @returns A new transport instance
  */
 export function createNodeWebSocketTransport(
-  config: NodeWebSocketTransportConfig
+  config: NodeWebSocketTransportConfig,
 ): NodeWebSocketTransport {
   return new NodeWebSocketTransport(config);
 }
