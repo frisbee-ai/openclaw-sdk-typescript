@@ -106,6 +106,34 @@ const client = createClient({
 });
 ```
 
+## Security Considerations
+
+### In-Memory Credentials
+
+When passing credentials directly via `ClientConfig.auth`, the credentials are stored in memory for the lifetime of the client instance. This applies to:
+
+- `auth.token`
+- `auth.bootstrapToken`
+- `auth.deviceToken`
+- `auth.password`
+
+**For high-security environments**, use the `CredentialsProvider` pattern instead:
+
+```typescript
+const client = createClient({
+  url: "wss://gateway.openclaw.example.com",
+  credentials: new CustomCredentialsProvider(),
+});
+```
+
+This allows you to:
+
+- Retrieve credentials from secure storage (e.g., keychain, vault)
+- Implement dynamic token refresh without storing static credentials
+- Clear credentials from memory when not needed
+
+See [Custom Credentials Provider](#custom-credentials-provider) for implementation details.
+
 ## Events
 
 Subscribe to gateway events using the client's event system:
