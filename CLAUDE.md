@@ -92,7 +92,7 @@ All public exports are in `src/index.ts`:
 ## Development Notes
 
 - Strict TypeScript (`strict: true`)
-- JSDoc required for public APIs
+- TypeDoc required for all public APIs (use `@module`, `@category`, `@example`, etc.)
 - All documentation in English (README.md, docs/, comments)
 - Vitest for testing
 - Dual output: ESM (`dist/esm/`) + CJS (`dist/cjs/`)

@@ -355,11 +355,12 @@ export class ConnectionManager {
         data.length > 100 ? `${data.slice(0, 100)}... (${data.length} bytes total)` : data;
 
       // Build detailed error message
-      let errorMessage = 'Failed to parse incoming message';
+      const baseError = 'Failed to parse incoming message';
+      let errorMessage = baseError;
       if (error instanceof SyntaxError) {
-        errorMessage = 'Failed to parse incoming message: Invalid JSON';
+        errorMessage = `${baseError}: Invalid JSON`;
       } else if (error instanceof Error && error.message.includes('empty')) {
-        errorMessage = 'Failed to parse incoming message: empty data received';
+        errorMessage = `${baseError}: empty data received`;
       }
 
       // Keep original error intact but attach data preview
