@@ -29,6 +29,19 @@ export interface ErrorShape {
 }
 
 // ============================================================================
+// Frame Type Constants
+// ============================================================================
+
+/** Frame type constants to avoid magic strings */
+export const FrameTypes = {
+  REQUEST: "req",
+  RESPONSE: "res",
+  EVENT: "event",
+} as const;
+
+export type FrameType = (typeof FrameTypes)[keyof typeof FrameTypes];
+
+// ============================================================================
 // Core Frame Types
 // ============================================================================
 
@@ -169,111 +182,288 @@ export interface ShutdownEvent {
 // Common API Types
 // ============================================================================
 
-export interface AgentIdentityParams { agentId: string; }
-export interface AgentIdentityResult { id: string; summary?: AgentSummary; }
-export interface AgentSummary { [key: string]: unknown; }
-export interface AgentWaitParams { agentId: string; timeoutMs?: number; }
+export interface AgentIdentityParams {
+  agentId: string;
+}
+export interface AgentIdentityResult {
+  id: string;
+  summary?: AgentSummary;
+}
+export interface AgentSummary {
+  [key: string]: unknown;
+}
+export interface AgentWaitParams {
+  agentId: string;
+  timeoutMs?: number;
+}
 
-export interface NodePairRequestParams { nodeId: string; ttlSec?: number; }
-export interface NodePairListParams { nodeId: string; }
-export interface NodePairApproveParams { nodeId: string; pairingId: string; }
-export interface NodePairRejectParams { nodeId: string; pairingId: string; }
-export interface NodePairVerifyParams { nodeId: string; pairingId: string; code: string; }
+export interface NodePairRequestParams {
+  nodeId: string;
+  ttlSec?: number;
+}
+export interface NodePairListParams {
+  nodeId: string;
+}
+export interface NodePairApproveParams {
+  nodeId: string;
+  pairingId: string;
+}
+export interface NodePairRejectParams {
+  nodeId: string;
+  pairingId: string;
+}
+export interface NodePairVerifyParams {
+  nodeId: string;
+  pairingId: string;
+  code: string;
+}
 
 export interface DevicePairListParams {}
-export interface DevicePairApproveParams { pairingId: string; }
-export interface DevicePairRejectParams { pairingId: string; }
+export interface DevicePairApproveParams {
+  pairingId: string;
+}
+export interface DevicePairRejectParams {
+  pairingId: string;
+}
 
-export interface ConfigGetParams { key?: string; }
-export interface ConfigSetParams { key: string; value: unknown; }
+export interface ConfigGetParams {
+  key?: string;
+}
+export interface ConfigSetParams {
+  key: string;
+  value: unknown;
+}
 export interface ConfigApplyParams {}
-export interface ConfigPatchParams { patches: Array<{ op: string; path: string; value?: unknown }>; }
-export interface ConfigSchemaParams { key?: string; }
-export interface ConfigSchemaResponse { schema: unknown; }
+export interface ConfigPatchParams {
+  patches: Array<{ op: string; path: string; value?: unknown }>;
+}
+export interface ConfigSchemaParams {
+  key?: string;
+}
+export interface ConfigSchemaResponse {
+  schema: unknown;
+}
 
-export interface WizardStartParams { wizardId: string; input?: unknown; }
-export interface WizardNextParams { wizardId: string; input?: unknown; }
-export interface WizardCancelParams { wizardId: string; }
-export interface WizardStatusParams { wizardId: string; }
-export interface WizardStep { id: string; prompt?: string; [key: string]: unknown; }
-export interface WizardNextResult { step: WizardStep; complete: boolean; }
+export interface WizardStartParams {
+  wizardId: string;
+  input?: unknown;
+}
+export interface WizardNextParams {
+  wizardId: string;
+  input?: unknown;
+}
+export interface WizardCancelParams {
+  wizardId: string;
+}
+export interface WizardStatusParams {
+  wizardId: string;
+}
+export interface WizardStep {
+  id: string;
+  prompt?: string;
+  [key: string]: unknown;
+}
+export interface WizardNextResult {
+  step: WizardStep;
+  complete: boolean;
+}
 export interface WizardStartResult extends WizardNextResult {}
-export interface WizardStatusResult { currentStep: WizardStep; complete: boolean; }
+export interface WizardStatusResult {
+  currentStep: WizardStep;
+  complete: boolean;
+}
 
 export interface TalkConfigParams {}
-export interface TalkConfigResult { enabled: boolean; [key: string]: unknown; }
-export interface TalkModeParams { enabled: boolean; }
+export interface TalkConfigResult {
+  enabled: boolean;
+  [key: string]: unknown;
+}
+export interface TalkModeParams {
+  enabled: boolean;
+}
 
 export interface ChannelsStatusParams {}
-export interface ChannelsStatusResult { channels: unknown[]; }
-export interface ChannelsLogoutParams { channelId: string; }
+export interface ChannelsStatusResult {
+  channels: unknown[];
+}
+export interface ChannelsLogoutParams {
+  channelId: string;
+}
 
-export interface WebLoginStartParams { returnUrl?: string; }
-export interface WebLoginWaitParams { token: string; timeoutMs?: number; }
+export interface WebLoginStartParams {
+  returnUrl?: string;
+}
+export interface WebLoginWaitParams {
+  token: string;
+  timeoutMs?: number;
+}
 
-export interface AgentsFileEntry { path: string; content: string; }
-export interface AgentsCreateParams { agentId: string; files: AgentsFileEntry[]; }
-export interface AgentsCreateResult { agentId: string; }
-export interface AgentsUpdateParams { agentId: string; files: AgentsFileEntry[]; }
-export interface AgentsUpdateResult { agentId: string; }
-export interface AgentsDeleteParams { agentId: string; }
-export interface AgentsDeleteResult { agentId: string; }
-export interface AgentsFilesListParams { agentId: string; }
-export interface AgentsFilesListResult { files: string[]; }
-export interface AgentsFilesGetParams { agentId: string; path: string; }
-export interface AgentsFilesGetResult { content: string; }
-export interface AgentsFilesSetParams { agentId: string; path: string; content: string; }
+export interface AgentsFileEntry {
+  path: string;
+  content: string;
+}
+export interface AgentsCreateParams {
+  agentId: string;
+  files: AgentsFileEntry[];
+}
+export interface AgentsCreateResult {
+  agentId: string;
+}
+export interface AgentsUpdateParams {
+  agentId: string;
+  files: AgentsFileEntry[];
+}
+export interface AgentsUpdateResult {
+  agentId: string;
+}
+export interface AgentsDeleteParams {
+  agentId: string;
+}
+export interface AgentsDeleteResult {
+  agentId: string;
+}
+export interface AgentsFilesListParams {
+  agentId: string;
+}
+export interface AgentsFilesListResult {
+  files: string[];
+}
+export interface AgentsFilesGetParams {
+  agentId: string;
+  path: string;
+}
+export interface AgentsFilesGetResult {
+  content: string;
+}
+export interface AgentsFilesSetParams {
+  agentId: string;
+  path: string;
+  content: string;
+}
 export interface AgentsFilesSetResult {}
 export interface AgentsListParams {}
-export interface AgentsListResult { agents: AgentSummary[]; }
+export interface AgentsListResult {
+  agents: AgentSummary[];
+}
 
-export interface SkillsStatusParams { skillId?: string; }
+export interface SkillsStatusParams {
+  skillId?: string;
+}
 export interface ToolsCatalogParams {}
-export interface ToolsCatalogResult { tools: unknown[]; }
+export interface ToolsCatalogResult {
+  tools: unknown[];
+}
 export interface SkillsBinsParams {}
-export interface SkillsBinsResult { bins: unknown[]; }
-export interface SkillsInstallParams { skillId: string; }
-export interface SkillsUpdateParams { skillId: string; }
+export interface SkillsBinsResult {
+  bins: unknown[];
+}
+export interface SkillsInstallParams {
+  skillId: string;
+}
+export interface SkillsUpdateParams {
+  skillId: string;
+}
 
-export interface CronJob { id: string; cron: string; prompt: string; [key: string]: unknown; }
+export interface CronJob {
+  id: string;
+  cron: string;
+  prompt: string;
+  [key: string]: unknown;
+}
 export interface CronListParams {}
-export interface CronStatusParams { jobId: string; }
-export interface CronAddParams { cron: string; prompt: string; }
-export interface CronUpdateParams { jobId: string; cron?: string; prompt?: string; }
-export interface CronRemoveParams { jobId: string; }
-export interface CronRunParams { jobId: string; }
+export interface CronStatusParams {
+  jobId: string;
+}
+export interface CronAddParams {
+  cron: string;
+  prompt: string;
+}
+export interface CronUpdateParams {
+  jobId: string;
+  cron?: string;
+  prompt?: string;
+}
+export interface CronRemoveParams {
+  jobId: string;
+}
+export interface CronRunParams {
+  jobId: string;
+}
 export interface CronRunsParams {}
-export interface CronRunLogEntry { timestamp: number; [key: string]: unknown; }
+export interface CronRunLogEntry {
+  timestamp: number;
+  [key: string]: unknown;
+}
 
-export interface LogsTailParams { lines?: number; }
-export interface LogsTailResult { logs: string[]; }
+export interface LogsTailParams {
+  lines?: number;
+}
+export interface LogsTailResult {
+  logs: string[];
+}
 
 export interface ExecApprovalsGetParams {}
-export interface ExecApprovalsSetParams { enabled: boolean; }
-export interface ExecApprovalsSnapshot { approvals: unknown[]; }
+export interface ExecApprovalsSetParams {
+  enabled: boolean;
+}
+export interface ExecApprovalsSnapshot {
+  approvals: unknown[];
+}
 
 export interface SessionsListParams {}
-export interface SessionsPreviewParams { sessionId: string; }
-export interface SessionsResolveParams { sessionId: string; }
-export interface SessionsPatchParams { sessionId: string; patch: unknown; }
+export interface SessionsPreviewParams {
+  sessionId: string;
+}
+export interface SessionsResolveParams {
+  sessionId: string;
+}
+export interface SessionsPatchParams {
+  sessionId: string;
+  patch: unknown;
+}
 export interface SessionsPatchResult {}
-export interface SessionsResetParams { sessionId: string; }
-export interface SessionsDeleteParams { sessionId: string; }
+export interface SessionsResetParams {
+  sessionId: string;
+}
+export interface SessionsDeleteParams {
+  sessionId: string;
+}
 export interface SessionsCompactParams {}
 export interface SessionsUsageParams {}
 
 export interface NodeListParams {}
-export interface NodeInvokeParams { nodeId: string; target: string; params?: unknown; }
-export interface NodeInvokeResultParams { result: unknown; }
-export interface NodeEventParams { nodeId: string; event: string; payload?: unknown; }
-export interface NodePendingDrainParams { nodeId: string; max?: number; }
-export interface NodePendingDrainResult { items: unknown[]; }
-export interface NodePendingEnqueueParams { nodeId: string; item: unknown; }
+export interface NodeInvokeParams {
+  nodeId: string;
+  target: string;
+  params?: unknown;
+}
+export interface NodeInvokeResultParams {
+  result: unknown;
+}
+export interface NodeEventParams {
+  nodeId: string;
+  event: string;
+  payload?: unknown;
+}
+export interface NodePendingDrainParams {
+  nodeId: string;
+  max?: number;
+}
+export interface NodePendingDrainResult {
+  items: unknown[];
+}
+export interface NodePendingEnqueueParams {
+  nodeId: string;
+  item: unknown;
+}
 export interface NodePendingEnqueueResult {}
 
 export interface PollParams {}
 export interface UpdateRunParams {}
-export interface ChatInjectParams { chatId: string; message: unknown; }
+export interface ChatInjectParams {
+  chatId: string;
+  message: unknown;
+}
 
 // ============================================================================
 // Connection State
