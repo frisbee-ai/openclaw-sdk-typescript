@@ -21,6 +21,28 @@ import {
 // Mock WebSocket Implementation
 // ============================================================================
 
+// Polyfill for CloseEvent in Node.js environment
+if (typeof (globalThis as any).CloseEvent === "undefined") {
+  (globalThis as any).CloseEvent = class CloseEvent extends Event {
+    readonly code: number;
+    readonly reason: string;
+    readonly wasClean: boolean;
+
+    constructor(type: string, eventInitDict?: CloseEventInit) {
+      super(type);
+      this.code = eventInitDict?.code ?? 0;
+      this.reason = eventInitDict?.reason ?? "";
+      this.wasClean = eventInitDict?.wasClean ?? false;
+    }
+  };
+}
+
+interface CloseEventInit {
+  code?: number;
+  reason?: string;
+  wasClean?: boolean;
+}
+
 class MockWebSocket {
   static readonly CONNECTING = 0;
   static readonly OPEN = 1;
@@ -54,7 +76,11 @@ class MockWebSocket {
   simulateClose(code: number = 1000, reason: string = ""): void {
     this.readyState = MockWebSocket.CLOSED;
     if (this.onclose) {
-      const event = new CloseEvent("close", { code, reason, wasClean: code === 1000 });
+      const event = new CloseEvent("close", {
+        code,
+        reason,
+        wasClean: code === 1000,
+      });
       this.onclose(event);
     }
   }
@@ -261,7 +287,7 @@ describe("WebSocket Transport", () => {
         await connectPromise;
 
         await expect(transport.connect("ws://localhost:8081")).rejects.toThrow(
-          "Already connected or connecting"
+          "Already connected or connecting",
         );
       });
 
@@ -272,7 +298,7 @@ describe("WebSocket Transport", () => {
         transport.connect("ws://localhost:8080");
 
         await expect(transport.connect("ws://localhost:8081")).rejects.toThrow(
-          "Already connected or connecting"
+          "Already connected or connecting",
         );
       });
     });
@@ -325,7 +351,7 @@ describe("WebSocket Transport", () => {
         });
 
         expect(() => transport.send("test")).toThrow(
-          "Cannot send data: connection is closed"
+          "Cannot send data: connection is closed",
         );
       });
     });
