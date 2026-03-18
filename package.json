@@ -79,5 +79,12 @@
   "license": "Apache-2.0",
   "engines": {
     "node": ">=22.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/i0r3k/openclaw-sdk"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
