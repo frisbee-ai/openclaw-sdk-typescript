@@ -7,8 +7,8 @@
  */
 
 // Main client exports
-export { OpenClawClient, createClient } from "./client.js";
-export type { ClientConfig } from "./client.js";
+export { OpenClawClient, createClient } from './client.js';
+export type { ClientConfig } from './client.js';
 
 // ============================================================================
 // Error Types
@@ -26,7 +26,7 @@ export {
   AbortError,
   GatewayError,
   ReconnectError,
-} from "./errors.js";
+} from './errors.js';
 
 // Error code types
 export type {
@@ -36,7 +36,7 @@ export type {
   RequestErrorCode,
   GatewayErrorCode,
   ReconnectErrorCode,
-} from "./errors.js";
+} from './errors.js';
 
 // Error type guards
 export {
@@ -46,10 +46,10 @@ export {
   isTimeoutError,
   isCancelledError,
   isAbortError,
-} from "./errors.js";
+} from './errors.js';
 
 // Error factory
-export { createErrorFromResponse } from "./errors.js";
+export { createErrorFromResponse } from './errors.js';
 
 // ============================================================================
 // Protocol Types
@@ -71,7 +71,7 @@ export type {
 
   // Snapshot types
   Snapshot,
-} from "./protocol/types.js";
+} from './protocol/types.js';
 
 // API parameter types (selectively exported)
 export type {
@@ -115,7 +115,7 @@ export type {
   NodePendingDrainResult,
   NodePendingEnqueueParams,
   NodePendingEnqueueResult,
-} from "./protocol/types.js";
+} from './protocol/types.js';
 
 // Validation functions
 export {
@@ -134,7 +134,7 @@ export {
   isEventFrame,
   isSuccessfulResponse,
   isErrorResponse,
-} from "./protocol/validation.js";
+} from './protocol/validation.js';
 
 // Authentication
 export {
@@ -142,27 +142,23 @@ export {
   StaticCredentialsProvider,
   AuthHandler,
   createAuthHandler,
-} from "./auth/provider.js";
+} from './auth/provider.js';
 export type {
   DeviceCredentials,
   RefreshResult,
   AuthMethod,
   StaticCredentialsConfig,
   AuthConfig,
-} from "./auth/provider.js";
+} from './auth/provider.js';
 
 // Event Manager
-export {
-  EventManager,
-  createEventManager,
-  MAX_EVENT_NAME_LENGTH,
-} from "./managers/event.js";
+export { EventManager, createEventManager, MAX_EVENT_NAME_LENGTH } from './managers/event.js';
 export type {
   EventHandler,
   UnsubscribeFn,
   EventPattern,
   ListenerErrorHandler,
-} from "./managers/event.js";
+} from './managers/event.js';
 
 // ============================================================================
 // Reconnection Manager (Advanced/Stand-alone)
@@ -204,58 +200,44 @@ export type {
  * });
  * ```
  */
-export {
-  ReconnectManager,
-  createReconnectManager,
-} from "./managers/reconnect.js";
+export { ReconnectManager, createReconnectManager } from './managers/reconnect.js';
 export type {
   ReconnectConfig,
   ReconnectState,
   ReconnectEvent,
   ReconnectListenerErrorHandler,
-} from "./managers/reconnect.js";
+} from './managers/reconnect.js';
 
 // Connection
-export {
-  ProtocolNegotiator,
-  createProtocolNegotiator,
-} from "./connection/protocol.js";
-export type {
-  ProtocolVersionRange,
-  NegotiatedProtocol,
-} from "./connection/protocol.js";
-export {
-  ConnectionStateMachine,
-  createConnectionStateMachine,
-} from "./connection/state.js";
+export { ProtocolNegotiator, createProtocolNegotiator } from './connection/protocol.js';
+export type { ProtocolVersionRange, NegotiatedProtocol } from './connection/protocol.js';
+export { ConnectionStateMachine, createConnectionStateMachine } from './connection/state.js';
 export type {
   StateChangeEvent,
   StateChangeListener,
   StateChangeListenerErrorHandler,
-} from "./connection/state.js";
-export {
-  PolicyManager,
-  createPolicyManager,
-  DEFAULT_POLICY,
-} from "./connection/policies.js";
-export type { Policy } from "./connection/policies.js";
-export { TlsValidator, createTlsValidator } from "./connection/tls.js";
-export type {
-  TlsValidatorConfig,
-  TlsValidationResult,
-  TLSSocket,
-} from "./connection/tls.js";
+} from './connection/state.js';
+export { PolicyManager, createPolicyManager, DEFAULT_POLICY } from './connection/policies.js';
+export type { Policy } from './connection/policies.js';
+export { TlsValidator, createTlsValidator } from './connection/tls.js';
+export type { TlsValidatorConfig, TlsValidationResult, TLSSocket } from './connection/tls.js';
 
 // Events
-export { TickMonitor, createTickMonitor } from "./events/tick.js";
-export type { TickMonitorConfig, TickStatus } from "./events/tick.js";
-export { GapDetector, createGapDetector } from "./events/gap.js";
+export { TickMonitor, createTickMonitor } from './events/tick.js';
+export type { TickMonitorConfig, TickStatus } from './events/tick.js';
+export { GapDetector, createGapDetector } from './events/gap.js';
 export type {
   GapInfo,
   GapRecoveryMode,
   GapRecoveryConfig,
   GapDetectorConfig,
-} from "./events/gap.js";
+} from './events/gap.js';
+
+// ============================================================================
+// Timeout Manager
+// ============================================================================
+
+export { TimeoutManager, createTimeoutManager } from './utils/timeoutManager.js';
 
 // ============================================================================
 // Logger Types (Reserved for Future Use)
@@ -270,8 +252,8 @@ export type {
  * implementation violates YAGNI at this stage. These types are
  * reserved for when logging needs grow.
  */
-export type { Logger, LogLevel } from "./types/logger.js";
-export { isLogger } from "./types/logger.js";
+export type { Logger, LogLevel } from './types/logger.js';
+export { isLogger } from './types/logger.js';
 
 // Re-export default
-export { default } from "./client.js";
+export { default } from './client.js';
