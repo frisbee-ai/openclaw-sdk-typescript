@@ -26,11 +26,7 @@ export enum ReadyState {
 /**
  * String representation of ready states for easier debugging
  */
-export type ReadyStateString =
-  | "connecting"
-  | "open"
-  | "closing"
-  | "closed";
+export type ReadyStateString = "connecting" | "open" | "closing" | "closed";
 
 /**
  * Convert numeric ready state to string representation
@@ -238,7 +234,7 @@ export class WebSocketTransport implements IWebSocketTransport {
       return ws.WebSocket || ws.default;
     } catch {
       throw new Error(
-        "WebSocket is not available. Please install the 'ws' package for Node.js environments."
+        "WebSocket is not available. Please install the 'ws' package for Node.js environments.",
       );
     }
   }
@@ -271,7 +267,10 @@ export class WebSocketTransport implements IWebSocketTransport {
    * @returns Promise that resolves when the connection is established
    */
   async connect(url: string): Promise<void> {
-    if (this._readyState === ReadyState.OPEN || this._readyState === ReadyState.CONNECTING) {
+    if (
+      this._readyState === ReadyState.OPEN ||
+      this._readyState === ReadyState.CONNECTING
+    ) {
       throw new Error(`Already connected or connecting to ${this._url}`);
     }
 
@@ -339,7 +338,9 @@ export class WebSocketTransport implements IWebSocketTransport {
 
           // If we were still connecting, reject the promise
           if (wasConnecting) {
-            reject(new Error(`Connection closed: ${event.reason} (${event.code})`));
+            reject(
+              new Error(`Connection closed: ${event.reason} (${event.code})`),
+            );
           }
         };
 
@@ -360,6 +361,7 @@ export class WebSocketTransport implements IWebSocketTransport {
           // If we were connecting, reject the promise and update state
           if (this._readyState === ReadyState.CONNECTING) {
             this._readyState = ReadyState.CLOSED;
+            this.cleanup(); // Clean up WebSocket reference to prevent memory leak
             reject(new Error(error.message));
           }
         };
@@ -369,7 +371,10 @@ export class WebSocketTransport implements IWebSocketTransport {
             if (this.onmessage) {
               this.onmessage(event.data);
             }
-          } else if (event.data instanceof ArrayBuffer || ArrayBuffer.isView(event.data)) {
+          } else if (
+            event.data instanceof ArrayBuffer ||
+            ArrayBuffer.isView(event.data)
+          ) {
             let buffer: ArrayBuffer;
             if (event.data instanceof ArrayBuffer) {
               buffer = event.data;
@@ -378,7 +383,7 @@ export class WebSocketTransport implements IWebSocketTransport {
               const sourceBuffer = event.data.buffer;
               buffer = sourceBuffer.slice(
                 event.data.byteOffset,
-                event.data.byteOffset + event.data.byteLength
+                event.data.byteOffset + event.data.byteLength,
               ) as ArrayBuffer;
             }
             if (this.onbinary) {
@@ -389,7 +394,9 @@ export class WebSocketTransport implements IWebSocketTransport {
       } catch (err) {
         this.cleanup();
         reject(
-          new Error(`Failed to create WebSocket: ${err instanceof Error ? err.message : String(err)}`)
+          new Error(
+            `Failed to create WebSocket: ${err instanceof Error ? err.message : String(err)}`,
+          ),
         );
       }
     });
@@ -404,7 +411,7 @@ export class WebSocketTransport implements IWebSocketTransport {
   send(data: string | ArrayBuffer): void {
     if (this._readyState !== ReadyState.OPEN || !this.ws) {
       throw new Error(
-        `Cannot send data: connection is ${this.readyStateString} (expected: open)`
+        `Cannot send data: connection is ${this.readyStateString} (expected: open)`,
       );
     }
 
@@ -472,7 +479,7 @@ export class WebSocketTransport implements IWebSocketTransport {
  * @returns A new WebSocket transport instance
  */
 export function createWebSocketTransport(
-  config?: WebSocketTransportConfig
+  config?: WebSocketTransportConfig,
 ): IWebSocketTransport {
   return new WebSocketTransport(config);
 }

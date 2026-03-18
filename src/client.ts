@@ -6,11 +6,18 @@
  */
 
 import type { ConnectionState } from "./protocol/types.js";
-import type { ConnectParams, GatewayFrame, ResponseFrame } from "./protocol/types.js";
+import type {
+  ConnectParams,
+  GatewayFrame,
+  ResponseFrame,
+} from "./protocol/types.js";
 import type { IWebSocketTransport } from "./transport/websocket.js";
 import { WebSocketTransport } from "./transport/websocket.js";
 import type { ConnectionEventHandlers } from "./managers/connection.js";
-import { ConnectionManager, createConnectionManager } from "./managers/connection.js";
+import {
+  ConnectionManager,
+  createConnectionManager,
+} from "./managers/connection.js";
 import { RequestManager, createRequestManager } from "./managers/request.js";
 
 // ============================================================================
@@ -95,11 +102,12 @@ export class OpenClawClient {
   private requestManager: RequestManager;
   private config: ClientConfig;
 
-  // Event handler storage
-  private stateChangeHandlers: Array<(state: ConnectionState) => void> = [];
-  private errorHandlers: Array<(error: Error) => void> = [];
-  private messageHandlers: Array<(frame: GatewayFrame) => void> = [];
-  private closedHandlers: Array<() => void> = [];
+  // Event handler storage - using Set for O(1) add/remove
+  private stateChangeHandlers: Set<(state: ConnectionState) => void> =
+    new Set();
+  private errorHandlers: Set<(error: Error) => void> = new Set();
+  private messageHandlers: Set<(frame: GatewayFrame) => void> = new Set();
+  private closedHandlers: Set<() => void> = new Set();
 
   /**
    * Create a new OpenClaw client instance.
@@ -135,21 +143,46 @@ export class OpenClawClient {
   private setupConnectionHandlers(): void {
     const handlers: ConnectionEventHandlers = {
       onStateChange: (event) => {
-        this.stateChangeHandlers.forEach((handler) => handler(event.newState));
+        this.stateChangeHandlers.forEach((handler) => {
+          try {
+            handler(event.newState);
+          } catch (error) {
+            // Silently ignore handler errors to prevent cascading failures
+            console.error("Error in stateChange handler:", error);
+          }
+        });
       },
       onError: (event) => {
         const error = new Error(event.message);
-        this.errorHandlers.forEach((handler) => handler(error));
+        this.errorHandlers.forEach((handler) => {
+          try {
+            handler(error);
+          } catch (err) {
+            console.error("Error in error handler:", err);
+          }
+        });
       },
       onMessage: (frame) => {
-        this.messageHandlers.forEach((handler) => handler(frame));
+        this.messageHandlers.forEach((handler) => {
+          try {
+            handler(frame);
+          } catch (error) {
+            console.error("Error in message handler:", error);
+          }
+        });
         // Also handle request responses
         if (frame.type === "res") {
           this.requestManager.resolveRequest(frame.id, frame as ResponseFrame);
         }
       },
       onClosed: () => {
-        this.closedHandlers.forEach((handler) => handler());
+        this.closedHandlers.forEach((handler) => {
+          try {
+            handler();
+          } catch (error) {
+            console.error("Error in closed handler:", error);
+          }
+        });
       },
     };
 
@@ -218,7 +251,7 @@ export class OpenClawClient {
   async request<T = unknown>(
     method: string,
     params?: unknown,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): Promise<T> {
     // Check if signal is already aborted
     if (options?.signal?.aborted) {
@@ -249,29 +282,44 @@ export class OpenClawClient {
 
     // Set up abort handler
     let abortHandler: (() => void) | undefined;
-    if (options?.signal) {
-      abortHandler = () => {
-        this.requestManager.abortRequest(requestId);
-      };
-      options.signal.addEventListener("abort", abortHandler);
-    }
-
-    // Send the request
-    this.connectionManager.send(requestFrame);
+    let cleanupAbortHandler: (() => void) | undefined;
 
     try {
+      if (options?.signal) {
+        abortHandler = () => {
+          this.requestManager.abortRequest(requestId);
+        };
+        options.signal.addEventListener("abort", abortHandler);
+
+        // Store cleanup function
+        cleanupAbortHandler = () => {
+          if (abortHandler && options.signal) {
+            options.signal.removeEventListener("abort", abortHandler);
+            abortHandler = undefined;
+          }
+        };
+
+        // Also clean up on abort
+        options.signal.addEventListener("abort", cleanupAbortHandler, {
+          once: true,
+        });
+      }
+
+      // Send the request
+      this.connectionManager.send(requestFrame);
+
       // Wait for response
       const response = await responsePromise;
 
       if (!response.ok) {
         throw new Error(
-          `Request failed: ${response.error?.code ?? "UNKNOWN"} - ${response.error?.message ?? "Unknown error"}`
+          `Request failed: ${response.error?.code ?? "UNKNOWN"} - ${response.error?.message ?? "Unknown error"}`,
         );
       }
 
       return response.payload as T;
     } finally {
-      // Clean up abort handler
+      // Always clean up abort handler
       if (abortHandler && options?.signal) {
         options.signal.removeEventListener("abort", abortHandler);
       }
@@ -300,36 +348,44 @@ export class OpenClawClient {
    * Register a handler for connection state changes.
    *
    * @param handler - Function to call when connection state changes
+   * @returns Unsubscribe function to remove the handler
    */
-  onStateChange(handler: (state: ConnectionState) => void): void {
-    this.stateChangeHandlers.push(handler);
+  onStateChange(handler: (state: ConnectionState) => void): () => void {
+    this.stateChangeHandlers.add(handler);
+    return () => this.stateChangeHandlers.delete(handler);
   }
 
   /**
    * Register a handler for connection errors.
    *
    * @param handler - Function to call when an error occurs
+   * @returns Unsubscribe function to remove the handler
    */
-  onError(handler: (error: Error) => void): void {
-    this.errorHandlers.push(handler);
+  onError(handler: (error: Error) => void): () => void {
+    this.errorHandlers.add(handler);
+    return () => this.errorHandlers.delete(handler);
   }
 
   /**
    * Register a handler for incoming gateway frames.
    *
    * @param handler - Function to call when a frame is received
+   * @returns Unsubscribe function to remove the handler
    */
-  onMessage(handler: (frame: GatewayFrame) => void): void {
-    this.messageHandlers.push(handler);
+  onMessage(handler: (frame: GatewayFrame) => void): () => void {
+    this.messageHandlers.add(handler);
+    return () => this.messageHandlers.delete(handler);
   }
 
   /**
    * Register a handler for connection close events.
    *
    * @param handler - Function to call when the connection closes
+   * @returns Unsubscribe function to remove the handler
    */
-  onClosed(handler: () => void): void {
-    this.closedHandlers.push(handler);
+  onClosed(handler: () => void): () => void {
+    this.closedHandlers.add(handler);
+    return () => this.closedHandlers.delete(handler);
   }
 }
 
