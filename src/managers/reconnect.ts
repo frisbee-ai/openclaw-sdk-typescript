@@ -4,9 +4,10 @@
  * Handles automatic reconnection with exponential backoff and auth-aware retry logic.
  */
 
-import { ReconnectError } from "../errors.js";
-import type { AuthErrorCode } from "../errors.js";
-import type { RefreshResult } from "../auth/provider.js";
+import { ReconnectError } from '../errors.js';
+import type { AuthErrorCode } from '../errors.js';
+import type { RefreshResult } from '../auth/provider.js';
+import { TimeoutManager } from '../utils/timeoutManager.js';
 
 // ============================================================================
 // Types
@@ -39,17 +40,17 @@ export const DEFAULT_RECONNECT_CONFIG: ReconnectConfig = {
 
 /** Terminal auth errors that should stop reconnection immediately */
 const TERMINAL_AUTH_ERRORS: AuthErrorCode[] = [
-  "AUTH_DEVICE_REJECTED",
-  "AUTH_PASSWORD_INVALID",
-  "AUTH_NOT_SUPPORTED",
-  "AUTH_CONFIGURATION_ERROR",
+  'AUTH_DEVICE_REJECTED',
+  'AUTH_PASSWORD_INVALID',
+  'AUTH_NOT_SUPPORTED',
+  'AUTH_CONFIGURATION_ERROR',
 ];
 
 /** Retryable auth errors that can be retried after token refresh */
 const RETRYABLE_AUTH_ERRORS: AuthErrorCode[] = [
-  "AUTH_TOKEN_EXPIRED",
-  "CHALLENGE_EXPIRED",
-  "AUTH_RATE_LIMITED",
+  'AUTH_TOKEN_EXPIRED',
+  'CHALLENGE_EXPIRED',
+  'AUTH_RATE_LIMITED',
 ];
 
 /**
@@ -58,20 +59,14 @@ const RETRYABLE_AUTH_ERRORS: AuthErrorCode[] = [
  * Sufficient for reasonable reconnection limits (up to 15+ attempts).
  */
 const FIBONACCI_TABLE = [
-  1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584,
-  4181, 6765,
+  1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765,
 ] as const;
 
 // ============================================================================
 // Reconnection Manager
 // ============================================================================
 
-export type ReconnectState =
-  | "idle"
-  | "connecting"
-  | "reconnecting"
-  | "failed"
-  | "success";
+export type ReconnectState = 'idle' | 'connecting' | 'reconnecting' | 'failed' | 'success';
 
 export interface ReconnectEvent {
   state: ReconnectState;
@@ -98,12 +93,12 @@ export type ReconnectListenerErrorHandler = (error: {
  */
 export class ReconnectManager {
   private config: ReconnectConfig;
-  private state: ReconnectState = "idle";
+  private state: ReconnectState = 'idle';
   private attempt = 0;
   private authRetries = 0;
   private listeners: Set<ReconnectListener> = new Set();
   private aborted = false;
-  private currentTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private timeoutManager = new TimeoutManager();
   private listenerErrorHandler: ReconnectListenerErrorHandler | null = null;
 
   constructor(config: Partial<ReconnectConfig> = {}) {
@@ -128,7 +123,7 @@ export class ReconnectManager {
    * Check if reconnection is in progress.
    */
   isReconnecting(): boolean {
-    return this.state === "reconnecting" || this.state === "connecting";
+    return this.state === 'reconnecting' || this.state === 'connecting';
   }
 
   /**
@@ -181,8 +176,7 @@ export class ReconnectManager {
    */
   private calculateDelay(attempt: number): number {
     // Get Fibonacci value from table (default to last value if attempt exceeds table)
-    const fibValue =
-      FIBONACCI_TABLE[Math.min(attempt, FIBONACCI_TABLE.length - 1)];
+    const fibValue = FIBONACCI_TABLE[Math.min(attempt, FIBONACCI_TABLE.length - 1)];
 
     // Base delay grows with Fibonacci
     const baseDelay = this.config.initialDelayMs * fibValue;
@@ -221,32 +215,32 @@ export class ReconnectManager {
    */
   async reconnect(
     connectFn: () => Promise<void>,
-    refreshTokenFn?: () => Promise<RefreshResult | null>,
+    refreshTokenFn?: () => Promise<RefreshResult | null>
   ): Promise<void> {
     this.aborted = false;
     this.attempt = 0;
     this.authRetries = 0;
-    this.state = "reconnecting";
+    this.state = 'reconnecting';
 
     while (!this.aborted && this.attempt < this.config.maxAttempts) {
       this.attempt++;
-      this.state = "connecting";
-      this.emit("connecting");
+      this.state = 'connecting';
+      this.emit('connecting');
 
       try {
         await connectFn();
-        this.state = "success";
-        this.emit("success");
+        this.state = 'success';
+        this.emit('success');
         return;
       } catch (error) {
         const err = error as Error;
 
         // Check for terminal auth errors - stop immediately
         if (this.isTerminalAuthError(err)) {
-          this.state = "failed";
-          this.emit("failed", err);
+          this.state = 'failed';
+          this.emit('failed', err);
           throw new ReconnectError({
-            code: "MAX_AUTH_RETRIES",
+            code: 'MAX_AUTH_RETRIES',
             message: `Terminal auth error: ${err.message}`,
             retryable: false,
             details: { originalError: err.message },
@@ -259,10 +253,10 @@ export class ReconnectManager {
             this.authRetries++;
 
             if (this.authRetries > this.config.maxAuthRetries) {
-              this.state = "failed";
-              this.emit("failed", err);
+              this.state = 'failed';
+              this.emit('failed', err);
               throw new ReconnectError({
-                code: "MAX_AUTH_RETRIES",
+                code: 'MAX_AUTH_RETRIES',
                 message: `Max auth retries (${this.config.maxAuthRetries}) exceeded`,
                 retryable: false,
                 details: { originalError: err.message },
@@ -273,11 +267,11 @@ export class ReconnectManager {
             const refreshResult = await refreshTokenFn();
             if (!refreshResult?.success) {
               // Token refresh failed - stop reconnecting
-              this.state = "failed";
-              this.emit("failed", err);
+              this.state = 'failed';
+              this.emit('failed', err);
               throw new ReconnectError({
-                code: "MAX_AUTH_RETRIES",
-                message: "Token refresh failed, cannot reconnect",
+                code: 'MAX_AUTH_RETRIES',
+                message: 'Token refresh failed, cannot reconnect',
                 retryable: false,
                 details: { originalError: err.message },
               });
@@ -287,10 +281,10 @@ export class ReconnectManager {
 
         // Check if we've exceeded max attempts
         if (this.attempt >= this.config.maxAttempts) {
-          this.state = "failed";
-          this.emit("failed", err);
+          this.state = 'failed';
+          this.emit('failed', err);
           throw new ReconnectError({
-            code: "MAX_RECONNECT_ATTEMPTS",
+            code: 'MAX_RECONNECT_ATTEMPTS',
             message: `Max reconnection attempts (${this.config.maxAttempts}) exceeded`,
             retryable: false,
             details: { originalError: err.message },
@@ -298,8 +292,8 @@ export class ReconnectManager {
         }
 
         // Calculate delay for next attempt
-        this.state = "reconnecting";
-        this.emit("reconnecting", err);
+        this.state = 'reconnecting';
+        this.emit('reconnecting', err);
 
         const delay = this.calculateDelay(this.attempt);
         await this.delay(delay);
@@ -309,8 +303,8 @@ export class ReconnectManager {
     // Should not reach here, but handle edge case
     if (this.aborted) {
       throw new ReconnectError({
-        code: "RECONNECT_DISABLED",
-        message: "Reconnection aborted",
+        code: 'RECONNECT_DISABLED',
+        message: 'Reconnection aborted',
         retryable: false,
       });
     }
@@ -321,12 +315,9 @@ export class ReconnectManager {
    */
   abort(): void {
     this.aborted = true;
-    if (this.currentTimeoutId) {
-      clearTimeout(this.currentTimeoutId);
-      this.currentTimeoutId = null;
-    }
-    this.state = "idle";
-    this.emit("idle");
+    this.timeoutManager.clearAll();
+    this.state = 'idle';
+    this.emit('idle');
   }
 
   /**
@@ -336,16 +327,14 @@ export class ReconnectManager {
     this.abort();
     this.attempt = 0;
     this.authRetries = 0;
-    this.state = "idle";
+    this.state = 'idle';
   }
 
   /**
    * Delay helper.
    */
   private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => {
-      this.currentTimeoutId = setTimeout(resolve, ms);
-    });
+    return this.timeoutManager.delay(ms);
   }
 }
 
@@ -356,8 +345,6 @@ export class ReconnectManager {
 /**
  * Create a reconnect manager.
  */
-export function createReconnectManager(
-  config?: Partial<ReconnectConfig>,
-): ReconnectManager {
+export function createReconnectManager(config?: Partial<ReconnectConfig>): ReconnectManager {
   return new ReconnectManager(config);
 }
