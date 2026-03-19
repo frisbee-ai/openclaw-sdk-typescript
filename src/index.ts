@@ -8,7 +8,7 @@
 
 // Main client exports
 export { OpenClawClient, createClient } from './client.js';
-export type { ClientConfig, ConnectionConfig } from './client.js';
+export type { ClientConfig, ConnectionConfig, RequestOptions } from './client.js';
 
 // ============================================================================
 // Error Types
@@ -71,6 +71,13 @@ export type {
 
   // Snapshot types
   Snapshot,
+
+  // State types
+  StateVersion,
+
+  // Agent types
+  AgentSummary,
+  AgentsFileEntry,
 } from './protocol/types.js';
 
 // API parameter types (selectively exported)
@@ -135,6 +142,7 @@ export {
   isSuccessfulResponse,
   isErrorResponse,
 } from './protocol/validation.js';
+export type { RequestIdValidationOptions } from './protocol/validation.js';
 
 // Authentication
 export {
@@ -205,6 +213,7 @@ export type {
   ReconnectConfig,
   ReconnectState,
   ReconnectEvent,
+  ReconnectListener,
   ReconnectListenerErrorHandler,
 } from './managers/reconnect.js';
 
@@ -216,11 +225,17 @@ export type {
   StateChangeEvent,
   StateChangeListener,
   StateChangeListenerErrorHandler,
+  ClientConnectionState,
 } from './connection/state.js';
 export { PolicyManager, createPolicyManager, DEFAULT_POLICY } from './connection/policies.js';
 export type { Policy } from './connection/policies.js';
 export { TlsValidator, createTlsValidator } from './connection/tls.js';
-export type { TlsValidatorConfig, TlsValidationResult, TLSSocket } from './connection/tls.js';
+export type {
+  TlsValidatorConfig,
+  TlsValidationResult,
+  TLSSocket,
+  TLSCertificate,
+} from './connection/tls.js';
 
 // Events
 export { TickMonitor, createTickMonitor } from './events/tick.js';
@@ -238,6 +253,7 @@ export type {
 // ============================================================================
 
 export { TimeoutManager, createTimeoutManager } from './utils/timeoutManager.js';
+export type { TimeoutHandle, TimeoutManagerConfig } from './utils/timeoutManager.js';
 
 // ============================================================================
 // Logger Types (Reserved for Future Use)

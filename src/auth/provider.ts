@@ -90,7 +90,7 @@ export interface StaticCredentialsConfig {
 /**
  * Static credentials provider for simple use cases.
  *
- * @warning Suitable for development but not production for device keys.
+ * Suitable for development but not production for device keys.
  */
 export class StaticCredentialsProvider implements CredentialsProvider {
   constructor(private config: StaticCredentialsConfig) {}

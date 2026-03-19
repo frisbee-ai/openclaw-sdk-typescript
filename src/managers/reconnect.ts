@@ -76,6 +76,7 @@ export interface ReconnectEvent {
   lastError?: Error;
 }
 
+/** Listener callback for reconnection events */
 export type ReconnectListener = (event: ReconnectEvent) => void;
 
 /** Error handler for listener errors */

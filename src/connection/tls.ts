@@ -33,6 +33,7 @@ export interface TLSSocket {
   getPeerCertificate(): TLSCertificate;
 }
 
+/** TLS certificate information from peer */
 export interface TLSCertificate {
   fingerprint256?: string;
   subject?: string;

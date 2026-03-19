@@ -62,6 +62,7 @@ export interface ResponseFrame {
   error?: ErrorShape;
 }
 
+/** State version for tracking connection state changes */
 export interface StateVersion {
   v: number;
 }
@@ -191,6 +192,7 @@ export interface AgentIdentityResult {
   id: string;
   summary?: AgentSummary;
 }
+/** Agent summary information returned from identity verification */
 export interface AgentSummary {
   [key: string]: unknown;
 }
@@ -300,6 +302,7 @@ export interface WebLoginWaitParams {
   timeoutMs?: number;
 }
 
+/** File entry for agent file operations */
 export interface AgentsFileEntry {
   path: string;
   content: string;

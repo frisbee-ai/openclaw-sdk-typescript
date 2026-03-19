@@ -1,7 +1,5 @@
 /**
- * Connection State Machine
- *
- * Manages connection state transitions with valid transition enforcement.
+ * Connection State Types
  *
  * @module
  */
@@ -10,6 +8,7 @@
 // Types
 // ============================================================================
 
+/** Client connection states */
 export type ClientConnectionState =
   | 'disconnected'
   | 'connecting'
