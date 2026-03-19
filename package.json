@@ -1,5 +1,5 @@
 {
-  "name": "@frisbee-ai/openclaw-sdk",
+  "name": "openclaw-sdk",
   "version": "2026.3.17",
   "description": "OpenClaw SDK for TypeScript/JavaScript",
   "type": "module",

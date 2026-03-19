@@ -11,7 +11,7 @@
 // NOTE: For browser usage, you'll need to use a bundler like
 // esbuild, webpack, or vite to bundle the SDK.
 
-import { createClient } from '@frisbee-ai/openclaw-sdk';
+import { createClient } from 'openclaw-sdk';
 
 // ============================================================================
 // Basic Browser Example

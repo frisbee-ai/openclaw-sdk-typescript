@@ -23,7 +23,7 @@ The SDK implements TLS certificate fingerprint validation to ensure secure conne
 - **Platform Support**: Full validation in Node.js; browser environments rely on native TLS
 
 ```typescript
-import { createTlsValidator } from '@frisbee-ai/openclaw-sdk';
+import { createTlsValidator } from 'openclaw-sdk';
 
 const validator = createTlsValidator({
   expectedFingerprints: ['AB:CD:EF:...'],
@@ -51,7 +51,7 @@ The SDK uses a `CredentialsProvider` interface to abstract credential storage, a
 - **Token Refresh**: Automatic token refresh on reconnection
 
 ```typescript
-import { CredentialsProvider } from '@frisbee-ai/openclaw-sdk';
+import { CredentialsProvider } from 'openclaw-sdk';
 
 class SecureCredentialsProvider implements CredentialsProvider {
   async getToken() {
