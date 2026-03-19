@@ -47,4 +47,4 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/coverage-final.json
           fail_ci_if_error: false
-          slug: i0r3k/openclaw-sdk-typescript
+          slug: frisbee-ai/openclaw-sdk-typescript
