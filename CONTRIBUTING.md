@@ -18,7 +18,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/i0r3k/openclaw-sdk.git
+   git clone https://github.com/frisbee-ai/openclaw-sdk-typescript.git
    cd openclaw-sdk
    ```
 
