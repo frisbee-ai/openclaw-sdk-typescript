@@ -10,13 +10,13 @@ TypeScript SDK for connecting to OpenClaw Gateway via WebSocket, providing a ful
 ## Installation
 
 ```bash
-npm install openclaw-sdk
+npm install @frisbee-ai/openclaw-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { createClient } from "openclaw-sdk";
+import { createClient } from "@frisbee-ai/openclaw-sdk";
 
 const client = createClient({
   url: "wss://gateway.openclaw.example.com",
@@ -67,7 +67,7 @@ The SDK supports multiple authentication methods through `CredentialsProvider`:
 ### Static Credentials
 
 ```typescript
-import { createClient, StaticCredentialsProvider } from "openclaw-sdk";
+import { createClient, StaticCredentialsProvider } from "@frisbee-ai/openclaw-sdk";
 
 const client = createClient({
   url: "wss://gateway.openclaw.example.com",
@@ -83,7 +83,7 @@ const client = createClient({
 For dynamic token refresh or custom auth flows:
 
 ```typescript
-import { type CredentialsProvider } from "openclaw-sdk";
+import { type CredentialsProvider } from "@frisbee-ai/openclaw-sdk";
 
 const customProvider: CredentialsProvider = {
   async getCredentials() {
@@ -210,7 +210,7 @@ const client = createClient({
 - Advanced retry strategies beyond standard backoff
 
 ```typescript
-import { createReconnectManager } from "openclaw-sdk";
+import { createReconnectManager } from "@frisbee-ai/openclaw-sdk";
 
 const reconnectMgr = createReconnectManager({
   maxAttempts: 10,
@@ -248,7 +248,7 @@ import {
   createClient,
   OpenClawClient,
   type ClientConfig,
-} from "openclaw-sdk";
+} from "@frisbee-ai/openclaw-sdk";
 ```
 
 ### Error Types
@@ -287,7 +287,7 @@ import {
 
   // Error factory
   createErrorFromResponse,
-} from "openclaw-sdk";
+} from "@frisbee-ai/openclaw-sdk";
 ```
 
 ### Type Guards
