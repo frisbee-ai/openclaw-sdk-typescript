@@ -10,8 +10,8 @@ on:
     branches: [main]
 
 jobs:
-  validate:
-    name: Validate
+  test:
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
