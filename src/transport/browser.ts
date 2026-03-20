@@ -127,16 +127,26 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
             });
           }
           // Clean up references after close event is handled
-          this.ws!.onopen = null;
-          this.ws!.onclose = null;
-          this.ws!.onerror = null;
-          this.ws!.onmessage = null;
-          this.ws = null;
+          if (this.ws) {
+            this.ws.onopen = null;
+            this.ws.onclose = null;
+            this.ws.onerror = null;
+            this.ws.onmessage = null;
+            this.ws = null;
+          }
         };
 
         this.ws.onerror = (_event: Event) => {
           clearTimeout(timeoutId);
-          if (this._readyState === ReadyState.CONNECTING) {
+          // Check state before modifying it
+          const wasConnecting = this._readyState === ReadyState.CONNECTING;
+          // Clean up WebSocket to prevent resource leaks
+          if (this.ws) {
+            this.ws.close();
+            this.ws = null;
+          }
+          this._readyState = ReadyState.CLOSED;
+          if (wasConnecting) {
             reject(new Error('WebSocket connection failed'));
           }
           if (this.config.onerror) {
