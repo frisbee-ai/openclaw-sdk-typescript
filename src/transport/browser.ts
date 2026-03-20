@@ -8,7 +8,7 @@
 
 import type { IWebSocketTransport, ReadyStateString } from './websocket.js';
 import { ReadyState, readyStateToString } from './websocket.js';
-import type { WebSocketOpenEvent, WebSocketClose, WebSocketError } from './node.js';
+import type { WebSocketOpenEvent, WebSocketClose, WebSocketError } from './websocket.js';
 
 // ============================================================================
 // Types
@@ -99,7 +99,7 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
         this.ws.onopen = () => {
           this._readyState = ReadyState.OPEN;
           if (this.config.onopen) {
-            this.config.onopen({ target: url });
+            this.config.onopen({ url, timestamp: Date.now() });
           }
           resolve();
         };
@@ -122,7 +122,8 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
           if (this.config.onerror) {
             this.config.onerror({
               message: 'WebSocket error',
-              error: new Error('WebSocket error'),
+              original: new Error('WebSocket error'),
+              recoverable: true,
             });
           }
         };
