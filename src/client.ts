@@ -702,6 +702,9 @@ export class OpenClawClient {
     this._serverInfo = null;
     this._snapshot = null;
 
+    // Clear pending requests so they reject immediately
+    this.requestManager.clear();
+
     // Clean up tick handler to prevent leak on reconnect cycles
     if (this.tickHandlerUnsub) {
       this.tickHandlerUnsub();
