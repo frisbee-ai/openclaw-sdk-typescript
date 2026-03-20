@@ -188,6 +188,7 @@ export class OpenClawClient {
   private authHandler: AuthHandler | null = null;
   private tickMonitor: TickMonitor | null = null;
   private gapDetector: GapDetector | null = null;
+  private tickHandlerUnsub: (() => void) | null = null;
 
   // API namespaces (created once, reused)
   private _chatAPI: ChatAPI;
@@ -666,10 +667,13 @@ export class OpenClawClient {
         this.tickMonitor.start();
 
         // Wire tick events from EventManager to TickMonitor
-        this.eventManager.on('tick', (frame: { payload?: { ts?: number } }) => {
-          const ts = frame.payload?.ts ?? Date.now();
-          this.tickMonitor?.recordTick(ts);
-        });
+        this.tickHandlerUnsub = this.eventManager.on(
+          'tick',
+          (frame: { payload?: { ts?: number } }) => {
+            const ts = frame.payload?.ts ?? Date.now();
+            this.tickMonitor?.recordTick(ts);
+          }
+        );
       }
 
       // Create gap detector
@@ -697,6 +701,13 @@ export class OpenClawClient {
     this.negotiatedProtocol = null;
     this._serverInfo = null;
     this._snapshot = null;
+
+    // Clean up tick handler to prevent leak on reconnect cycles
+    if (this.tickHandlerUnsub) {
+      this.tickHandlerUnsub();
+      this.tickHandlerUnsub = null;
+    }
+
     if (this.tickMonitor) {
       this.tickMonitor.stop();
     }
