@@ -134,20 +134,19 @@ export interface Logger {
  * ```
  */
 export function isLogger(value: unknown): value is Logger {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'name' in value &&
-    'level' in value &&
-    'debug' in value &&
-    'info' in value &&
-    'warn' in value &&
-    'error' in value &&
-    typeof (value as Logger).debug === 'function' &&
-    typeof (value as Logger).info === 'function' &&
-    typeof (value as Logger).warn === 'function' &&
-    typeof (value as Logger).error === 'function'
-  );
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    typeof (value as Logger).name !== 'string' ||
+    !('level' in value) ||
+    typeof (value as Logger).debug !== 'function' ||
+    typeof (value as Logger).info !== 'function' ||
+    typeof (value as Logger).warn !== 'function' ||
+    typeof (value as Logger).error !== 'function'
+  ) {
+    return false;
+  }
+  return true;
 }
 
 // ============================================================================
