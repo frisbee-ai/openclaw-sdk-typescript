@@ -20,9 +20,9 @@ import { createClient } from "openclaw-sdk";
 
 const client = createClient({
   url: "wss://gateway.openclaw.example.com",
-  credentials: {
-    deviceId: "your-device-id",
-    apiKey: "your-api-key",
+  clientId: "your-client-id",
+  auth: {
+    token: "your-auth-token",
   },
 });
 
@@ -47,9 +47,19 @@ The `ClientConfig` interface provides all configuration options:
 interface ClientConfig {
   // Required
   url: string;                    // WebSocket URL
-  credentials: CredentialsProvider | DeviceCredentials;
+  clientId: string;                // Client identifier
 
-  // Optional
+  // Optional - authentication
+  auth?: {
+    token?: string;                // Auth token
+    bootstrapToken?: string;      // Bootstrap token
+    deviceToken?: string;          // Device token
+    password?: string;             // Password
+  };
+  device?: DevicePairingCredentials;  // Device pairing credentials
+  credentialsProvider?: CredentialsProvider; // Advanced auth flows
+
+  // Optional - connection
   autoReconnect?: boolean;        // Auto-reconnect on disconnect (default: false)
   maxReconnectAttempts?: number;  // Max reconnection attempts (default: 5)
   reconnectDelayMs?: number;      // Initial reconnection delay (default: 1000)
@@ -71,9 +81,9 @@ import { createClient, StaticCredentialsProvider } from "openclaw-sdk";
 
 const client = createClient({
   url: "wss://gateway.openclaw.example.com",
-  credentials: {
-    deviceId: "your-device-id",
-    apiKey: "your-api-key",
+  clientId: "your-client-id",
+  auth: {
+    token: "your-auth-token",
   },
 });
 ```
@@ -107,7 +117,8 @@ const customProvider: CredentialsProvider = {
 
 const client = createClient({
   url: "wss://gateway.openclaw.example.com",
-  credentials: customProvider,
+  clientId: "my-client-id",
+  credentialsProvider: customProvider,
 });
 ```
 
@@ -127,7 +138,8 @@ When passing credentials directly via `ClientConfig.auth`, the credentials are s
 ```typescript
 const client = createClient({
   url: "wss://gateway.openclaw.example.com",
-  credentials: new CustomCredentialsProvider(),
+  clientId: "my-client-id",
+  credentialsProvider: new CustomCredentialsProvider(),
 });
 ```
 
@@ -192,10 +204,13 @@ The `ConnectionManager` has built-in reconnection support:
 ```typescript
 const client = createClient({
   url: "wss://gateway.openclaw.example.com",
-  credentials: { ... },
-  autoReconnect: true,      // Enable auto-reconnect
-  maxReconnectAttempts: 5,  // Max retry attempts
-  reconnectDelayMs: 1000,   // Initial delay
+  clientId: "my-client-id",
+  auth: { token: "your-auth-token" },
+  connection: {
+    autoReconnect: true,      // Enable auto-reconnect
+    maxReconnectAttempts: 5,  // Max retry attempts
+    reconnectDelayMs: 1000,   // Initial delay
+  },
 });
 
 // Reconnection happens automatically

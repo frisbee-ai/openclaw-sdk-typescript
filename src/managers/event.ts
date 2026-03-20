@@ -40,6 +40,10 @@ interface SubscriptionEntry {
   handler: EventHandler<unknown>;
   namespace?: string;
   priority: number;
+  /** Whether this is a once() subscription that should auto-remove after first emit */
+  isOnce?: boolean;
+  /** Token for identifying this subscription (used for once() cleanup via reference equality) */
+  onceToken?: object;
 }
 
 // ============================================================================
