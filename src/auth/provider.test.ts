@@ -251,7 +251,7 @@ describe('AuthHandler', () => {
 
       expect(result).toEqual({
         method: 'deviceToken',
-        data: { deviceToken: 'public-key' },
+        data: { deviceToken: 'device-1' },
       });
     });
 

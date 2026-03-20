@@ -193,24 +193,23 @@ describe('isLogger type guard', () => {
     expect(isLogger(obj)).toBe(false);
   });
 
-  it('should return true for logger with custom level string', () => {
+  it('should return true for logger with LogLevel enum', () => {
     const obj = {
       name: 'custom',
-      level: 'custom-level',
+      level: LogLevel.Debug,
       debug: () => {},
       info: () => {},
       warn: () => {},
       error: () => {},
     };
 
-    // Type guard checks for presence, not valid LogLevel
     expect(isLogger(obj)).toBe(true);
   });
 
-  it('should return true for empty object with all required properties as functions', () => {
+  it('should return true for empty object with LogLevel enum', () => {
     const obj = {
       name: '',
-      level: '' as any,
+      level: LogLevel.Info,
       debug: () => {},
       info: () => {},
       warn: () => {},

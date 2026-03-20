@@ -158,14 +158,14 @@ export class ConnectionStateMachine {
 
   /**
    * Reset to disconnected state.
-   * Emits a state change event from the previous state to 'disconnected'.
+   * Does NOT emit events - designed to be called after disconnect() already
+   * triggered a state change, to ensure state machine is in consistent state.
    */
   reset(): void {
-    const previous = this.state;
+    // Reset state without emitting events.
+    // This is called after ConnectionManager.disconnect() already triggered
+    // the state change event, to ensure state machine is in known state.
     this.state = 'disconnected';
-    if (previous !== 'disconnected') {
-      this.emit({ previous, current: 'disconnected' });
-    }
   }
 
   /**
