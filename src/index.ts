@@ -304,9 +304,9 @@ export type {
  *   maxDelayMs: 30000,
  * });
  *
- * reconnectMgr.on("stateChange", (state) => {
- *   if (state.phase === "waiting") {
- *     console.log(`Reconnecting in ${state.delayMs}ms...`);
+ * reconnectMgr.onEvent((event) => {
+ *   if (event.state === "waiting") {
+ *     console.log(`Reconnecting in ${event.delayMs}ms...`);
  *   }
  * });
  * ```

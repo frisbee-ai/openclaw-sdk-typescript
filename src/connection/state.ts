@@ -222,11 +222,11 @@ export class ConnectionStateMachine {
  *
  * const stateMachine = createConnectionStateMachine();
  *
- * stateMachine.onStateChange((event) => {
- *   console.log(`State: ${event.previousState} -> ${event.newState}`);
+ * stateMachine.onChange((event) => {
+ *   console.log(`State: ${event.previous} -> ${event.current}`);
  * });
  *
- * stateMachine.transition('connecting');
+ * stateMachine.transitionTo('connecting');
  * ```
  */
 export function createConnectionStateMachine(): ConnectionStateMachine {

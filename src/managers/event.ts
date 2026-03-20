@@ -91,9 +91,9 @@ export class EventManager {
    *
    * @example
    * ```ts
-   * const unsub1 = events.on('*', (e) => console.log(e.event));
-   * const unsub2 = events.on('agent:*', (e) => console.log(e.event));
-   * const unsub3 = events.on('tick', (e) => console.log(e.payload));
+   * const unsub1 = events.on('*', (payload) => console.log(payload));
+   * const unsub2 = events.on('agent:*', (payload) => console.log(payload));
+   * const unsub3 = events.on('tick', (payload) => console.log(payload));
    * ```
    */
   on<T = unknown>(

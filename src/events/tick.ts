@@ -197,12 +197,9 @@ export class TickMonitor extends EventEmitter {
  * import { createTickMonitor } from './events/tick.js';
  *
  * const tickMonitor = createTickMonitor({
- *   expectedIntervalMs: 5000,
- *   maxMissedTicks: 3
- * });
- *
- * tickMonitor.onTick((status) => {
- *   console.log("Tick status:", status);
+ *   tickIntervalMs: 5000,
+ *   staleMultiplier: 3,
+ *   onStale: () => console.log("Connection stale!"),
  * });
  *
  * tickMonitor.start();

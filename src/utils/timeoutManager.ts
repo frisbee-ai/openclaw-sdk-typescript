@@ -197,8 +197,8 @@ export class TimeoutManager {
  * await timeoutMgr.delay(5000);
  *
  * // Set custom timeout
- * const id = timeoutMgr.setTimeout(() => console.log("Done!"), 3000);
- * timeoutMgr.clearTimeout(id);
+ * const handle = timeoutMgr.set(() => console.log("Done!"), 3000);
+ * handle.clear();
  * ```
  */
 export function createTimeoutManager(config?: TimeoutManagerConfig): TimeoutManager {
