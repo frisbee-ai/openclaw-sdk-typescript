@@ -8,12 +8,43 @@
  */
 
 import type { ConnectionState } from './protocol/types.js';
-import type { ConnectParams, GatewayFrame, ResponseFrame } from './protocol/types.js';
+import type {
+  ConnectParams,
+  GatewayFrame,
+  ResponseFrame,
+  HelloOk,
+  Snapshot,
+} from './protocol/types.js';
 import type { IWebSocketTransport } from './transport/websocket.js';
 import { WebSocketTransport } from './transport/websocket.js';
 import type { ConnectionEventHandlers } from './managers/connection.js';
 import { ConnectionManager, createConnectionManager } from './managers/connection.js';
 import { RequestManager, createRequestManager } from './managers/request.js';
+import { EventManager, createEventManager } from './managers/event.js';
+import type { EventPattern, EventHandler, UnsubscribeFn } from './managers/event.js';
+import { createErrorFromResponse } from './errors.js';
+import { ProtocolNegotiator, createProtocolNegotiator } from './connection/protocol.js';
+import type { NegotiatedProtocol } from './connection/protocol.js';
+import { PolicyManager, createPolicyManager } from './connection/policies.js';
+import type { Policy } from './connection/policies.js';
+import { ConnectionStateMachine, createConnectionStateMachine } from './connection/state.js';
+import type { ClientConnectionState } from './connection/state.js';
+import { AuthHandler, createAuthHandler } from './auth/provider.js';
+import type { CredentialsProvider } from './auth/provider.js';
+import { TickMonitor, createTickMonitor } from './events/tick.js';
+import type { TickMonitorConfig } from './events/tick.js';
+import { GapDetector, createGapDetector } from './events/gap.js';
+import type { GapDetectorConfig } from './events/gap.js';
+import type { Logger } from './types/logger.js';
+import { LogLevel } from './types/logger.js';
+import { ChatAPI } from './api/chat.js';
+import { AgentsAPI } from './api/agents.js';
+import { SessionsAPI } from './api/sessions.js';
+import { ConfigAPI } from './api/config.js';
+import { CronAPI } from './api/cron.js';
+import { NodesAPI } from './api/nodes.js';
+import { SkillsAPI } from './api/skills.js';
+import { DevicePairingAPI } from './api/devicePairing.js';
 
 // ============================================================================
 // Default Configuration Constants
@@ -23,6 +54,16 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 30000;
 const DEFAULT_CONNECT_TIMEOUT_MS = 30000;
 const DEFAULT_MAX_RECONNECT_ATTEMPTS = 10;
 const DEFAULT_RECONNECT_DELAY_MS = 1000;
+
+/** Default no-op logger used when no logger is configured */
+const NOOP_LOGGER: Logger = {
+  name: 'openclaw-sdk',
+  level: LogLevel.Error,
+  debug() {},
+  info() {},
+  warn() {},
+  error() {},
+};
 
 // ============================================================================
 // Configuration Types
@@ -87,6 +128,16 @@ export interface ClientConfig {
   };
   /** Connection behavior configuration (nested form) */
   connection?: ConnectionConfig;
+  /** Credentials provider for advanced auth flows */
+  credentialsProvider?: CredentialsProvider;
+  /** Tick monitor configuration for heartbeat monitoring */
+  tickMonitor?: Partial<TickMonitorConfig>;
+  /** Gap detector configuration for event sequence tracking */
+  gapDetector?: Partial<GapDetectorConfig>;
+  /** Client capabilities to advertise (e.g., ['tool_events']) */
+  capabilities?: string[];
+  /** Logger instance for structured logging */
+  logger?: Logger;
   /** Default request timeout in milliseconds (default: 30000) */
   requestTimeoutMs?: number;
   /** Connection timeout in milliseconds (default: 30000) */
@@ -109,6 +160,8 @@ export interface RequestOptions {
   expectFinal?: boolean;
   /** Timeout for expectFinal in milliseconds */
   expectFinalTimeoutMs?: number;
+  /** Callback for intermediate progress updates from the server */
+  onProgress?: (payload: unknown) => void;
 }
 
 // ============================================================================
@@ -124,7 +177,28 @@ export interface RequestOptions {
 export class OpenClawClient {
   private connectionManager: ConnectionManager;
   private requestManager: RequestManager;
-  private config: ClientConfig;
+  private eventManager: EventManager;
+  private protocolNegotiator: ProtocolNegotiator;
+  private policyManager: PolicyManager;
+  private stateMachine: ConnectionStateMachine;
+  private _config: ClientConfig;
+  private negotiatedProtocol: NegotiatedProtocol | null = null;
+  private _serverInfo: HelloOk | null = null;
+  private _snapshot: Snapshot | null = null;
+  private authHandler: AuthHandler | null = null;
+  private tickMonitor: TickMonitor | null = null;
+  private gapDetector: GapDetector | null = null;
+
+  // API namespaces (created once, reused)
+  private _chatAPI: ChatAPI;
+  private _agentsAPI: AgentsAPI;
+  private _sessionsAPI: SessionsAPI;
+  private _configAPI: ConfigAPI;
+  private _cronAPI: CronAPI;
+  private _nodesAPI: NodesAPI;
+  private _skillsAPI: SkillsAPI;
+  private _devicePairingAPI: DevicePairingAPI;
+  private logger: Logger;
 
   // Event handler storage - using Set for O(1) add/remove
   private stateChangeHandlers: Set<(state: ConnectionState) => void> = new Set();
@@ -140,7 +214,10 @@ export class OpenClawClient {
   constructor(config: ClientConfig) {
     // Normalize connection config - supports both flat and nested style
     const normalizedConfig = this.normalizeConnectionConfig(config);
-    this.config = config;
+    this._config = config;
+
+    // Set up logger
+    this.logger = config.logger ?? NOOP_LOGGER;
 
     // Create WebSocket transport
     const transport: IWebSocketTransport = new WebSocketTransport({
@@ -160,6 +237,49 @@ export class OpenClawClient {
 
     // Create request manager
     this.requestManager = createRequestManager();
+
+    // Create event manager for server-sent event subscriptions
+    this.eventManager = createEventManager();
+
+    // Handle server-initiated request cancellation
+    this.eventManager.on(
+      'request.cancelled',
+      (frame: { payload?: { requestId?: string; reason?: string } }) => {
+        const requestId = frame.payload?.requestId;
+        if (requestId) {
+          this.requestManager.rejectRequest(
+            requestId,
+            new Error(`Request cancelled by server: ${frame.payload?.reason ?? 'unknown'}`)
+          );
+        }
+      }
+    );
+
+    // Create protocol negotiator for version validation
+    this.protocolNegotiator = createProtocolNegotiator({ min: 3, max: 3 });
+
+    // Create policy manager for server policies
+    this.policyManager = createPolicyManager();
+
+    // Create state machine for transition validation
+    this.stateMachine = createConnectionStateMachine();
+
+    // Create auth handler if credentials provider is configured
+    if (config.credentialsProvider) {
+      this.authHandler = createAuthHandler(config.credentialsProvider);
+    }
+
+    // Initialize API namespaces
+    const requestFn = <T = unknown>(method: string, params?: unknown): Promise<T> =>
+      this.request<T>(method, params);
+    this._chatAPI = new ChatAPI(requestFn);
+    this._agentsAPI = new AgentsAPI(requestFn);
+    this._sessionsAPI = new SessionsAPI(requestFn);
+    this._configAPI = new ConfigAPI(requestFn);
+    this._cronAPI = new CronAPI(requestFn);
+    this._nodesAPI = new NodesAPI(requestFn);
+    this._skillsAPI = new SkillsAPI(requestFn);
+    this._devicePairingAPI = new DevicePairingAPI(requestFn);
   }
 
   /**
@@ -187,12 +307,21 @@ export class OpenClawClient {
   private setupConnectionHandlers(): void {
     const handlers: ConnectionEventHandlers = {
       onStateChange: event => {
+        // Track state in the state machine (with transition validation)
+        try {
+          if (this.stateMachine.canTransitionTo(event.newState as ClientConnectionState)) {
+            this.stateMachine.transitionTo(event.newState as ClientConnectionState);
+          }
+        } catch {
+          // State machine validation is advisory — don't break the connection
+        }
+
         this.stateChangeHandlers.forEach(handler => {
           try {
             handler(event.newState);
           } catch (error) {
             // Silently ignore handler errors to prevent cascading failures
-            console.error('Error in stateChange handler:', error);
+            this.logger.error('Error in stateChange handler', { error: String(error) });
           }
         });
       },
@@ -202,7 +331,7 @@ export class OpenClawClient {
           try {
             handler(error);
           } catch (err) {
-            console.error('Error in error handler:', err);
+            this.logger.error('Error in error handler', { error: String(err) });
           }
         });
       },
@@ -211,12 +340,26 @@ export class OpenClawClient {
           try {
             handler(frame);
           } catch (error) {
-            console.error('Error in message handler:', error);
+            this.logger.error('Error in message handler', { error: String(error) });
           }
         });
-        // Also handle request responses
+        // Handle request responses
         if (frame.type === 'res') {
-          this.requestManager.resolveRequest(frame.id, frame as ResponseFrame);
+          if (frame.progress) {
+            // Intermediate progress update — deliver to progress callback
+            this.requestManager.resolveProgress(frame.id, frame.payload);
+          } else {
+            // Final response — resolve the pending request
+            this.requestManager.resolveRequest(frame.id, frame as ResponseFrame);
+          }
+        }
+        // Emit event frames through the EventManager
+        if (frame.type === 'event') {
+          this.eventManager.emitFrame(frame);
+          // Track event sequence for gap detection
+          if (frame.seq !== undefined && this.gapDetector) {
+            this.gapDetector.recordSequence(frame.seq);
+          }
         }
       },
       onClosed: () => {
@@ -224,7 +367,7 @@ export class OpenClawClient {
           try {
             handler();
           } catch (error) {
-            console.error('Error in closed handler:', error);
+            this.logger.error('Error in closed handler', { error: String(error) });
           }
         });
       },
@@ -265,6 +408,192 @@ export class OpenClawClient {
   }
 
   /**
+   * Get the negotiated protocol version.
+   *
+   * @returns The negotiated protocol version, or null if not yet connected
+   */
+  get protocol(): number | null {
+    return this.negotiatedProtocol?.version ?? null;
+  }
+
+  /**
+   * Get server policies received during handshake.
+   *
+   * @returns Server policy, or default policy if not yet connected
+   */
+  getPolicy(): Policy {
+    return {
+      maxPayload: this.policyManager.getMaxPayload(),
+      maxBufferedBytes: this.policyManager.getMaxBufferedBytes(),
+      tickIntervalMs: this.policyManager.getTickIntervalMs(),
+    };
+  }
+
+  /**
+   * Get server info from the hello-ok response.
+   *
+   * @returns Server info, or null if not yet connected
+   */
+  getServerInfo(): HelloOk | null {
+    return this._serverInfo;
+  }
+
+  /**
+   * Get the server features (available methods and events).
+   *
+   * @returns Server features, or null if not yet connected
+   */
+  getServerFeatures(): { methods: string[]; events: string[] } | null {
+    return this._serverInfo?.features ?? null;
+  }
+
+  /**
+   * Get the snapshot from the hello-ok response.
+   *
+   * Contains server state including presence, health, state version, and uptime.
+   *
+   * @returns Snapshot data, or null if not yet connected
+   */
+  getSnapshot(): Snapshot | null {
+    return this._snapshot;
+  }
+
+  /**
+   * Check if the connection is ready for requests (using state machine).
+   *
+   * @returns True if the state machine reports ready
+   */
+  get isReady(): boolean {
+    return this.stateMachine.isReady();
+  }
+
+  /**
+   * Get the tick monitor instance for heartbeat monitoring.
+   *
+   * @returns TickMonitor instance, or null if not configured
+   */
+  getTickMonitor(): TickMonitor | null {
+    return this.tickMonitor;
+  }
+
+  /**
+   * Get the gap detector instance for event sequence tracking.
+   *
+   * @returns GapDetector instance, or null if not configured
+   */
+  getGapDetector(): GapDetector | null {
+    return this.gapDetector;
+  }
+
+  // ==========================================================================
+  // API Namespaces
+  // ==========================================================================
+
+  /**
+   * Chat API for chat session operations.
+   *
+   * @example
+   * ```ts
+   * const { chats } = await client.chat.list();
+   * await client.chat.inject({ chatId: "chat-123", message: { role: "user", content: "Hello" } });
+   * ```
+   */
+  get chat(): ChatAPI {
+    return this._chatAPI;
+  }
+
+  /**
+   * Agents API for agent lifecycle and file operations.
+   *
+   * @example
+   * ```ts
+   * const { agents } = await client.agents.list();
+   * await client.agents.create({ agentId: "my-agent", files: [] });
+   * ```
+   */
+  get agents(): AgentsAPI {
+    return this._agentsAPI;
+  }
+
+  /**
+   * Sessions API for session management operations.
+   *
+   * @example
+   * ```ts
+   * const sessions = await client.sessions.list();
+   * await client.sessions.reset({ sessionId: "sess-123" });
+   * ```
+   */
+  get sessions(): SessionsAPI {
+    return this._sessionsAPI;
+  }
+
+  /**
+   * Config API for gateway configuration operations.
+   *
+   * @example
+   * ```ts
+   * const config = await client.config.get();
+   * await client.config.set({ key: "theme", value: "dark" });
+   * ```
+   */
+  get config(): ConfigAPI {
+    return this._configAPI;
+  }
+
+  /**
+   * Cron API for scheduled job operations.
+   *
+   * @example
+   * ```ts
+   * const { jobs } = await client.cron.list();
+   * await client.cron.add({ cron: "0 * * * *", prompt: "Check status" });
+   * ```
+   */
+  get cron(): CronAPI {
+    return this._cronAPI;
+  }
+
+  /**
+   * Nodes API for node management and invocation.
+   *
+   * @example
+   * ```ts
+   * const nodes = await client.nodes.list();
+   * const result = await client.nodes.invoke({ nodeId: "node-1", target: "run" });
+   * ```
+   */
+  get nodes(): NodesAPI {
+    return this._nodesAPI;
+  }
+
+  /**
+   * Skills API for skill and tool catalog operations.
+   *
+   * @example
+   * ```ts
+   * const status = await client.skills.status();
+   * const { tools } = await client.skills.tools.catalog();
+   * ```
+   */
+  get skills(): SkillsAPI {
+    return this._skillsAPI;
+  }
+
+  /**
+   * Device Pairing API for device pairing operations.
+   *
+   * @example
+   * ```ts
+   * const pairings = await client.devicePairing.list();
+   * await client.devicePairing.approve({ pairingId: "pair-123" });
+   * ```
+   */
+  get devicePairing(): DevicePairingAPI {
+    return this._devicePairingAPI;
+  }
+
+  /**
    * Connect to the OpenClaw Gateway.
    *
    * @returns Promise that resolves when the connection is established
@@ -282,26 +611,75 @@ export class OpenClawClient {
    * ```
    */
   async connect(): Promise<void> {
+    // Prepare auth data via AuthHandler if credentials provider is configured
+    let auth = this._config.auth;
+    if (this.authHandler) {
+      const prepared = await this.authHandler.prepareAuth();
+      if (prepared) {
+        auth = prepared.data;
+      }
+    }
+
     // Build connection parameters
     const connectParams: ConnectParams = {
-      minProtocol: 1,
-      maxProtocol: 1,
+      minProtocol: 3,
+      maxProtocol: 3,
       client: {
-        id: this.config.clientId,
-        displayName: this.config.clientId,
-        version: this.config.clientVersion ?? '1.0.0',
-        platform: this.config.platform ?? 'typescript-sdk',
-        deviceFamily: this.config.deviceFamily,
-        modelIdentifier: this.config.modelIdentifier,
-        mode: (this.config.mode ?? 'node') as string,
-        instanceId: this.config.instanceId,
+        id: this._config.clientId,
+        displayName: this._config.clientId,
+        version: this._config.clientVersion ?? '1.0.0',
+        platform: this._config.platform ?? 'typescript-sdk',
+        deviceFamily: this._config.deviceFamily,
+        modelIdentifier: this._config.modelIdentifier,
+        mode: (this._config.mode ?? 'node') as string,
+        instanceId: this._config.instanceId,
       },
-      auth: this.config.auth,
-      device: this.config.device,
+      auth,
+      device: this._config.device,
+      caps: this._config.capabilities,
     };
 
     // Connect using connection manager
-    await this.connectionManager.connect(this.config.url, connectParams);
+    await this.connectionManager.connect(this._config.url, connectParams);
+
+    // Post-handshake: validate protocol and store policies
+    const serverInfo = this.connectionManager.getServerInfo();
+    if (serverInfo) {
+      this._serverInfo = serverInfo;
+      this._snapshot = serverInfo.snapshot ?? null;
+      this.negotiatedProtocol = this.protocolNegotiator.negotiate(serverInfo);
+      this.policyManager.setPolicies(serverInfo.policy);
+
+      // Snapshot recovery: reset gap detector if stateVersion changed
+      if (this._snapshot && this.gapDetector) {
+        this.gapDetector.reset();
+      }
+
+      // Create tick monitor using server's tick interval
+      if (this._config.tickMonitor !== undefined) {
+        const tickIntervalMs =
+          this._config.tickMonitor.tickIntervalMs ?? this.policyManager.getTickIntervalMs();
+        this.tickMonitor = createTickMonitor({
+          tickIntervalMs,
+          ...this._config.tickMonitor,
+        });
+        this.tickMonitor.start();
+
+        // Wire tick events from EventManager to TickMonitor
+        this.eventManager.on('tick', (frame: { payload?: { ts?: number } }) => {
+          const ts = frame.payload?.ts ?? Date.now();
+          this.tickMonitor?.recordTick(ts);
+        });
+      }
+
+      // Create gap detector
+      if (this._config.gapDetector) {
+        this.gapDetector = createGapDetector({
+          recovery: { mode: 'reconnect', ...this._config.gapDetector.recovery },
+          ...this._config.gapDetector,
+        });
+      }
+    }
   }
 
   /**
@@ -315,6 +693,16 @@ export class OpenClawClient {
    */
   disconnect(): void {
     this.connectionManager.disconnect();
+    this.stateMachine.reset();
+    this.negotiatedProtocol = null;
+    this._serverInfo = null;
+    this._snapshot = null;
+    if (this.tickMonitor) {
+      this.tickMonitor.stop();
+    }
+    if (this.gapDetector) {
+      this.gapDetector.reset();
+    }
   }
 
   /**
@@ -348,7 +736,7 @@ export class OpenClawClient {
     };
 
     // Determine timeout
-    let timeout = this.config.requestTimeoutMs ?? 30000;
+    let timeout = this._config.requestTimeoutMs ?? 30000;
     if (options?.expectFinal && options.expectFinalTimeoutMs) {
       timeout = options.expectFinalTimeoutMs;
     }
@@ -356,6 +744,7 @@ export class OpenClawClient {
     // Add pending request
     const responsePromise = this.requestManager.addRequest(requestId, {
       timeout,
+      onProgress: options?.onProgress,
     });
 
     // Set up abort handler
@@ -390,9 +779,10 @@ export class OpenClawClient {
       const response = await responsePromise;
 
       if (!response.ok) {
-        throw new Error(
-          `Request failed: ${response.error?.code ?? 'UNKNOWN'} - ${response.error?.message ?? 'Unknown error'}`
-        );
+        if (response.error) {
+          throw createErrorFromResponse(response.error);
+        }
+        throw new Error('Request failed: unknown error');
       }
 
       return response.payload as T;
@@ -500,6 +890,95 @@ export class OpenClawClient {
   onClosed(handler: () => void): () => void {
     this.closedHandlers.add(handler);
     return () => this.closedHandlers.delete(handler);
+  }
+
+  // ==========================================================================
+  // Event Subscriptions (Server-Sent Events)
+  // ==========================================================================
+
+  /**
+   * Subscribe to server-sent events with pattern matching.
+   *
+   * Supports exact match (`'tick'`), prefix wildcard (`'agent:*'`),
+   * and global wildcard (`'*'`).
+   *
+   * @param pattern - Event pattern to match
+   * @param handler - Event handler function
+   * @returns Unsubscribe function
+   *
+   * @example
+   * ```ts
+   * // Exact match
+   * const unsub1 = client.on('tick', (frame) => {
+   *   console.log('Tick:', frame.payload);
+   * });
+   *
+   * // Prefix wildcard
+   * const unsub2 = client.on('agent:*', (frame) => {
+   *   console.log('Agent event:', frame.event);
+   * });
+   *
+   * // All events
+   * const unsub3 = client.on('*', (frame) => {
+   *   console.log('Any event:', frame.event);
+   * });
+   *
+   * // Cleanup
+   * unsub1();
+   * ```
+   */
+  on<T = unknown>(pattern: EventPattern, handler: EventHandler<T>): UnsubscribeFn {
+    return this.eventManager.on(pattern, handler);
+  }
+
+  /**
+   * Subscribe to a server-sent event once.
+   *
+   * @param pattern - Event pattern to match
+   * @param handler - Event handler function
+   * @returns Unsubscribe function
+   *
+   * @example
+   * ```ts
+   * client.once('shutdown', (frame) => {
+   *   console.log('Server shutting down:', frame.payload);
+   * });
+   * ```
+   */
+  once<T = unknown>(pattern: EventPattern, handler: EventHandler<T>): UnsubscribeFn {
+    return this.eventManager.once(pattern, handler);
+  }
+
+  /**
+   * Unsubscribe from server-sent events.
+   *
+   * @param pattern - Event pattern to unsubscribe from (omit to clear all)
+   * @param handler - Specific handler to remove (omit to remove all for pattern)
+   *
+   * @example
+   * ```ts
+   * // Remove all 'tick' handlers
+   * client.off('tick');
+   *
+   * // Remove specific handler
+   * client.off('tick', myHandler);
+   *
+   * // Remove all event handlers
+   * client.off();
+   * ```
+   */
+  off<T = unknown>(pattern?: EventPattern, handler?: EventHandler<T>): void {
+    this.eventManager.off(pattern, handler);
+  }
+
+  /**
+   * Get the number of active event handlers.
+   *
+   * @param pattern - Optional pattern to count handlers for
+   * @returns Number of handlers
+   */
+  listenerCount(pattern?: EventPattern): number {
+    return this.eventManager.handlerCount(pattern);
   }
 }
 

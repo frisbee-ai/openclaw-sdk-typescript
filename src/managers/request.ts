@@ -26,6 +26,8 @@ interface RequestEntry {
   reject: (error: Error) => void;
   /** Timeout timer ID */
   timeoutId: ReturnType<typeof setTimeout> | null;
+  /** Optional progress callback for intermediate responses */
+  onProgress?: (payload: unknown) => void;
 }
 
 // ============================================================================
@@ -52,7 +54,10 @@ export class RequestManager {
    * @param options - Request options
    * @returns Promise that resolves with the response or rejects on timeout/error
    */
-  addRequest(id: string, options: { timeout: number }): Promise<ResponseFrame> {
+  addRequest(
+    id: string,
+    options: { timeout: number; onProgress?: (payload: unknown) => void }
+  ): Promise<ResponseFrame> {
     // Check if a request with this ID already exists
     if (this.pendingRequests.has(id)) {
       return Promise.reject(new Error(`Request with ID "${id}" already exists`));
@@ -73,6 +78,7 @@ export class RequestManager {
         resolve,
         reject,
         timeoutId,
+        onProgress: options.onProgress,
       };
 
       this.pendingRequests.set(id, entry);
@@ -103,6 +109,29 @@ export class RequestManager {
 
     // Resolve the promise
     entry.resolve(response);
+  }
+
+  /**
+   * Handle an intermediate progress response for a pending request.
+   *
+   * Calls the progress callback if one is registered, without resolving
+   * the pending request. The request remains pending for the final response.
+   *
+   * @param id - The request ID
+   * @param payload - The progress payload
+   * @returns True if the progress was delivered, false if no pending request or callback
+   */
+  resolveProgress(id: string, payload: unknown): boolean {
+    const entry = this.pendingRequests.get(id);
+    if (!entry?.onProgress) {
+      return false;
+    }
+    try {
+      entry.onProgress(payload);
+    } catch {
+      // Silently ignore progress callback errors
+    }
+    return true;
   }
 
   /**

@@ -340,9 +340,15 @@ export class ConnectionManager {
       if (frame.type === 'res') {
         const pending = this.pendingRequests.get(frame.id);
         if (pending) {
+          // Internal request (e.g., handshake) — resolve it
           clearTimeout(pending.timeoutId);
           this.pendingRequests.delete(frame.id);
           pending.resolve(frame);
+          return;
+        }
+        // Not an internal request — forward to onMessage for client RequestManager
+        if (this.handlers.onMessage) {
+          this.handlers.onMessage(frame);
         }
         return;
       }

@@ -60,11 +60,16 @@ export interface ResponseFrame {
   ok: boolean;
   payload?: unknown;
   error?: ErrorShape;
+  /** If true, this is an intermediate progress update, not a final response */
+  progress?: boolean;
 }
 
 /** State version for tracking connection state changes */
 export interface StateVersion {
-  v: number;
+  /** Presence state version */
+  presence: number;
+  /** Health state version */
+  health: number;
 }
 
 export interface EventFrame {
@@ -92,8 +97,14 @@ export interface PresenceEntry {
 }
 
 export interface Snapshot {
-  agents: Record<string, unknown>;
-  nodes: Record<string, unknown>;
+  presence: Record<string, unknown>;
+  health: Record<string, unknown>;
+  stateVersion: number;
+  uptimeMs: number;
+  configPath?: string;
+  authMode?: string;
+  agents?: Record<string, unknown>;
+  nodes?: Record<string, unknown>;
 }
 
 export interface ConnectParams {
@@ -468,6 +479,241 @@ export interface UpdateRunParams {}
 export interface ChatInjectParams {
   chatId: string;
   message: unknown;
+}
+
+// ============================================================================
+// TTS (Text-to-Speech) Types
+// ============================================================================
+
+export interface TtsSpeakParams {
+  text: string;
+  voice?: string;
+  language?: string;
+  speed?: number;
+}
+export interface TtsSpeakResult {
+  audioUrl?: string;
+  durationMs?: number;
+}
+export interface TtsVoicesParams {}
+export interface TtsVoicesResult {
+  voices: Array<{ id: string; name: string; language?: string; [key: string]: unknown }>;
+}
+
+// ============================================================================
+// Voice Wake Types
+// ============================================================================
+
+export interface VoiceWakeStartParams {
+  sensitivity?: number;
+  keywords?: string[];
+}
+export interface VoiceWakeStopParams {}
+export interface VoiceWakeStatusParams {}
+export interface VoiceWakeStatusResult {
+  active: boolean;
+  sensitivity?: number;
+}
+
+// ============================================================================
+// Browser Types
+// ============================================================================
+
+export interface BrowserOpenParams {
+  url: string;
+  nodeId?: string;
+}
+export interface BrowserOpenResult {
+  tabId: string;
+}
+export interface BrowserCloseParams {
+  tabId: string;
+}
+export interface BrowserCloseResult {}
+export interface BrowserListParams {}
+export interface BrowserListResult {
+  tabs: Array<{ tabId: string; url: string; title?: string; [key: string]: unknown }>;
+}
+export interface BrowserScreenshotParams {
+  tabId: string;
+}
+export interface BrowserScreenshotResult {
+  imageUrl: string;
+}
+export interface BrowserEvalParams {
+  tabId: string;
+  script: string;
+}
+export interface BrowserEvalResult {
+  result: unknown;
+}
+
+// ============================================================================
+// Push Notification Types
+// ============================================================================
+
+export interface PushRegisterParams {
+  token: string;
+  platform: string;
+}
+export interface PushRegisterResult {}
+export interface PushUnregisterParams {
+  token: string;
+}
+export interface PushUnregisterResult {}
+export interface PushSendParams {
+  target: string;
+  title: string;
+  body: string;
+  data?: Record<string, unknown>;
+}
+export interface PushSendResult {}
+
+// ============================================================================
+// Usage / Billing Types
+// ============================================================================
+
+export interface UsageSummaryParams {
+  period?: string;
+}
+export interface UsageSummaryResult {
+  totalTokens?: number;
+  totalCost?: number;
+  period?: string;
+  [key: string]: unknown;
+}
+export interface UsageDetailsParams {
+  period?: string;
+  agentId?: string;
+}
+export interface UsageDetailsResult {
+  entries: unknown[];
+}
+
+// ============================================================================
+// Doctor / Diagnostics Types
+// ============================================================================
+
+export interface DoctorCheckParams {}
+export interface DoctorCheckResult {
+  checks: Array<{ name: string; status: string; message?: string; [key: string]: unknown }>;
+}
+export interface DoctorFixParams {
+  checkName?: string;
+}
+export interface DoctorFixResult {
+  fixed: string[];
+  failed: string[];
+}
+
+// ============================================================================
+// Secrets Management Types
+// ============================================================================
+
+export interface SecretsListParams {}
+export interface SecretsListResult {
+  keys: string[];
+}
+export interface SecretsGetParams {
+  key: string;
+}
+export interface SecretsGetResult {
+  value: string;
+}
+export interface SecretsSetParams {
+  key: string;
+  value: string;
+}
+export interface SecretsSetResult {}
+export interface SecretsDeleteParams {
+  key: string;
+}
+export interface SecretsDeleteResult {}
+
+// ============================================================================
+// Chat Extended Types
+// ============================================================================
+
+export interface ChatListParams {}
+export interface ChatListResult {
+  chats: Array<{ chatId: string; [key: string]: unknown }>;
+}
+export interface ChatHistoryParams {
+  chatId: string;
+  limit?: number;
+  before?: string;
+}
+export interface ChatHistoryResult {
+  messages: unknown[];
+}
+export interface ChatDeleteParams {
+  chatId: string;
+}
+export interface ChatDeleteResult {}
+export interface ChatTitleParams {
+  chatId: string;
+}
+export interface ChatTitleResult {
+  title: string;
+}
+
+// ============================================================================
+// Talk (Voice) Extended Types
+// ============================================================================
+
+export interface TalkStartParams {
+  language?: string;
+}
+export interface TalkStartResult {
+  sessionId: string;
+}
+export interface TalkStopParams {
+  sessionId: string;
+}
+export interface TalkStopResult {}
+
+// ============================================================================
+// Web Login Extended Types
+// ============================================================================
+
+export interface WebLoginStartResult {
+  token: string;
+  url: string;
+}
+export interface WebLoginWaitResult {
+  success: boolean;
+  userId?: string;
+}
+export interface WebLoginCancelParams {
+  token: string;
+}
+export interface WebLoginCancelResult {}
+
+// ============================================================================
+// Update Types
+// ============================================================================
+
+export interface UpdateCheckParams {}
+export interface UpdateCheckResult {
+  available: boolean;
+  version?: string;
+  changelog?: string;
+}
+export interface UpdateApplyParams {
+  version?: string;
+}
+export interface UpdateApplyResult {
+  success: boolean;
+  version?: string;
+}
+
+// ============================================================================
+// Diagnostics Types
+// ============================================================================
+
+export interface DiagnosticsSnapshotParams {}
+export interface DiagnosticsSnapshotResult {
+  snapshot: unknown;
 }
 
 // ============================================================================

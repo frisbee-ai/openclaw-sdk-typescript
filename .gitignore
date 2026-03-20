@@ -47,6 +47,7 @@ coverage/
 
 # AI
 .omc/
+.kilo/
 
 # Generated documentation
 docs/api/

@@ -103,8 +103,8 @@ describe('ProtocolNegotiator Integration', () => {
 
       const range = negotiator.getRange();
 
-      expect(range.min).toBe(1);
-      expect(range.max).toBeGreaterThanOrEqual(1);
+      expect(range.min).toBe(3);
+      expect(range.max).toBeGreaterThanOrEqual(3);
     });
   });
 

@@ -122,6 +122,109 @@ export type {
   NodePendingDrainResult,
   NodePendingEnqueueParams,
   NodePendingEnqueueResult,
+  // TTS
+  TtsSpeakParams,
+  TtsSpeakResult,
+  TtsVoicesParams,
+  TtsVoicesResult,
+  // Browser
+  BrowserOpenParams,
+  BrowserOpenResult,
+  BrowserListParams,
+  BrowserListResult,
+  BrowserScreenshotParams,
+  BrowserScreenshotResult,
+  BrowserEvalParams,
+  BrowserEvalResult,
+  // Chat extended
+  ChatListParams,
+  ChatListResult,
+  ChatHistoryParams,
+  ChatHistoryResult,
+  ChatDeleteParams,
+  ChatDeleteResult,
+  ChatTitleParams,
+  ChatTitleResult,
+  // Secrets
+  SecretsListParams,
+  SecretsListResult,
+  SecretsGetParams,
+  SecretsGetResult,
+  SecretsSetParams,
+  SecretsSetResult,
+  // Usage
+  UsageSummaryParams,
+  UsageSummaryResult,
+  // Doctor
+  DoctorCheckParams,
+  DoctorCheckResult,
+  // Config extended
+  ConfigGetParams,
+  ConfigSetParams,
+  ConfigApplyParams,
+  ConfigPatchParams,
+  ConfigSchemaParams,
+  ConfigSchemaResponse,
+  // Wizard
+  WizardStartParams,
+  WizardNextParams,
+  WizardCancelParams,
+  WizardStatusParams,
+  WizardStep,
+  WizardNextResult,
+  WizardStartResult,
+  WizardStatusResult,
+  // Skills
+  SkillsStatusParams,
+  ToolsCatalogParams,
+  ToolsCatalogResult,
+  SkillsBinsParams,
+  SkillsBinsResult,
+  SkillsInstallParams,
+  SkillsUpdateParams,
+  // Exec Approvals
+  ExecApprovalsGetParams,
+  ExecApprovalsSetParams,
+  ExecApprovalsSnapshot,
+  // Sessions
+  SessionsListParams,
+  SessionsPreviewParams,
+  SessionsResolveParams,
+  SessionsPatchParams,
+  SessionsPatchResult,
+  SessionsResetParams,
+  SessionsDeleteParams,
+  SessionsCompactParams,
+  SessionsUsageParams,
+  // Logs
+  LogsTailParams,
+  LogsTailResult,
+  // Talk
+  TalkConfigParams,
+  TalkConfigResult,
+  TalkModeParams,
+  // Channels
+  ChannelsStatusParams,
+  ChannelsStatusResult,
+  ChannelsLogoutParams,
+  // Web Login
+  WebLoginStartParams,
+  WebLoginWaitParams,
+  WebLoginStartResult,
+  WebLoginWaitResult,
+  // Push
+  PushRegisterParams,
+  PushRegisterResult,
+  PushSendParams,
+  PushSendResult,
+  // Update
+  UpdateCheckParams,
+  UpdateCheckResult,
+  UpdateApplyParams,
+  UpdateApplyResult,
+  // Diagnostics
+  DiagnosticsSnapshotParams,
+  DiagnosticsSnapshotResult,
 } from './protocol/types.js';
 
 // Validation functions
@@ -269,7 +372,20 @@ export type { TimeoutHandle, TimeoutManagerConfig } from './utils/timeoutManager
  * reserved for when logging needs grow.
  */
 export type { Logger, LogLevel } from './types/logger.js';
-export { isLogger } from './types/logger.js';
+export { isLogger, ConsoleLogger } from './types/logger.js';
 
 // Re-export default
 export { default } from './client.js';
+
+// ============================================================================
+// API Namespaces
+// ============================================================================
+
+export { ChatAPI } from './api/chat.js';
+export { AgentsAPI } from './api/agents.js';
+export { SessionsAPI } from './api/sessions.js';
+export { ConfigAPI } from './api/config.js';
+export { CronAPI } from './api/cron.js';
+export { NodesAPI } from './api/nodes.js';
+export { SkillsAPI } from './api/skills.js';
+export { DevicePairingAPI } from './api/devicePairing.js';

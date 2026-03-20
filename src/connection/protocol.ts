@@ -27,8 +27,8 @@ export interface NegotiatedProtocol {
 
 // Default protocol version
 export const DEFAULT_PROTOCOL_VERSION: ProtocolVersionRange = {
-  min: 1,
-  max: 1,
+  min: 3,
+  max: 3,
 };
 
 // ============================================================================

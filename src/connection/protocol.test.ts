@@ -27,7 +27,7 @@ describe('ProtocolNegotiator', () => {
     it('should merge partial config with defaults', () => {
       const negotiator = new ProtocolNegotiator({ min: 2 });
 
-      expect(negotiator.getRange()).toEqual({ min: 2, max: 1 });
+      expect(negotiator.getRange()).toEqual({ min: 2, max: 3 });
     });
   });
 
@@ -68,7 +68,7 @@ describe('ProtocolNegotiator', () => {
     it('should return true after successful negotiation', () => {
       const negotiator = new ProtocolNegotiator();
 
-      negotiator.negotiate({ protocol: 1 } as any);
+      negotiator.negotiate({ protocol: 3 } as any);
 
       expect(negotiator.isNegotiated()).toBe(true);
     });
@@ -130,7 +130,7 @@ describe('ProtocolNegotiator', () => {
     it('should clear negotiated version', () => {
       const negotiator = new ProtocolNegotiator();
 
-      negotiator.negotiate({ protocol: 1 } as any);
+      negotiator.negotiate({ protocol: 3 } as any);
       expect(negotiator.isNegotiated()).toBe(true);
 
       negotiator.reset();
@@ -156,7 +156,7 @@ describe('createProtocolNegotiator factory', () => {
 });
 
 describe('DEFAULT_PROTOCOL_VERSION', () => {
-  it('should be { min: 1, max: 1 }', () => {
-    expect(DEFAULT_PROTOCOL_VERSION).toEqual({ min: 1, max: 1 });
+  it('should be { min: 3, max: 3 }', () => {
+    expect(DEFAULT_PROTOCOL_VERSION).toEqual({ min: 3, max: 3 });
   });
 });

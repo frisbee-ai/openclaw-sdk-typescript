@@ -149,3 +149,71 @@ export function isLogger(value: unknown): value is Logger {
     typeof (value as Logger).error === 'function'
   );
 }
+
+// ============================================================================
+// Console Logger Implementation
+// ============================================================================
+
+/** Log level priority for filtering */
+const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
+  [LogLevel.Debug]: 0,
+  [LogLevel.Info]: 1,
+  [LogLevel.Warn]: 2,
+  [LogLevel.Error]: 3,
+};
+
+/**
+ * Simple console-based logger implementation.
+ *
+ * Filters messages by level and outputs to the appropriate `console` method.
+ *
+ * @beta
+ *
+ * @example
+ * ```ts
+ * import { ConsoleLogger, LogLevel } from 'openclaw-sdk';
+ *
+ * const client = createClient({
+ *   url: "ws://localhost:8080",
+ *   clientId: "my-app",
+ *   logger: new ConsoleLogger({ level: LogLevel.Debug }),
+ * });
+ * ```
+ */
+export class ConsoleLogger implements Logger {
+  readonly name: string;
+  readonly level: LogLevel;
+
+  constructor(config: { name?: string; level?: LogLevel } = {}) {
+    this.name = config.name ?? 'openclaw-sdk';
+    this.level = config.level ?? LogLevel.Warn;
+  }
+
+  debug(message: string, meta?: Record<string, unknown>): void {
+    if (this.shouldLog(LogLevel.Debug)) {
+      console.debug(`[${this.name}] DEBUG: ${message}`, meta ?? '');
+    }
+  }
+
+  info(message: string, meta?: Record<string, unknown>): void {
+    if (this.shouldLog(LogLevel.Info)) {
+      console.info(`[${this.name}] INFO: ${message}`, meta ?? '');
+    }
+  }
+
+  warn(message: string, meta?: Record<string, unknown>): void {
+    if (this.shouldLog(LogLevel.Warn)) {
+      console.warn(`[${this.name}] WARN: ${message}`, meta ?? '');
+    }
+  }
+
+  error(message: string, meta?: Record<string, unknown>): void {
+    if (this.shouldLog(LogLevel.Error)) {
+      console.error(`[${this.name}] ERROR: ${message}`, meta ?? '');
+    }
+  }
+
+  private shouldLog(level: LogLevel): boolean {
+    return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[this.level];
+  }
+}
