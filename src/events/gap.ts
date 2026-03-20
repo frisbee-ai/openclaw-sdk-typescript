@@ -82,9 +82,9 @@ export class GapDetector extends EventEmitter {
 
         this.gaps.push(gap);
 
-        // Trim if exceeds max
+        // Trim if exceeds max (use splice to avoid array copy)
         if (this.gaps.length > this.maxGaps) {
-          this.gaps = this.gaps.slice(-this.maxGaps);
+          this.gaps.splice(0, this.gaps.length - this.maxGaps);
         }
 
         // Emit callback
