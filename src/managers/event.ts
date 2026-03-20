@@ -68,11 +68,11 @@ export class EventManager {
       level: LogLevel.Error,
       debug() {},
       info() {},
-       
+
       warn(message: string, meta?: Record<string, unknown>) {
         console.warn(message, meta ?? '');
       },
-       
+
       error(message: string, meta?: Record<string, unknown>) {
         console.error(message, meta ?? '');
       },
@@ -181,21 +181,24 @@ export class EventManager {
       return;
     }
 
-    // Determine target namespace: use provided namespace or default to '__default__'
-    // This ensures entries stored with default namespace can be removed when no namespace specified
-    const targetNs = namespace ?? this.defaultNamespace;
-
-    const filterByNs = (e: SubscriptionEntry) => {
-      // Keep entries NOT in the target namespace (remove entries in target namespace)
-      return e.namespace !== targetNs;
+    // When namespace is specified: remove only that namespace's entries
+    // When namespace is NOT specified: remove ALL namespaces' matching entries (symmetric with on())
+    const shouldRemove = (e: SubscriptionEntry): boolean => {
+      if (handler !== undefined) {
+        // Handler specified: match by handler AND namespace (if provided)
+        if (namespace !== undefined) {
+          return e.handler === handler && e.namespace === namespace;
+        }
+        return e.handler === handler;
+      }
+      // No handler: when namespace specified, remove only that namespace; otherwise remove all
+      if (namespace !== undefined) {
+        return e.namespace === namespace;
+      }
+      return true; // Remove all entries (will be filtered out)
     };
 
-    const filterByHandler = handler
-      ? (e: SubscriptionEntry) => {
-          // Keep entries where handler OR namespace doesn't match (remove matching entries)
-          return !(e.handler === handler && e.namespace === targetNs);
-        }
-      : filterByNs;
+    const filterByHandler = (e: SubscriptionEntry) => !shouldRemove(e);
 
     if (pattern === '*') {
       this.wildcardSubscriptions = this.wildcardSubscriptions.filter(filterByHandler);
