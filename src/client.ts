@@ -22,7 +22,7 @@ import { ConnectionManager, createConnectionManager } from './managers/connectio
 import { RequestManager, createRequestManager } from './managers/request.js';
 import { EventManager, createEventManager } from './managers/event.js';
 import type { EventPattern, EventHandler, UnsubscribeFn } from './managers/event.js';
-import { createErrorFromResponse } from './errors.js';
+import { createErrorFromResponse, ConnectionError } from './errors.js';
 import { ProtocolNegotiator, createProtocolNegotiator } from './connection/protocol.js';
 import type { NegotiatedProtocol } from './connection/protocol.js';
 import { PolicyManager, createPolicyManager } from './connection/policies.js';
@@ -329,7 +329,14 @@ export class OpenClawClient {
         });
       },
       onError: event => {
-        const error = new Error(event.message);
+        const error =
+          event.original instanceof Error
+            ? event.original
+            : new ConnectionError({
+                code: 'NETWORK_ERROR',
+                message: event.message,
+                retryable: event.recoverable,
+              });
         this.errorHandlers.forEach(handler => {
           try {
             handler(error);
