@@ -166,9 +166,14 @@ export class ConnectionStateMachine {
 
   /**
    * Reset to disconnected state.
+   * Emits a state change event from the previous state to 'disconnected'.
    */
   reset(): void {
+    const previous = this.state;
     this.state = 'disconnected';
+    if (previous !== 'disconnected') {
+      this.emit({ previous, current: 'disconnected' });
+    }
   }
 
   /**
