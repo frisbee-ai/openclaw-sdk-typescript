@@ -134,14 +134,18 @@ export class StaticCredentialsProvider implements CredentialsProvider {
       throw new Error('No private key available for signing');
     }
 
-    // Node.js crypto implementation
     const crypto = await import('crypto');
     const payload = `${nonce}:${timestamp}`;
     const sign = crypto.createSign('SHA256');
     sign.update(payload);
     sign.end();
-    const signature = sign.sign(this.config.device.privateKey, 'base64');
-    return signature;
+
+    const keyBuffer = Buffer.from(this.config.device.privateKey, 'utf-8');
+    try {
+      return sign.sign(keyBuffer, 'base64');
+    } finally {
+      keyBuffer.fill(0);
+    }
   }
 }
 
