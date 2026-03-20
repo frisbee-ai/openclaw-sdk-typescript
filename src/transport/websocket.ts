@@ -285,6 +285,7 @@ export class WebSocketTransport implements IWebSocketTransport {
     this._readyState = ReadyState.CONNECTING;
 
     return new Promise<void>((resolve, reject) => {
+      let settled = false;
       try {
         // Create WebSocket instance
         const WebSocketImpl = this.config.WebSocketImpl;
@@ -300,7 +301,10 @@ export class WebSocketTransport implements IWebSocketTransport {
                 recoverable: true,
               };
               this.handleError(error);
-              reject(new Error(error.message));
+              if (!settled) {
+                settled = true;
+                reject(new Error(error.message));
+              }
             }
           },
           this.config.connectTimeoutMs,
@@ -309,6 +313,8 @@ export class WebSocketTransport implements IWebSocketTransport {
 
         // Set up event handlers
         this.ws.onopen = () => {
+          if (settled) return;
+          settled = true;
           this.timeoutManager.clear('ws-connect');
 
           this._readyState = ReadyState.OPEN;
@@ -341,8 +347,9 @@ export class WebSocketTransport implements IWebSocketTransport {
             this.onclose(closeEvent);
           }
 
-          // If we were still connecting, reject the promise
-          if (wasConnecting) {
+          // If we were still connecting, reject the promise (only once)
+          if (wasConnecting && !settled) {
+            settled = true;
             reject(new Error(`Connection closed: ${event.reason} (${event.code})`));
           }
         };
@@ -358,10 +365,11 @@ export class WebSocketTransport implements IWebSocketTransport {
 
           this.handleError(error);
 
-          // If we were connecting, reject the promise and update state
-          if (this._readyState === ReadyState.CONNECTING) {
+          // If we were connecting, reject the promise and update state (only once)
+          if (this._readyState === ReadyState.CONNECTING && !settled) {
+            settled = true;
             this._readyState = ReadyState.CLOSED;
-            this.cleanup(); // Clean up WebSocket reference to prevent memory leak
+            this.cleanup();
             reject(new Error(error.message));
           }
         };
