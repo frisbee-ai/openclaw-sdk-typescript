@@ -2,8 +2,12 @@
  * Browser WebSocket Transport Tests
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { BrowserWebSocketTransport, BrowserWebSocketTransportConfig, createBrowserWebSocketTransport } from "../browser";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import {
+  BrowserWebSocketTransport,
+  BrowserWebSocketTransportConfig,
+  createBrowserWebSocketTransport,
+} from '../browser';
 
 // Mock the native WebSocket API
 class MockWebSocket {
@@ -27,17 +31,17 @@ class MockWebSocket {
     this.readyState = 0;
 
     // Check if this is an "invalid" URL for testing connection errors
-    const shouldError = url.includes("invalid");
+    const shouldError = url.includes('invalid');
 
     // Simulate connection opening or error
     setTimeout(() => {
       if (shouldError) {
         this.readyState = 3;
         if (this.onerror) {
-          this.onerror(new Error("Connection failed") as any);
+          this.onerror(new Error('Connection failed') as any);
         }
-        const errorHandlers = this._handlers.get("error") || [];
-        errorHandlers.forEach((h: Function) => h(new Error("Connection failed")));
+        const errorHandlers = this._handlers.get('error') || [];
+        errorHandlers.forEach((h: Function) => h(new Error('Connection failed')));
       } else {
         this.readyState = 1;
         if (this.onopen) {
@@ -47,18 +51,18 @@ class MockWebSocket {
         this._open();
         // Send a test message after connection
         setTimeout(() => {
-          this._message("test message");
+          this._message('test message');
         }, 5);
       }
     }, 0);
   }
 
   // Override close to simulate async close
-  close(_code?: number, _reason?: string) {
+  close(code?: number, reason?: string) {
     this.readyState = 2; // CLOSING
     setTimeout(() => {
       this.readyState = 3; // CLOSED
-      this._close();
+      this._close(code, reason);
     }, 0);
   }
 
@@ -70,7 +74,7 @@ class MockWebSocket {
   }
 
   _open() {
-    const openHandlers = this._handlers.get("open") || [];
+    const openHandlers = this._handlers.get('open') || [];
     openHandlers.forEach((h: Function) => h({}));
   }
 
@@ -80,17 +84,17 @@ class MockWebSocket {
       this.onmessage({ data } as MessageEvent);
     }
     // Also trigger addEventListener handlers
-    const messageHandlers = this._handlers.get("message") || [];
+    const messageHandlers = this._handlers.get('message') || [];
     messageHandlers.forEach((h: Function) => h({ data }));
   }
 
-  _close() {
+  _close(code: number = 1000, reason: string = '') {
     this.readyState = 3;
-    const closeEvent = { code: 1000, reason: "", wasClean: true };
+    const closeEvent = { code, reason, wasClean: code === 1000 };
     if (this.onclose) {
       this.onclose(closeEvent as CloseEvent);
     }
-    const closeHandlers = this._handlers.get("close") || [];
+    const closeHandlers = this._handlers.get('close') || [];
     closeHandlers.forEach((h: Function) => h(closeEvent));
   }
 }
@@ -111,12 +115,12 @@ Object.assign(global.WebSocket, {
   CLOSED: 3,
 });
 
-describe("BrowserWebSocketTransport", () => {
+describe('BrowserWebSocketTransport', () => {
   let transport: BrowserWebSocketTransport;
 
   beforeEach(() => {
     transport = createBrowserWebSocketTransport({
-      url: "wss://example.com",
+      url: 'wss://example.com',
     });
   });
 
@@ -124,127 +128,182 @@ describe("BrowserWebSocketTransport", () => {
     transport.close();
   });
 
-  describe("constructor", () => {
-    it("should create transport with url", () => {
-      expect(transport.url).toBe("wss://example.com");
+  describe('constructor', () => {
+    it('should create transport with url', () => {
+      expect(transport.url).toBe('wss://example.com');
     });
 
-    it("should have initial ready state", () => {
+    it('should have initial ready state', () => {
       expect(transport.readyState).toBeDefined();
     });
   });
 
-  describe("connect", () => {
-    it("should connect to WebSocket server", async () => {
-      await transport.connect("wss://example.com/ws");
+  describe('connect', () => {
+    it('should connect to WebSocket server', async () => {
+      await transport.connect('wss://example.com/ws');
       expect(transport.readyState).toBe(1); // OPEN
     });
 
-    it("should reject on connection error", async () => {
+    it('should reject on connection error', async () => {
       const transport = createBrowserWebSocketTransport({
-        url: "wss://invalid.example.com",
+        url: 'wss://invalid.example.com',
       });
 
-      await expect(transport.connect("wss://invalid.example.com")).rejects.toThrow();
+      await expect(transport.connect('wss://invalid.example.com')).rejects.toThrow();
     });
   });
 
-  describe("send", () => {
-    it("should send text data", async () => {
-      await transport.connect("wss://example.com/ws");
-      expect(() => transport.send("test message")).not.toThrow();
+  describe('send', () => {
+    it('should send text data', async () => {
+      await transport.connect('wss://example.com/ws');
+      expect(() => transport.send('test message')).not.toThrow();
     });
 
-    it("should send binary data", async () => {
-      await transport.connect("wss://example.com/ws");
+    it('should send binary data', async () => {
+      await transport.connect('wss://example.com/ws');
       const buffer = new ArrayBuffer(8);
       expect(() => transport.send(buffer)).not.toThrow();
     });
 
-    it("should throw when not connected", () => {
-      expect(() => transport.send("test")).toThrow();
+    it('should throw when not connected', () => {
+      expect(() => transport.send('test')).toThrow();
     });
   });
 
-  describe("close", () => {
-    it("should close connection", async () => {
-      await transport.connect("wss://example.com/ws");
-      transport.close(1000, "Normal closure");
+  describe('close', () => {
+    it('should close connection', async () => {
+      await transport.connect('wss://example.com/ws');
+      transport.close(1000, 'Normal closure');
       // Wait for async close
       await new Promise(resolve => setTimeout(resolve, 10));
       expect(transport.readyState).toBe(3); // CLOSED
     });
 
-    it("should close with default code", async () => {
-      await transport.connect("wss://example.com/ws");
+    it('should close with default code', async () => {
+      await transport.connect('wss://example.com/ws');
       transport.close();
       await new Promise(resolve => setTimeout(resolve, 10));
       expect(transport.readyState).toBe(3);
     });
   });
 
-  describe("event handlers", () => {
-    it("should call onopen handler", async () => {
+  describe('event handlers', () => {
+    it('should call onopen handler', async () => {
       const onOpen = vi.fn();
       const transport = createBrowserWebSocketTransport({
-        url: "wss://example.com",
+        url: 'wss://example.com',
         onopen: onOpen,
       });
 
-      await transport.connect("wss://example.com/ws");
+      await transport.connect('wss://example.com/ws');
       expect(onOpen).toHaveBeenCalled();
     });
 
-    it("should call onclose handler", async () => {
+    it('should call onclose handler', async () => {
       const onClose = vi.fn();
       const transport = createBrowserWebSocketTransport({
-        url: "wss://example.com",
+        url: 'wss://example.com',
         onclose: onClose,
       });
 
-      await transport.connect("wss://example.com/ws");
+      await transport.connect('wss://example.com/ws');
       transport.close();
       await new Promise(resolve => setTimeout(resolve, 10));
       expect(onClose).toHaveBeenCalled();
     });
 
-    it("should call onerror handler", async () => {
+    it('should call onerror handler', async () => {
       const onError = vi.fn();
       const transport = createBrowserWebSocketTransport({
-        url: "wss://example.com",
+        url: 'wss://example.com',
         onerror: onError,
       });
 
-      await expect(transport.connect("wss://invalid.example.com")).rejects.toThrow();
+      await expect(transport.connect('wss://invalid.example.com')).rejects.toThrow();
       // Error handler should be called
     });
 
-    it("should call onmessage handler", async () => {
+    it('should call onmessage handler', async () => {
       const onMessage = vi.fn();
       const transport = createBrowserWebSocketTransport({
-        url: "wss://example.com",
+        url: 'wss://example.com',
         onmessage: onMessage,
       });
 
-      await transport.connect("wss://example.com/ws");
+      await transport.connect('wss://example.com/ws');
       // Wait for test message
       await new Promise(resolve => setTimeout(resolve, 20));
       expect(onMessage).toHaveBeenCalled();
     });
+
+    it('should clean up ws reference after close', async () => {
+      const onClose = vi.fn();
+      const transport = createBrowserWebSocketTransport({
+        url: 'wss://example.com',
+        onclose: onClose,
+      });
+
+      await transport.connect('wss://example.com/ws');
+      transport.close();
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(onClose).toHaveBeenCalled();
+      // ws reference should be cleaned up after onclose fires
+      expect(transport.readyState).toBe(3); // CLOSED
+    });
+
+    it('should not call onclose handler again after cleanup', async () => {
+      const onClose = vi.fn();
+      const transport = createBrowserWebSocketTransport({
+        url: 'wss://example.com',
+        onclose: onClose,
+      });
+
+      await transport.connect('wss://example.com/ws');
+      transport.close();
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+
+      // Calling close again should not trigger another onclose
+      transport.close();
+      await new Promise(resolve => setTimeout(resolve, 10));
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('should pass correct close event data to onclose handler', async () => {
+      let closeEventData: { code: number; reason: string; wasClean: boolean } | null = null;
+      const transport = createBrowserWebSocketTransport({
+        url: 'wss://example.com',
+        onclose: event => {
+          closeEventData = event;
+        },
+      });
+
+      await transport.connect('wss://example.com/ws');
+      transport.close(1000, 'Test closure');
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(closeEventData).toEqual({
+        code: 1000,
+        reason: 'Test closure',
+        wasClean: true,
+      });
+    });
   });
 });
 
-describe("BrowserWebSocketTransportConfig", () => {
-  it("should accept url in config", () => {
+describe('BrowserWebSocketTransportConfig', () => {
+  it('should accept url in config', () => {
     const config: BrowserWebSocketTransportConfig = {
-      url: "wss://example.com",
+      url: 'wss://example.com',
     };
-    expect(config.url).toBe("wss://example.com");
+    expect(config.url).toBe('wss://example.com');
   });
 
-  it("should accept event handlers in config", () => {
+  it('should accept event handlers in config', () => {
     const config: BrowserWebSocketTransportConfig = {
-      url: "wss://example.com",
+      url: 'wss://example.com',
       onopen: vi.fn(),
       onclose: vi.fn(),
       onerror: vi.fn(),
@@ -256,20 +315,20 @@ describe("BrowserWebSocketTransportConfig", () => {
     expect(config.onmessage).toBeDefined();
   });
 
-  it("should not have tlsValidator in config (browser handles TLS)", () => {
+  it('should not have tlsValidator in config (browser handles TLS)', () => {
     const config: BrowserWebSocketTransportConfig = {
-      url: "wss://example.com",
+      url: 'wss://example.com',
     };
-    expect(config).not.toHaveProperty("tlsValidator");
+    expect(config).not.toHaveProperty('tlsValidator');
   });
 });
 
-describe("createBrowserWebSocketTransport", () => {
-  it("should create transport instance", () => {
+describe('createBrowserWebSocketTransport', () => {
+  it('should create transport instance', () => {
     const transport = createBrowserWebSocketTransport({
-      url: "wss://example.com",
+      url: 'wss://example.com',
     });
     expect(transport).toBeDefined();
-    expect(transport.url).toBe("wss://example.com");
+    expect(transport.url).toBe('wss://example.com');
   });
 });

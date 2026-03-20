@@ -126,6 +126,12 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
               wasClean: event.wasClean,
             });
           }
+          // Clean up references after close event is handled
+          this.ws!.onopen = null;
+          this.ws!.onclose = null;
+          this.ws!.onerror = null;
+          this.ws!.onmessage = null;
+          this.ws = null;
         };
 
         this.ws.onerror = (_event: Event) => {
