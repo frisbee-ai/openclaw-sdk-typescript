@@ -166,8 +166,7 @@ export class ReconnectManager {
         if (this.listenerErrorHandler) {
           this.listenerErrorHandler({ error, event });
         } else {
-          // Default: silent to prevent cascading failures during reconnection
-          // Users can set onListenerError to capture these
+          console.error('Error in reconnect event listener:', error);
         }
       }
     }
