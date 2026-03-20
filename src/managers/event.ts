@@ -141,8 +141,8 @@ export class EventManager {
     namespace?: string
   ): UnsubscribeFn {
     const wrapped: EventHandler<T> = event => {
-      handler(event);
       this.off(pattern, wrapped, namespace);
+      handler(event);
     };
     return this.on(pattern, wrapped, namespace);
   }
