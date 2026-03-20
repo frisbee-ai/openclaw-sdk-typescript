@@ -208,6 +208,18 @@ export class OpenClawClient {
    * @param config - Client configuration
    */
   constructor(config: ClientConfig) {
+    // Validate URL scheme early (fail-fast)
+    let parsed: URL;
+    try {
+      parsed = new URL(config.url);
+    } catch {
+      // URL constructor throws for malformed URLs - let it propagate
+      throw new Error(`Invalid WebSocket URL: ${config.url}`);
+    }
+    if (!['ws:', 'wss:'].includes(parsed.protocol)) {
+      throw new Error(`Invalid URL scheme: ${parsed.protocol}. Expected ws: or wss:`);
+    }
+
     // Normalize connection config - supports both flat and nested style
     const normalizedConfig = this.normalizeConnectionConfig(config);
     this._config = config;

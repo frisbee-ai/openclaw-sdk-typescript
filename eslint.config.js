@@ -82,6 +82,7 @@ export default [
         MessageEvent: 'readonly',
         CloseEvent: 'readonly',
         AbortSignal: 'readonly',
+        URL: 'readonly',
         crypto: 'readonly',
         // Node.js globals
         setTimeout: 'readonly',

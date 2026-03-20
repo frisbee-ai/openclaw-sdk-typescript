@@ -305,6 +305,44 @@ describe('ClientConfig', () => {
     expect(config.url).toBe('ws://localhost:8080');
     expect(config.clientId).toBe('test-client');
   });
+
+  describe('url validation', () => {
+    it('should accept ws:// URL scheme', () => {
+      expect(
+        () => new OpenClawClient({ url: 'ws://localhost:8080', clientId: 'test' })
+      ).not.toThrow();
+    });
+
+    it('should accept wss:// URL scheme', () => {
+      expect(
+        () => new OpenClawClient({ url: 'wss://localhost:8080', clientId: 'test' })
+      ).not.toThrow();
+    });
+
+    it('should reject http:// URL scheme', () => {
+      expect(() => new OpenClawClient({ url: 'http://localhost:8080', clientId: 'test' })).toThrow(
+        'Invalid URL scheme: http:. Expected ws: or wss:'
+      );
+    });
+
+    it('should reject https:// URL scheme', () => {
+      expect(() => new OpenClawClient({ url: 'https://localhost:8080', clientId: 'test' })).toThrow(
+        'Invalid URL scheme: https:. Expected ws: or wss:'
+      );
+    });
+
+    it('should reject file:// URL scheme', () => {
+      expect(() => new OpenClawClient({ url: 'file:///path/to/socket', clientId: 'test' })).toThrow(
+        'Invalid URL scheme: file:. Expected ws: or wss:'
+      );
+    });
+
+    it('should reject malformed URLs', () => {
+      expect(() => new OpenClawClient({ url: 'not-a-valid-url', clientId: 'test' })).toThrow(
+        'Invalid WebSocket URL: not-a-valid-url'
+      );
+    });
+  });
 });
 
 describe('ConnectionConfig', () => {
