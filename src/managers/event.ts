@@ -251,27 +251,26 @@ export class EventManager {
    * Get handler count.
    */
   handlerCount(pattern?: EventPattern, namespace?: string): number {
+    const countNs = (entries: SubscriptionEntry[]): number =>
+      namespace ? entries.filter(h => h.namespace === namespace).length : entries.length;
+
     if (!pattern) {
-      let count = this.wildcardSubscriptions.length;
+      let count = countNs(this.wildcardSubscriptions);
       for (const handlers of this.subscriptions.values()) {
-        count += handlers.length;
-      }
-      if (namespace) {
-        count -= this.subscriptions.size; // Approximate
+        count += countNs(handlers);
       }
       return count;
     }
 
     if (pattern === '*') {
-      const handlers = this.wildcardSubscriptions;
-      return namespace ? handlers.filter(h => h.namespace === namespace).length : handlers.length;
+      return countNs(this.wildcardSubscriptions);
     }
 
     const key = pattern.endsWith(':*') ? `wildcard:${pattern.slice(0, -2)}` : pattern;
     const handlers = this.subscriptions.get(key);
     if (!handlers) return 0;
 
-    return namespace ? handlers.filter(h => h.namespace === namespace).length : handlers.length;
+    return countNs(handlers);
   }
 
   /**
