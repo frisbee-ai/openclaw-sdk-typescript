@@ -108,14 +108,14 @@ export class TimeoutManager {
    * @returns Object with promise and cancel function
    */
   wait(ms: number): { promise: Promise<void>; cancel: () => void } {
-    let cancelFn: (() => void) | undefined;
+    let cancelFn: () => void = () => {};
 
     const promise = new Promise<void>(resolve => {
       const handle = this.set(() => resolve(), ms);
       cancelFn = () => handle.clear();
     });
 
-    return { promise, cancel: cancelFn! };
+    return { promise, cancel: cancelFn };
   }
 
   /**
