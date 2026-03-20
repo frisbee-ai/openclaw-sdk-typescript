@@ -67,13 +67,7 @@ export class TlsValidator {
    * inspection is not available.
    */
   static get isSupported(): boolean {
-    // Check if we're in Node.js by verifying tls module exists
-    try {
-      require('tls');
-      return true;
-    } catch {
-      return false;
-    }
+    return typeof process !== 'undefined' && typeof process.versions?.node === 'string';
   }
 
   /**
