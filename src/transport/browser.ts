@@ -95,8 +95,21 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
       try {
         this.ws = new WebSocket(url);
 
+        // Connection timeout
+        const timeoutId = setTimeout(() => {
+          if (this._readyState === ReadyState.CONNECTING) {
+            this._readyState = ReadyState.CLOSED;
+            if (this.ws) {
+              this.ws.close();
+              this.ws = null;
+            }
+            reject(new Error('WebSocket connection timeout'));
+          }
+        }, 30000);
+
         // Set up event handlers
         this.ws.onopen = () => {
+          clearTimeout(timeoutId);
           this._readyState = ReadyState.OPEN;
           if (this.config.onopen) {
             this.config.onopen({ url, timestamp: Date.now() });
@@ -116,6 +129,7 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
         };
 
         this.ws.onerror = (_event: Event) => {
+          clearTimeout(timeoutId);
           if (this._readyState === ReadyState.CONNECTING) {
             reject(new Error('WebSocket connection failed'));
           }
