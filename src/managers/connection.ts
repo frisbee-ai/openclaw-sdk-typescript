@@ -254,14 +254,16 @@ export class ConnectionManager {
       this.reconnectAttempts = 0;
 
       // Resolve the handshake promise
-      this.handshakeCompleters?.resolve();
+      const completers = this.handshakeCompleters;
+      this.handshakeCompleters = undefined;
+      completers?.resolve();
     } catch (error) {
       this.handleError(error instanceof Error ? error.message : 'Handshake failed', error, true);
 
       // Reject the handshake promise
-      this.handshakeCompleters?.reject(
-        error instanceof Error ? error : new Error('Handshake failed')
-      );
+      const completers = this.handshakeCompleters;
+      this.handshakeCompleters = undefined;
+      completers?.reject(error instanceof Error ? error : new Error('Handshake failed'));
 
       this.handleDisconnect();
     }
