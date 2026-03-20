@@ -843,6 +843,9 @@ export class OpenClawClient {
    * @returns A unique request ID string
    */
   private generateRequestId(): string {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return `req-${crypto.randomUUID()}`;
+    }
     return `req-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
   }
 
