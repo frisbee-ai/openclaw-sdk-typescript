@@ -8,7 +8,12 @@
 
 import { WebSocket as WS } from 'ws';
 import type { TLSSocket } from 'tls';
-import { ReadyState, readyStateToString, type ReadyStateString } from './websocket.js';
+import {
+  ReadyState,
+  readyStateToString,
+  type ReadyStateString,
+  type IWebSocketTransport,
+} from './websocket.js';
 
 // ============================================================================
 // Types
@@ -84,7 +89,7 @@ export type { ReadyStateString } from './websocket.js';
  *
  * Uses the `ws` package for WebSocket connectivity.
  */
-export class NodeWebSocketTransport {
+export class NodeWebSocketTransport implements IWebSocketTransport {
   private ws: WS | null = null;
   private config: NodeWebSocketTransportConfig;
 
