@@ -132,7 +132,7 @@ export class TlsValidator {
       if (this.requireValidation) {
         throw new ConnectionError({
           code: 'TLS_FINGERPRINT_MISMATCH',
-          message: `TLS fingerprint mismatch: expected ${[...this.expectedFingerprints][0]}, got ${fingerprint}`,
+          message: 'TLS fingerprint mismatch',
           retryable: false,
         });
       }
