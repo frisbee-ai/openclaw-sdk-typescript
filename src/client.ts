@@ -182,6 +182,7 @@ export class OpenClawClient {
   private policyManager: PolicyManager;
   private stateMachine: ConnectionStateMachine;
   private _config: ClientConfig;
+  private _normalizedConfig: Required<ConnectionConfig>;
   private negotiatedProtocol: NegotiatedProtocol | null = null;
   private _serverInfo: HelloOk | null = null;
   private _snapshot: Snapshot | null = null;
@@ -216,6 +217,7 @@ export class OpenClawClient {
     // Normalize connection config - supports both flat and nested style
     const normalizedConfig = this.normalizeConnectionConfig(config);
     this._config = config;
+    this._normalizedConfig = normalizedConfig;
 
     // Set up logger
     this.logger = config.logger ?? NOOP_LOGGER;
@@ -750,7 +752,7 @@ export class OpenClawClient {
     };
 
     // Determine timeout
-    let timeout = this._config.requestTimeoutMs ?? 30000;
+    let timeout = this._normalizedConfig.requestTimeoutMs;
     if (options?.expectFinal && options.expectFinalTimeoutMs) {
       timeout = options.expectFinalTimeoutMs;
     }
