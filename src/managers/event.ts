@@ -7,6 +7,7 @@
  */
 
 import type { EventFrame } from '../protocol/frames.js';
+import { type Logger, LogLevel } from '../types/logger.js';
 
 // ============================================================================
 // Types
@@ -59,6 +60,24 @@ export class EventManager {
   private prefixSubscriptions: Map<string, SubscriptionEntry[]> = new Map();
   private defaultNamespace = '__default__';
   private listenerErrorHandler: ListenerErrorHandler | null = null;
+  private logger: Logger;
+
+  constructor(logger?: Logger) {
+    this.logger = logger ?? {
+      name: 'event-manager',
+      level: LogLevel.Error,
+      debug() {},
+      info() {},
+       
+      warn(message: string, meta?: Record<string, unknown>) {
+        console.warn(message, meta ?? '');
+      },
+       
+      error(message: string, meta?: Record<string, unknown>) {
+        console.error(message, meta ?? '');
+      },
+    };
+  }
 
   /**
    * Set a callback for handling errors thrown by event listeners.
@@ -205,7 +224,7 @@ export class EventManager {
   emit<T = unknown>(eventName: string, payload: T): void {
     // Validate incoming event name length
     if (eventName.length > MAX_EVENT_NAME_LENGTH) {
-      console.warn(`Received event name exceeds max length (${eventName.length}), dropping`);
+      this.logger.warn(`Received event name exceeds max length (${eventName.length}), dropping`);
       return;
     }
 
@@ -320,9 +339,9 @@ export class EventManager {
         this.listenerErrorHandler({ error, eventName, pattern });
       } else {
         // Default: log with context for debugging
-        console.error(
+        this.logger.error(
           `Error in event handler for pattern "${pattern}" on event "${eventName}":`,
-          error
+          error as unknown as Record<string, unknown>
         );
       }
     }
@@ -354,6 +373,6 @@ export class EventManager {
  * unsub();
  * ```
  */
-export function createEventManager(): EventManager {
-  return new EventManager();
+export function createEventManager(logger?: Logger): EventManager {
+  return new EventManager(logger);
 }

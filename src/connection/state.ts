@@ -5,6 +5,7 @@
  */
 
 import type { ConnectionState } from '../protocol/connection-state.js';
+import { type Logger, LogLevel } from '../types/logger.js';
 
 // ============================================================================
 // Types
@@ -56,6 +57,21 @@ export class ConnectionStateMachine {
   private state: ConnectionState = 'disconnected';
   private listeners: Set<StateChangeListener> = new Set();
   private listenerErrorHandler: StateChangeListenerErrorHandler | null = null;
+  private logger: Logger;
+
+  constructor(logger?: Logger) {
+    this.logger = logger ?? {
+      name: 'state-machine',
+      level: LogLevel.Error,
+      debug() {},
+      info() {},
+      warn() {},
+       
+      error(message: string, meta?: Record<string, unknown>) {
+        console.error(message, meta ?? '');
+      },
+    };
+  }
 
   /**
    * Get current state.
@@ -200,7 +216,7 @@ export class ConnectionStateMachine {
         if (this.listenerErrorHandler) {
           this.listenerErrorHandler({ error, event });
         } else {
-          console.error('Error in state change listener:', error);
+          this.logger.error('Error in state change listener:', { error: String(error) });
         }
       }
     }
@@ -229,6 +245,6 @@ export class ConnectionStateMachine {
  * stateMachine.transitionTo('connecting');
  * ```
  */
-export function createConnectionStateMachine(): ConnectionStateMachine {
-  return new ConnectionStateMachine();
+export function createConnectionStateMachine(logger?: Logger): ConnectionStateMachine {
+  return new ConnectionStateMachine(logger);
 }

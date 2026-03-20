@@ -10,6 +10,7 @@ import { ReconnectError, OpenClawError } from '../errors.js';
 import type { AuthErrorCode } from '../errors.js';
 import type { RefreshResult } from '../auth/provider.js';
 import { TimeoutManager } from '../utils/timeoutManager.js';
+import { type Logger, LogLevel } from '../types/logger.js';
 
 // ============================================================================
 // Types
@@ -103,9 +104,21 @@ export class ReconnectManager {
   private aborted = false;
   private timeoutManager = new TimeoutManager();
   private listenerErrorHandler: ReconnectListenerErrorHandler | null = null;
+  private logger: Logger;
 
-  constructor(config: Partial<ReconnectConfig> = {}) {
+  constructor(config: Partial<ReconnectConfig> = {}, logger?: Logger) {
     this.config = { ...DEFAULT_RECONNECT_CONFIG, ...config };
+    this.logger = logger ?? {
+      name: 'reconnect-manager',
+      level: LogLevel.Error,
+      debug() {},
+      info() {},
+      warn() {},
+       
+      error(message: string, meta?: Record<string, unknown>) {
+        console.error(message, meta ?? '');
+      },
+    };
   }
 
   /**
@@ -166,7 +179,7 @@ export class ReconnectManager {
         if (this.listenerErrorHandler) {
           this.listenerErrorHandler({ error, event });
         } else {
-          console.error('Error in reconnect event listener:', error);
+          this.logger.error('Error in reconnect event listener:', { error: String(error) });
         }
       }
     }
@@ -379,6 +392,9 @@ export class ReconnectManager {
  * );
  * ```
  */
-export function createReconnectManager(config?: Partial<ReconnectConfig>): ReconnectManager {
-  return new ReconnectManager(config);
+export function createReconnectManager(
+  config?: Partial<ReconnectConfig>,
+  logger?: Logger
+): ReconnectManager {
+  return new ReconnectManager(config, logger);
 }

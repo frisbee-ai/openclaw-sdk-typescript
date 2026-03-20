@@ -236,7 +236,7 @@ export class OpenClawClient {
     this.requestManager = createRequestManager();
 
     // Create event manager for server-sent event subscriptions
-    this.eventManager = createEventManager();
+    this.eventManager = createEventManager(this.logger);
 
     // Handle server-initiated request cancellation
     this.eventManager.on(
@@ -259,7 +259,7 @@ export class OpenClawClient {
     this.policyManager = createPolicyManager();
 
     // Create state machine for transition validation
-    this.stateMachine = createConnectionStateMachine();
+    this.stateMachine = createConnectionStateMachine(this.logger);
 
     // Create auth handler if credentials provider is configured
     if (config.credentialsProvider) {
