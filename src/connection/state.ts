@@ -4,22 +4,14 @@
  * @module
  */
 
+import type { ConnectionState } from '../protocol/types.js';
+
 // ============================================================================
 // Types
 // ============================================================================
 
-/** Client connection states */
-export type ClientConnectionState =
-  | 'disconnected'
-  | 'connecting'
-  | 'handshaking'
-  | 'authenticating'
-  | 'ready'
-  | 'reconnecting'
-  | 'closed';
-
 /** Valid state transitions map */
-const VALID_TRANSITIONS: Record<ClientConnectionState, ClientConnectionState[]> = {
+const VALID_TRANSITIONS: Record<ConnectionState, ConnectionState[]> = {
   disconnected: ['connecting'],
   connecting: ['handshaking', 'disconnected', 'closed'],
   handshaking: ['authenticating', 'reconnecting', 'disconnected', 'closed'],
@@ -31,8 +23,8 @@ const VALID_TRANSITIONS: Record<ClientConnectionState, ClientConnectionState[]> 
 
 /** State change event */
 export interface StateChangeEvent {
-  previous: ClientConnectionState;
-  current: ClientConnectionState;
+  previous: ConnectionState;
+  current: ConnectionState;
 }
 
 /** State change listener */
@@ -61,14 +53,14 @@ export type StateChangeListenerErrorHandler = (error: {
  * - `closed`: Connection closed (terminal state)
  */
 export class ConnectionStateMachine {
-  private state: ClientConnectionState = 'disconnected';
+  private state: ConnectionState = 'disconnected';
   private listeners: Set<StateChangeListener> = new Set();
   private listenerErrorHandler: StateChangeListenerErrorHandler | null = null;
 
   /**
    * Get current state.
    */
-  getState(): ClientConnectionState {
+  getState(): ConnectionState {
     return this.state;
   }
 
@@ -94,7 +86,7 @@ export class ConnectionStateMachine {
   /**
    * Check if can transition to a new state.
    */
-  canTransitionTo(newState: ClientConnectionState): boolean {
+  canTransitionTo(newState: ConnectionState): boolean {
     const valid = VALID_TRANSITIONS[this.state];
     return valid.includes(newState);
   }
@@ -105,7 +97,7 @@ export class ConnectionStateMachine {
    * @param newState Target state
    * @throws Error if transition is invalid
    */
-  transitionTo(newState: ClientConnectionState): void {
+  transitionTo(newState: ConnectionState): void {
     if (!this.canTransitionTo(newState)) {
       throw new Error(`Invalid state transition from '${this.state}' to '${newState}'`);
     }

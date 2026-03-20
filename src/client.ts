@@ -28,7 +28,6 @@ import type { NegotiatedProtocol } from './connection/protocol.js';
 import { PolicyManager, createPolicyManager } from './connection/policies.js';
 import type { Policy } from './connection/policies.js';
 import { ConnectionStateMachine, createConnectionStateMachine } from './connection/state.js';
-import type { ClientConnectionState } from './connection/state.js';
 import { AuthHandler, createAuthHandler } from './auth/provider.js';
 import type { CredentialsProvider } from './auth/provider.js';
 import { TickMonitor, createTickMonitor } from './events/tick.js';
@@ -312,8 +311,8 @@ export class OpenClawClient {
       onStateChange: event => {
         // Track state in the state machine (with transition validation)
         try {
-          if (this.stateMachine.canTransitionTo(event.newState as ClientConnectionState)) {
-            this.stateMachine.transitionTo(event.newState as ClientConnectionState);
+          if (this.stateMachine.canTransitionTo(event.newState as ConnectionState)) {
+            this.stateMachine.transitionTo(event.newState as ConnectionState);
           }
         } catch {
           // State machine validation is advisory — don't break the connection

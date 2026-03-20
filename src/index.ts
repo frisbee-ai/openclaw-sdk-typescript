@@ -328,7 +328,6 @@ export type {
   StateChangeEvent,
   StateChangeListener,
   StateChangeListenerErrorHandler,
-  ClientConnectionState,
 } from './connection/state.js';
 export { PolicyManager, createPolicyManager, DEFAULT_POLICY } from './connection/policies.js';
 export type { Policy } from './connection/policies.js';
