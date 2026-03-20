@@ -773,7 +773,12 @@ export class OpenClawClient {
       }
 
       // Send the request
-      this.connectionManager.send(requestFrame);
+      try {
+        this.connectionManager.send(requestFrame);
+      } catch (sendError) {
+        this.requestManager.abortRequest(requestId);
+        throw sendError;
+      }
 
       // Wait for response
       const response = await responsePromise;
