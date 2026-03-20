@@ -56,6 +56,7 @@ interface SubscriptionEntry {
 export class EventManager {
   private subscriptions: Map<string, SubscriptionEntry[]> = new Map();
   private wildcardSubscriptions: SubscriptionEntry[] = [];
+  private prefixSubscriptions: Map<string, SubscriptionEntry[]> = new Map();
   private defaultNamespace = '__default__';
   private listenerErrorHandler: ListenerErrorHandler | null = null;
 
@@ -115,12 +116,11 @@ export class EventManager {
     if (pattern === '*') {
       this.wildcardSubscriptions.push(entry);
     } else if (pattern.endsWith(':*')) {
-      // Prefix wildcard - store without the trailing *
+      // Prefix wildcard - store in separate map for O(1) lookup
       const prefix = pattern.slice(0, -2);
-      const key = `wildcard:${prefix}`;
-      const existing = this.subscriptions.get(key) ?? [];
+      const existing = this.prefixSubscriptions.get(prefix) ?? [];
       existing.push(entry);
-      this.subscriptions.set(key, existing);
+      this.prefixSubscriptions.set(prefix, existing);
     } else {
       // Exact match
       const existing = this.subscriptions.get(pattern) ?? [];
@@ -182,10 +182,14 @@ export class EventManager {
       this.wildcardSubscriptions = this.wildcardSubscriptions.filter(filterByHandler);
     } else if (pattern.endsWith(':*')) {
       const prefix = pattern.slice(0, -2);
-      const key = `wildcard:${prefix}`;
-      const existing = this.subscriptions.get(key);
+      const existing = this.prefixSubscriptions.get(prefix);
       if (existing) {
-        this.subscriptions.set(key, existing.filter(filterByHandler));
+        const filtered = existing.filter(filterByHandler);
+        if (filtered.length === 0) {
+          this.prefixSubscriptions.delete(prefix);
+        } else {
+          this.prefixSubscriptions.set(prefix, filtered);
+        }
       }
     } else {
       const existing = this.subscriptions.get(pattern);
@@ -216,17 +220,13 @@ export class EventManager {
       }
     }
 
-    // 2. Prefix wildcard matches
-    // Find all wildcard subscriptions where eventName starts with prefix
-    for (const [key, entries] of this.subscriptions) {
-      if (key.startsWith('wildcard:')) {
-        const prefix = key.slice(9); // Remove 'wildcard:'
-        if (eventName.startsWith(prefix + ':')) {
-          for (const entry of entries) {
-            if (!called.has(entry.handler)) {
-              called.add(entry.handler);
-              this.safeCall(entry.handler, payload, eventName, entry.pattern);
-            }
+    // 2. Prefix wildcard matches — O(k) where k is number of registered prefixes
+    for (const [prefix, entries] of this.prefixSubscriptions) {
+      if (eventName.startsWith(prefix + ':')) {
+        for (const entry of entries) {
+          if (!called.has(entry.handler)) {
+            called.add(entry.handler);
+            this.safeCall(entry.handler, payload, eventName, entry.pattern);
           }
         }
       }
@@ -259,6 +259,9 @@ export class EventManager {
       for (const handlers of this.subscriptions.values()) {
         count += countNs(handlers);
       }
+      for (const handlers of this.prefixSubscriptions.values()) {
+        count += countNs(handlers);
+      }
       return count;
     }
 
@@ -266,8 +269,13 @@ export class EventManager {
       return countNs(this.wildcardSubscriptions);
     }
 
-    const key = pattern.endsWith(':*') ? `wildcard:${pattern.slice(0, -2)}` : pattern;
-    const handlers = this.subscriptions.get(key);
+    if (pattern.endsWith(':*')) {
+      const prefix = pattern.slice(0, -2);
+      const handlers = this.prefixSubscriptions.get(prefix);
+      return handlers ? countNs(handlers) : 0;
+    }
+
+    const handlers = this.subscriptions.get(pattern);
     if (!handlers) return 0;
 
     return countNs(handlers);
@@ -283,6 +291,14 @@ export class EventManager {
         this.subscriptions.delete(key);
       } else {
         this.subscriptions.set(key, filtered);
+      }
+    }
+    for (const [prefix, handlers] of this.prefixSubscriptions) {
+      const filtered = handlers.filter(h => h.namespace !== namespace);
+      if (filtered.length === 0) {
+        this.prefixSubscriptions.delete(prefix);
+      } else {
+        this.prefixSubscriptions.set(prefix, filtered);
       }
     }
     this.wildcardSubscriptions = this.wildcardSubscriptions.filter(h => h.namespace !== namespace);
