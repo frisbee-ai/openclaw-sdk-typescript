@@ -136,6 +136,114 @@ describe('TickMonitor', () => {
 
       expect(onRecovered).not.toHaveBeenCalled();
     });
+
+    it('should call onRecovered only once when checkStale and recordTick are called multiple times', () => {
+      const onRecovered = vi.fn();
+      const onStale = vi.fn();
+      const monitor = createTickMonitor({
+        tickIntervalMs: 1000,
+        staleMultiplier: 2,
+        onStale,
+        onRecovered,
+        getTime: () => currentTime,
+      });
+
+      monitor.start();
+      // Become stale
+      monitor.recordTick(currentTime);
+      currentTime += 2001;
+      monitor.checkStale();
+      expect(onStale).toHaveBeenCalled();
+
+      // Recover with tick - recovered should be called once
+      currentTime += 1;
+      monitor.recordTick(currentTime);
+      expect(onRecovered).toHaveBeenCalledTimes(1);
+
+      // Simulate subsequent checkStale calls that would re-trigger stale
+      // without an actual new tick arriving
+      currentTime += 500;
+      monitor.checkStale();
+      currentTime += 500;
+      monitor.checkStale();
+
+      // Another tick should NOT trigger recovered again
+      currentTime += 500;
+      monitor.recordTick(currentTime);
+      expect(onRecovered).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not re-trigger recovered after checkStale sets staleDetected back to true', () => {
+      const onRecovered = vi.fn();
+      const onStale = vi.fn();
+      const monitor = createTickMonitor({
+        tickIntervalMs: 1000,
+        staleMultiplier: 2,
+        onStale,
+        onRecovered,
+        getTime: () => currentTime,
+      });
+
+      monitor.start();
+      // Become stale
+      monitor.recordTick(currentTime);
+      currentTime += 2001;
+      monitor.checkStale();
+      expect(onStale).toHaveBeenCalled();
+
+      // Recover with tick
+      currentTime += 1;
+      monitor.recordTick(currentTime);
+      expect(onRecovered).toHaveBeenCalledTimes(1);
+
+      // Advance time but don't record tick - checkStale should detect stale again
+      currentTime += 2001;
+      monitor.checkStale();
+      expect(onStale).toHaveBeenCalledTimes(2);
+
+      // Another tick - recovered should trigger again (new stale period ended)
+      currentTime += 1;
+      monitor.recordTick(currentTime);
+      expect(onRecovered).toHaveBeenCalledTimes(2);
+    });
+
+    it('should emit recovered event only once per recovery cycle', () => {
+      const recoveredEvents: number[] = [];
+      const monitor = createTickMonitor({
+        tickIntervalMs: 1000,
+        staleMultiplier: 2,
+        onRecovered: () => {}, // Must be provided for event to emit
+        getTime: () => currentTime,
+      });
+
+      monitor.start();
+      monitor.on('recovered', () => recoveredEvents.push(currentTime));
+
+      // Become stale
+      monitor.recordTick(currentTime);
+      currentTime += 2001;
+      monitor.checkStale();
+
+      // Recover
+      currentTime += 1;
+      monitor.recordTick(currentTime);
+
+      // Multiple checkStale calls should not re-trigger recovered
+      // Even though checkStale may re-detect staleness, recovered should not fire again
+      currentTime += 500;
+      monitor.checkStale();
+      currentTime += 500;
+      monitor.checkStale();
+      currentTime += 500;
+      monitor.checkStale();
+
+      // Another tick after sufficient time passes should NOT trigger recovered
+      // because checkStale did not set staleDetected (isStale returned false)
+      currentTime += 600;
+      monitor.recordTick(currentTime);
+
+      expect(recoveredEvents).toHaveLength(1);
+    });
   });
 
   describe('getTimeSinceLastTick', () => {

@@ -88,13 +88,19 @@ export class TickMonitor extends EventEmitter {
   recordTick(ts: number): void {
     const wasStale = this.staleDetected;
     this.lastTickTime = ts;
-    this.staleDetected = false;
     this.staleStartTime = null;
 
-    // If was stale and now recovered, emit event
-    if (wasStale && this.onRecovered) {
-      this.onRecovered();
-      this.emit('recovered');
+    // Only clear staleDetected if connection is actually healthy.
+    // This prevents checkStale() from re-triggering stale on the next tick.
+    // staleDetected is only cleared by checkStale() when isStale() returns false.
+    if (wasStale) {
+      // Only emit recovered if connection is genuinely healthy
+      // (i.e., enough time has passed since this tick)
+      if (!this.isStale() && this.onRecovered) {
+        this.onRecovered();
+        this.emit('recovered');
+      }
+      this.staleDetected = false;
     }
   }
 
