@@ -99,7 +99,7 @@ export class TickMonitor extends EventEmitter {
   }
 
   /**
-   * Check if connection is stale.
+   * Check if connection is stale (pure query, no side effects).
    *
    * @returns true if no tick received within threshold
    */
@@ -114,21 +114,28 @@ export class TickMonitor extends EventEmitter {
 
     const now = this.getTime();
     const threshold = this.tickIntervalMs * this.staleMultiplier;
-    const timeSinceTick = now - this.lastTickTime;
+    return now - this.lastTickTime > threshold;
+  }
 
-    const isStale = timeSinceTick > threshold;
+  /**
+   * Check staleness and fire stale event if newly detected.
+   *
+   * @returns true if connection is stale
+   */
+  checkStale(): boolean {
+    const stale = this.isStale();
 
-    // Handle stale state transitions
-    if (isStale && !this.staleDetected) {
+    if (stale && !this.staleDetected) {
       this.staleDetected = true;
+      const threshold = this.tickIntervalMs * this.staleMultiplier;
       this.staleStartTime = this.lastTickTime + threshold;
       if (this.onStale) {
         this.onStale();
-        this.emit('stale');
       }
+      this.emit('stale');
     }
 
-    return isStale;
+    return stale;
   }
 
   /**
@@ -149,8 +156,12 @@ export class TickMonitor extends EventEmitter {
    * @returns Milliseconds in stale state, 0 if not stale
    */
   getStaleDuration(): number {
-    if (!this.isStale() || this.staleStartTime === null) {
+    if (!this.isStale()) {
       return 0;
+    }
+    if (this.staleStartTime === null) {
+      const threshold = this.tickIntervalMs * this.staleMultiplier;
+      this.staleStartTime = this.lastTickTime + threshold;
     }
     return this.getTime() - this.staleStartTime;
   }
