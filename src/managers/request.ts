@@ -8,7 +8,7 @@
  * @module
  */
 
-import type { ResponseFrame } from '../protocol/types.js';
+import type { ResponseFrame } from '../protocol/frames.js';
 
 // ============================================================================
 // Types

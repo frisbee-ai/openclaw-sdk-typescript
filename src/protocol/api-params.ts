@@ -1,199 +1,15 @@
 /**
- * OpenClaw Protocol Types
+ * OpenClaw Protocol API Parameter Types
  *
- * This module defines TypeScript types for the OpenClaw WebSocket protocol.
- * These types are derived from the TypeBox schemas in the openclaw package
- * but defined as native TypeScript types for better IDE support.
+ * All XxxParams and XxxResult interfaces for API calls.
  *
  * @module
  */
 
-// ============================================================================
-// Error Codes
-// ============================================================================
-
-export const ErrorCodes = {
-  NOT_LINKED: 'NOT_LINKED',
-  NOT_PAIRED: 'NOT_PAIRED',
-  AGENT_TIMEOUT: 'AGENT_TIMEOUT',
-  INVALID_REQUEST: 'INVALID_REQUEST',
-  UNAVAILABLE: 'UNAVAILABLE',
-} as const;
-
-export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
-
-export interface ErrorShape {
-  code: string;
-  message: string;
-  details?: unknown;
-  retryable?: boolean;
-  retryAfterMs?: number;
-}
+import type { AgentSummary, WizardStep } from './api-common.js';
 
 // ============================================================================
-// Frame Type Constants
-// ============================================================================
-
-/** Frame type constants to avoid magic strings */
-export const FrameTypes = {
-  REQUEST: 'req',
-  RESPONSE: 'res',
-  EVENT: 'event',
-} as const;
-
-export type FrameType = (typeof FrameTypes)[keyof typeof FrameTypes];
-
-// ============================================================================
-// Core Frame Types
-// ============================================================================
-
-export interface RequestFrame {
-  type: 'req';
-  id: string;
-  method: string;
-  params?: unknown;
-}
-
-export interface ResponseFrame {
-  type: 'res';
-  id: string;
-  ok: boolean;
-  payload?: unknown;
-  error?: ErrorShape;
-  /** If true, this is an intermediate progress update, not a final response */
-  progress?: boolean;
-}
-
-/** State version for tracking connection state changes */
-export interface StateVersion {
-  /** Presence state version */
-  presence: number;
-  /** Health state version */
-  health: number;
-}
-
-export interface EventFrame {
-  type: 'event';
-  event: string;
-  payload?: unknown;
-  seq?: number;
-  stateVersion?: StateVersion;
-}
-
-export type GatewayFrame = RequestFrame | ResponseFrame | EventFrame;
-
-export interface Frame {
-  type: string;
-  [key: string]: unknown;
-}
-
-// ============================================================================
-// Connection and Handshake Types
-// ============================================================================
-
-export interface PresenceEntry {
-  node: string;
-  [key: string]: unknown;
-}
-
-export interface Snapshot {
-  presence: Record<string, unknown>;
-  health: Record<string, unknown>;
-  stateVersion: number;
-  uptimeMs: number;
-  configPath?: string;
-  authMode?: string;
-  agents?: Record<string, unknown>;
-  nodes?: Record<string, unknown>;
-}
-
-export interface ConnectParams {
-  minProtocol: number;
-  maxProtocol: number;
-  client: {
-    id: string;
-    displayName?: string;
-    version: string;
-    platform: string;
-    deviceFamily?: string;
-    modelIdentifier?: string;
-    mode: string;
-    instanceId?: string;
-  };
-  caps?: string[];
-  commands?: string[];
-  permissions?: Record<string, boolean>;
-  pathEnv?: string;
-  role?: string;
-  scopes?: string[];
-  device?: {
-    id: string;
-    publicKey: string;
-    signature: string;
-    signedAt: number;
-    nonce: string;
-  };
-  auth?: {
-    token?: string;
-    bootstrapToken?: string;
-    deviceToken?: string;
-    password?: string;
-  };
-  locale?: string;
-  userAgent?: string;
-}
-
-export interface HelloOk {
-  type: 'hello-ok';
-  protocol: number;
-  server: {
-    version: string;
-    connId: string;
-  };
-  features: {
-    methods: string[];
-    events: string[];
-  };
-  snapshot: Snapshot;
-  canvasHostUrl?: string;
-  auth?: {
-    deviceToken: string;
-    role: string;
-    scopes: string[];
-    issuedAtMs?: number;
-  };
-  policy: {
-    maxPayload: number;
-    maxBufferedBytes: number;
-    tickIntervalMs: number;
-  };
-}
-
-// ============================================================================
-// Event Payload Types
-// ============================================================================
-
-export interface AgentEvent {
-  agentId: string;
-  [key: string]: unknown;
-}
-
-export interface ChatEvent {
-  chatId: string;
-  [key: string]: unknown;
-}
-
-export interface TickEvent {
-  ts: number;
-}
-
-export interface ShutdownEvent {
-  reason: string;
-  restartExpectedMs?: number;
-}
-
-// ============================================================================
-// Common API Types
+// Agent Types
 // ============================================================================
 
 export interface AgentIdentityParams {
@@ -203,113 +19,8 @@ export interface AgentIdentityResult {
   id: string;
   summary?: AgentSummary;
 }
-/** Agent summary information returned from identity verification */
-export interface AgentSummary {
-  [key: string]: unknown;
-}
 export interface AgentWaitParams {
   agentId: string;
-  timeoutMs?: number;
-}
-
-export interface NodePairRequestParams {
-  nodeId: string;
-  ttlSec?: number;
-}
-export interface NodePairListParams {
-  nodeId: string;
-}
-export interface NodePairApproveParams {
-  nodeId: string;
-  pairingId: string;
-}
-export interface NodePairRejectParams {
-  nodeId: string;
-  pairingId: string;
-}
-export interface NodePairVerifyParams {
-  nodeId: string;
-  pairingId: string;
-  code: string;
-}
-
-export interface DevicePairListParams {}
-export interface DevicePairApproveParams {
-  pairingId: string;
-}
-export interface DevicePairRejectParams {
-  pairingId: string;
-}
-
-export interface ConfigGetParams {
-  key?: string;
-}
-export interface ConfigSetParams {
-  key: string;
-  value: unknown;
-}
-export interface ConfigApplyParams {}
-export interface ConfigPatchParams {
-  patches: Array<{ op: string; path: string; value?: unknown }>;
-}
-export interface ConfigSchemaParams {
-  key?: string;
-}
-export interface ConfigSchemaResponse {
-  schema: unknown;
-}
-
-export interface WizardStartParams {
-  wizardId: string;
-  input?: unknown;
-}
-export interface WizardNextParams {
-  wizardId: string;
-  input?: unknown;
-}
-export interface WizardCancelParams {
-  wizardId: string;
-}
-export interface WizardStatusParams {
-  wizardId: string;
-}
-export interface WizardStep {
-  id: string;
-  prompt?: string;
-  [key: string]: unknown;
-}
-export interface WizardNextResult {
-  step: WizardStep;
-  complete: boolean;
-}
-export interface WizardStartResult extends WizardNextResult {}
-export interface WizardStatusResult {
-  currentStep: WizardStep;
-  complete: boolean;
-}
-
-export interface TalkConfigParams {}
-export interface TalkConfigResult {
-  enabled: boolean;
-  [key: string]: unknown;
-}
-export interface TalkModeParams {
-  enabled: boolean;
-}
-
-export interface ChannelsStatusParams {}
-export interface ChannelsStatusResult {
-  channels: unknown[];
-}
-export interface ChannelsLogoutParams {
-  channelId: string;
-}
-
-export interface WebLoginStartParams {
-  returnUrl?: string;
-}
-export interface WebLoginWaitParams {
-  token: string;
   timeoutMs?: number;
 }
 
@@ -362,6 +73,146 @@ export interface AgentsListResult {
   agents: AgentSummary[];
 }
 
+// ============================================================================
+// Node Pairing Types
+// ============================================================================
+
+export interface NodePairRequestParams {
+  nodeId: string;
+  ttlSec?: number;
+}
+export interface NodePairListParams {
+  nodeId: string;
+}
+export interface NodePairApproveParams {
+  nodeId: string;
+  pairingId: string;
+}
+export interface NodePairRejectParams {
+  nodeId: string;
+  pairingId: string;
+}
+export interface NodePairVerifyParams {
+  nodeId: string;
+  pairingId: string;
+  code: string;
+}
+
+// ============================================================================
+// Device Pairing Types
+// ============================================================================
+
+export interface DevicePairListParams {}
+export interface DevicePairApproveParams {
+  pairingId: string;
+}
+export interface DevicePairRejectParams {
+  pairingId: string;
+}
+
+// ============================================================================
+// Config Types
+// ============================================================================
+
+export interface ConfigGetParams {
+  key?: string;
+}
+export interface ConfigSetParams {
+  key: string;
+  value: unknown;
+}
+export interface ConfigApplyParams {}
+export interface ConfigPatchParams {
+  patches: Array<{ op: string; path: string; value?: unknown }>;
+}
+export interface ConfigSchemaParams {
+  key?: string;
+}
+export interface ConfigSchemaResponse {
+  schema: unknown;
+}
+
+// ============================================================================
+// Wizard Types
+// ============================================================================
+
+export interface WizardStartParams {
+  wizardId: string;
+  input?: unknown;
+}
+export interface WizardNextParams {
+  wizardId: string;
+  input?: unknown;
+}
+export interface WizardCancelParams {
+  wizardId: string;
+}
+export interface WizardStatusParams {
+  wizardId: string;
+}
+export interface WizardNextResult {
+  step: WizardStep;
+  complete: boolean;
+}
+export interface WizardStartResult extends WizardNextResult {}
+export interface WizardStatusResult {
+  currentStep: WizardStep;
+  complete: boolean;
+}
+
+// ============================================================================
+// Talk Types
+// ============================================================================
+
+export interface TalkConfigParams {}
+export interface TalkConfigResult {
+  enabled: boolean;
+  [key: string]: unknown;
+}
+export interface TalkModeParams {
+  enabled: boolean;
+}
+
+// ============================================================================
+// Channels Types
+// ============================================================================
+
+export interface ChannelsStatusParams {}
+export interface ChannelsStatusResult {
+  channels: unknown[];
+}
+export interface ChannelsLogoutParams {
+  channelId: string;
+}
+
+// ============================================================================
+// WebLogin Types
+// ============================================================================
+
+export interface WebLoginStartParams {
+  returnUrl?: string;
+}
+export interface WebLoginWaitParams {
+  token: string;
+  timeoutMs?: number;
+}
+export interface WebLoginStartResult {
+  token: string;
+  url: string;
+}
+export interface WebLoginWaitResult {
+  success: boolean;
+  userId?: string;
+}
+export interface WebLoginCancelParams {
+  token: string;
+}
+export interface WebLoginCancelResult {}
+
+// ============================================================================
+// Skills Types
+// ============================================================================
+
 export interface SkillsStatusParams {
   skillId?: string;
 }
@@ -380,12 +231,10 @@ export interface SkillsUpdateParams {
   skillId: string;
 }
 
-export interface CronJob {
-  id: string;
-  cron: string;
-  prompt: string;
-  [key: string]: unknown;
-}
+// ============================================================================
+// Cron Types
+// ============================================================================
+
 export interface CronListParams {}
 export interface CronStatusParams {
   jobId: string;
@@ -406,10 +255,10 @@ export interface CronRunParams {
   jobId: string;
 }
 export interface CronRunsParams {}
-export interface CronRunLogEntry {
-  timestamp: number;
-  [key: string]: unknown;
-}
+
+// ============================================================================
+// Logs Types
+// ============================================================================
 
 export interface LogsTailParams {
   lines?: number;
@@ -418,6 +267,10 @@ export interface LogsTailResult {
   logs: string[];
 }
 
+// ============================================================================
+// ExecApprovals Types
+// ============================================================================
+
 export interface ExecApprovalsGetParams {}
 export interface ExecApprovalsSetParams {
   enabled: boolean;
@@ -425,6 +278,10 @@ export interface ExecApprovalsSetParams {
 export interface ExecApprovalsSnapshot {
   approvals: unknown[];
 }
+
+// ============================================================================
+// Sessions Types
+// ============================================================================
 
 export interface SessionsListParams {}
 export interface SessionsPreviewParams {
@@ -446,6 +303,10 @@ export interface SessionsDeleteParams {
 }
 export interface SessionsCompactParams {}
 export interface SessionsUsageParams {}
+
+// ============================================================================
+// Node Types
+// ============================================================================
 
 export interface NodeListParams {}
 export interface NodeInvokeParams {
@@ -474,6 +335,10 @@ export interface NodePendingEnqueueParams {
 }
 export interface NodePendingEnqueueResult {}
 
+// ============================================================================
+// Poll / Update / ChatInject Types
+// ============================================================================
+
 export interface PollParams {}
 export interface UpdateRunParams {}
 export interface ChatInjectParams {
@@ -482,7 +347,7 @@ export interface ChatInjectParams {
 }
 
 // ============================================================================
-// TTS (Text-to-Speech) Types
+// TTS Types
 // ============================================================================
 
 export interface TtsSpeakParams {
@@ -496,9 +361,6 @@ export interface TtsSpeakResult {
   durationMs?: number;
 }
 export interface TtsVoicesParams {}
-export interface TtsVoicesResult {
-  voices: Array<{ id: string; name: string; language?: string; [key: string]: unknown }>;
-}
 
 // ============================================================================
 // Voice Wake Types
@@ -510,10 +372,6 @@ export interface VoiceWakeStartParams {
 }
 export interface VoiceWakeStopParams {}
 export interface VoiceWakeStatusParams {}
-export interface VoiceWakeStatusResult {
-  active: boolean;
-  sensitivity?: number;
-}
 
 // ============================================================================
 // Browser Types
@@ -531,9 +389,6 @@ export interface BrowserCloseParams {
 }
 export interface BrowserCloseResult {}
 export interface BrowserListParams {}
-export interface BrowserListResult {
-  tabs: Array<{ tabId: string; url: string; title?: string; [key: string]: unknown }>;
-}
 export interface BrowserScreenshotParams {
   tabId: string;
 }
@@ -595,9 +450,6 @@ export interface UsageDetailsResult {
 // ============================================================================
 
 export interface DoctorCheckParams {}
-export interface DoctorCheckResult {
-  checks: Array<{ name: string; status: string; message?: string; [key: string]: unknown }>;
-}
 export interface DoctorFixParams {
   checkName?: string;
 }
@@ -611,9 +463,6 @@ export interface DoctorFixResult {
 // ============================================================================
 
 export interface SecretsListParams {}
-export interface SecretsListResult {
-  keys: string[];
-}
 export interface SecretsGetParams {
   key: string;
 }
@@ -635,9 +484,6 @@ export interface SecretsDeleteResult {}
 // ============================================================================
 
 export interface ChatListParams {}
-export interface ChatListResult {
-  chats: Array<{ chatId: string; [key: string]: unknown }>;
-}
 export interface ChatHistoryParams {
   chatId: string;
   limit?: number;
@@ -658,7 +504,7 @@ export interface ChatTitleResult {
 }
 
 // ============================================================================
-// Talk (Voice) Extended Types
+// Talk Extended Types
 // ============================================================================
 
 export interface TalkStartParams {
@@ -671,23 +517,6 @@ export interface TalkStopParams {
   sessionId: string;
 }
 export interface TalkStopResult {}
-
-// ============================================================================
-// Web Login Extended Types
-// ============================================================================
-
-export interface WebLoginStartResult {
-  token: string;
-  url: string;
-}
-export interface WebLoginWaitResult {
-  success: boolean;
-  userId?: string;
-}
-export interface WebLoginCancelParams {
-  token: string;
-}
-export interface WebLoginCancelResult {}
 
 // ============================================================================
 // Update Types
@@ -715,16 +544,3 @@ export interface DiagnosticsSnapshotParams {}
 export interface DiagnosticsSnapshotResult {
   snapshot: unknown;
 }
-
-// ============================================================================
-// Connection State
-// ============================================================================
-
-export type ConnectionState =
-  | 'disconnected'
-  | 'connecting'
-  | 'handshaking'
-  | 'authenticating'
-  | 'ready'
-  | 'reconnecting'
-  | 'closed';

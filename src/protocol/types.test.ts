@@ -7,19 +7,16 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { ErrorCodes, type ErrorCode, type ErrorShape } from './errors.js';
 import {
-  ErrorCodes,
   FrameTypes,
-  type ErrorCode,
   type FrameType,
   type RequestFrame,
   type ResponseFrame,
   type EventFrame,
   type GatewayFrame,
-  type ConnectParams,
-  type HelloOk,
-  type ErrorShape,
-} from './types';
+} from './frames.js';
+import { type ConnectParams, type HelloOk } from './connection.js';
 
 describe('ErrorCodes', () => {
   it('should have correct error code values', () => {

@@ -4,7 +4,7 @@
  * @module
  */
 
-import type { ConnectionState } from '../protocol/types.js';
+import type { ConnectionState } from '../protocol/connection-state.js';
 
 // ============================================================================
 // Types

@@ -7,14 +7,9 @@
  * @module
  */
 
-import type { ConnectionState } from './protocol/types.js';
-import type {
-  ConnectParams,
-  GatewayFrame,
-  ResponseFrame,
-  HelloOk,
-  Snapshot,
-} from './protocol/types.js';
+import type { ConnectionState } from './protocol/connection-state.js';
+import type { ConnectParams, HelloOk, Snapshot } from './protocol/connection.js';
+import type { GatewayFrame, ResponseFrame } from './protocol/frames.js';
 import type { IWebSocketTransport } from './transport/websocket.js';
 import { WebSocketTransport } from './transport/websocket.js';
 import type { ConnectionEventHandlers } from './managers/connection.js';

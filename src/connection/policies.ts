@@ -6,7 +6,7 @@
  * @module
  */
 
-import type { HelloOk } from '../protocol/types.js';
+import type { HelloOk } from '../protocol/connection.js';
 
 // ============================================================================
 // Types

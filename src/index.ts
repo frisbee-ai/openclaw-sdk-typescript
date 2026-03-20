@@ -60,25 +60,32 @@ export type {
   RequestFrame,
   ResponseFrame,
   EventFrame,
+  StateVersion,
+} from './protocol/frames.js';
 
+export type {
   // Connection types
   ConnectionState,
+} from './protocol/connection-state.js';
+
+export type {
+  // Connection types
   ConnectParams,
   HelloOk,
+  Snapshot,
+} from './protocol/connection.js';
 
+export type {
   // Error types
   ErrorShape,
+} from './protocol/errors.js';
 
-  // Snapshot types
-  Snapshot,
-
-  // State types
-  StateVersion,
-
+export type {
   // Agent types
   AgentSummary,
-  AgentsFileEntry,
-} from './protocol/types.js';
+} from './protocol/api-common.js';
+
+export type { AgentsFileEntry } from './protocol/api-params.js';
 
 // API parameter types (selectively exported)
 export type {
@@ -126,19 +133,16 @@ export type {
   TtsSpeakParams,
   TtsSpeakResult,
   TtsVoicesParams,
-  TtsVoicesResult,
   // Browser
   BrowserOpenParams,
   BrowserOpenResult,
   BrowserListParams,
-  BrowserListResult,
   BrowserScreenshotParams,
   BrowserScreenshotResult,
   BrowserEvalParams,
   BrowserEvalResult,
   // Chat extended
   ChatListParams,
-  ChatListResult,
   ChatHistoryParams,
   ChatHistoryResult,
   ChatDeleteParams,
@@ -147,17 +151,21 @@ export type {
   ChatTitleResult,
   // Secrets
   SecretsListParams,
-  SecretsListResult,
   SecretsGetParams,
   SecretsGetResult,
   SecretsSetParams,
   SecretsSetResult,
+  SecretsDeleteParams,
+  SecretsDeleteResult,
   // Usage
   UsageSummaryParams,
   UsageSummaryResult,
+  UsageDetailsParams,
+  UsageDetailsResult,
   // Doctor
   DoctorCheckParams,
-  DoctorCheckResult,
+  DoctorFixParams,
+  DoctorFixResult,
   // Config extended
   ConfigGetParams,
   ConfigSetParams,
@@ -170,7 +178,6 @@ export type {
   WizardNextParams,
   WizardCancelParams,
   WizardStatusParams,
-  WizardStep,
   WizardNextResult,
   WizardStartResult,
   WizardStatusResult,
@@ -203,6 +210,10 @@ export type {
   TalkConfigParams,
   TalkConfigResult,
   TalkModeParams,
+  TalkStartParams,
+  TalkStartResult,
+  TalkStopParams,
+  TalkStopResult,
   // Channels
   ChannelsStatusParams,
   ChannelsStatusResult,
@@ -212,9 +223,13 @@ export type {
   WebLoginWaitParams,
   WebLoginStartResult,
   WebLoginWaitResult,
+  WebLoginCancelParams,
+  WebLoginCancelResult,
   // Push
   PushRegisterParams,
   PushRegisterResult,
+  PushUnregisterParams,
+  PushUnregisterResult,
   PushSendParams,
   PushSendResult,
   // Update
@@ -225,7 +240,19 @@ export type {
   // Diagnostics
   DiagnosticsSnapshotParams,
   DiagnosticsSnapshotResult,
-} from './protocol/types.js';
+} from './protocol/api-params.js';
+
+export type {
+  WizardStep,
+  ChatListResult,
+  TtsVoicesResult,
+  VoiceWakeStatusResult,
+  BrowserListResult,
+  DoctorCheckResult,
+  SecretsListResult,
+  CronJob,
+  CronRunLogEntry,
+} from './protocol/api-common.js';
 
 // Validation functions
 export {

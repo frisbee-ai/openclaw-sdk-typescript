@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { RequestFrame, ResponseFrame, EventFrame } from './types.js';
+import type { RequestFrame, ResponseFrame, EventFrame } from './frames.js';
 import {
   ValidationError,
   validateRequestId,
@@ -111,27 +111,23 @@ describe('validateRequestFrame', () => {
   });
 
   it('throws on missing id', () => {
-    expect(() =>
-      validateRequestFrame({ type: 'req', method: 'ping' }),
-    ).toThrow(ValidationError);
+    expect(() => validateRequestFrame({ type: 'req', method: 'ping' })).toThrow(ValidationError);
   });
 
   it('throws on invalid id', () => {
-    expect(() =>
-      validateRequestFrame({ type: 'req', id: '', method: 'ping' }),
-    ).toThrow(ValidationError);
+    expect(() => validateRequestFrame({ type: 'req', id: '', method: 'ping' })).toThrow(
+      ValidationError
+    );
   });
 
   it('throws on missing method', () => {
-    expect(() =>
-      validateRequestFrame({ type: 'req', id: '1' }),
-    ).toThrow(ValidationError);
+    expect(() => validateRequestFrame({ type: 'req', id: '1' })).toThrow(ValidationError);
   });
 
   it('throws on empty method', () => {
-    expect(() =>
-      validateRequestFrame({ type: 'req', id: '1', method: '' }),
-    ).toThrow(ValidationError);
+    expect(() => validateRequestFrame({ type: 'req', id: '1', method: '' })).toThrow(
+      ValidationError
+    );
   });
 });
 
@@ -161,21 +157,17 @@ describe('validateResponseFrame', () => {
   });
 
   it('throws on missing id', () => {
-    expect(() =>
-      validateResponseFrame({ type: 'res', ok: true }),
-    ).toThrow(ValidationError);
+    expect(() => validateResponseFrame({ type: 'res', ok: true })).toThrow(ValidationError);
   });
 
   it('throws on missing ok field', () => {
-    expect(() =>
-      validateResponseFrame({ type: 'res', id: '1' }),
-    ).toThrow(ValidationError);
+    expect(() => validateResponseFrame({ type: 'res', id: '1' })).toThrow(ValidationError);
   });
 
   it('throws when ok is false but error is missing', () => {
-    expect(() =>
-      validateResponseFrame({ type: 'res', id: '1', ok: false }),
-    ).toThrow(ValidationError);
+    expect(() => validateResponseFrame({ type: 'res', id: '1', ok: false })).toThrow(
+      ValidationError
+    );
   });
 
   it('throws on invalid error shape', () => {
@@ -185,7 +177,7 @@ describe('validateResponseFrame', () => {
         id: '1',
         ok: false,
         error: { code: 'ERROR' }, // missing message
-      }),
+      })
     ).toThrow(ValidationError);
   });
 });
@@ -220,26 +212,22 @@ describe('validateEventFrame', () => {
   });
 
   it('throws on missing event name', () => {
-    expect(() =>
-      validateEventFrame({ type: 'event' }),
-    ).toThrow(ValidationError);
+    expect(() => validateEventFrame({ type: 'event' })).toThrow(ValidationError);
   });
 
   it('throws on empty event name', () => {
-    expect(() =>
-      validateEventFrame({ type: 'event', event: '' }),
-    ).toThrow(ValidationError);
+    expect(() => validateEventFrame({ type: 'event', event: '' })).toThrow(ValidationError);
   });
 
   it('throws on invalid seq', () => {
-    expect(() =>
-      validateEventFrame({ type: 'event', event: 'test', seq: -1 }),
-    ).toThrow(ValidationError);
+    expect(() => validateEventFrame({ type: 'event', event: 'test', seq: -1 })).toThrow(
+      ValidationError
+    );
   });
 
   it('throws on invalid stateVersion', () => {
     expect(() =>
-      validateEventFrame({ type: 'event', event: 'test', stateVersion: null as any }),
+      validateEventFrame({ type: 'event', event: 'test', stateVersion: null as any })
     ).toThrow(ValidationError);
   });
 });

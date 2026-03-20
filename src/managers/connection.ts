@@ -8,13 +8,9 @@
  */
 
 import type { IWebSocketTransport } from '../transport/websocket.js';
-import type {
-  ConnectionState,
-  ConnectParams,
-  HelloOk,
-  GatewayFrame,
-  ResponseFrame,
-} from '../protocol/types.js';
+import type { ConnectionState } from '../protocol/connection-state.js';
+import type { ConnectParams, HelloOk } from '../protocol/connection.js';
+import type { GatewayFrame, ResponseFrame } from '../protocol/frames.js';
 
 // ============================================================================
 // Constants

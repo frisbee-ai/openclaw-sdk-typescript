@@ -7,7 +7,7 @@
  * @module
  */
 
-import type { ConnectParams } from '../protocol/types.js';
+import type { ConnectParams } from '../protocol/connection.js';
 import { AuthError } from '../errors.js';
 
 // ============================================================================

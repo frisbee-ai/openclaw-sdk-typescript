@@ -6,7 +6,7 @@
  * @module
  */
 
-import type { EventFrame } from '../protocol/types.js';
+import type { EventFrame } from '../protocol/frames.js';
 
 // ============================================================================
 // Types

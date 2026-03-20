@@ -8,14 +8,9 @@
  * @see https://github.com/openclaw/openclaw
  */
 
-import type {
-  GatewayFrame,
-  RequestFrame,
-  ResponseFrame,
-  EventFrame,
-  ConnectParams,
-  ErrorShape,
-} from './types.js';
+import type { GatewayFrame, RequestFrame, ResponseFrame, EventFrame } from './frames.js';
+import type { ConnectParams } from './connection.js';
+import type { ErrorShape } from './errors.js';
 
 /**
  * Validation error thrown when frame validation fails.

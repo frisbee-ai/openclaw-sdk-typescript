@@ -14,7 +14,7 @@ import type {
   SkillsBinsResult,
   SkillsInstallParams,
   SkillsUpdateParams,
-} from '../protocol/types.js';
+} from '../protocol/api-params.js';
 
 import type { RequestFn } from './shared.js';
 

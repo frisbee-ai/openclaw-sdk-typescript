@@ -7,16 +7,16 @@
  */
 
 import type {
-  ChatInjectParams,
   ChatListParams,
-  ChatListResult,
+  ChatInjectParams,
   ChatHistoryParams,
   ChatHistoryResult,
   ChatDeleteParams,
   ChatDeleteResult,
   ChatTitleParams,
   ChatTitleResult,
-} from '../protocol/types.js';
+} from '../protocol/api-params.js';
+import type { ChatListResult } from '../protocol/api-common.js';
 
 import type { RequestFn } from './shared.js';
 
