@@ -270,7 +270,7 @@ export class AuthHandler {
         const device = await this.provider.getDeviceCredentials?.();
         if (device) {
           return {
-            deviceToken: device.publicKey,
+            deviceToken: device.deviceId,
           };
         }
         return null;
