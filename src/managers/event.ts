@@ -278,10 +278,12 @@ export class EventManager {
    */
   private clearNamespace(namespace: string): void {
     for (const [key, handlers] of this.subscriptions) {
-      this.subscriptions.set(
-        key,
-        handlers.filter(h => h.namespace !== namespace)
-      );
+      const filtered = handlers.filter(h => h.namespace !== namespace);
+      if (filtered.length === 0) {
+        this.subscriptions.delete(key);
+      } else {
+        this.subscriptions.set(key, filtered);
+      }
     }
     this.wildcardSubscriptions = this.wildcardSubscriptions.filter(h => h.namespace !== namespace);
   }
