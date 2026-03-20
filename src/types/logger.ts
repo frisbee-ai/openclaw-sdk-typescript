@@ -138,7 +138,6 @@ export function isLogger(value: unknown): value is Logger {
     typeof value !== 'object' ||
     value === null ||
     typeof (value as Logger).name !== 'string' ||
-    !('level' in value) ||
     typeof (value as Logger).debug !== 'function' ||
     typeof (value as Logger).info !== 'function' ||
     typeof (value as Logger).warn !== 'function' ||
@@ -146,7 +145,7 @@ export function isLogger(value: unknown): value is Logger {
   ) {
     return false;
   }
-  return true;
+  return Object.values(LogLevel).includes((value as Logger).level);
 }
 
 // ============================================================================
