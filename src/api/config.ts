@@ -15,7 +15,7 @@ import type {
   ConfigSchemaResponse,
 } from '../protocol/types.js';
 
-type RequestFn = <T = unknown>(method: string, params?: unknown) => Promise<T>;
+import type { RequestFn } from './shared.js';
 
 /**
  * Config API namespace.

@@ -6,6 +6,9 @@
  * @module api
  */
 
+/** Shared request function type used by all API namespaces */
+export type { RequestFn } from './shared.js';
+
 export { ChatAPI } from './chat.js';
 export { AgentsAPI } from './agents.js';
 export { SessionsAPI } from './sessions.js';

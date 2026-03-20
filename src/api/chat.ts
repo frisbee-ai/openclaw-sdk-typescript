@@ -18,10 +18,7 @@ import type {
   ChatTitleResult,
 } from '../protocol/types.js';
 
-/**
- * Type for the request function used by API namespaces.
- */
-type RequestFn = <T = unknown>(method: string, params?: unknown) => Promise<T>;
+import type { RequestFn } from './shared.js';
 
 /**
  * Chat API namespace.
