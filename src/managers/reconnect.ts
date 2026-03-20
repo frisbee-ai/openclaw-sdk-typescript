@@ -6,7 +6,7 @@
  * @module
  */
 
-import { ReconnectError } from '../errors.js';
+import { ReconnectError, OpenClawError } from '../errors.js';
 import type { AuthErrorCode } from '../errors.js';
 import type { RefreshResult } from '../auth/provider.js';
 import { TimeoutManager } from '../utils/timeoutManager.js';
@@ -197,6 +197,9 @@ export class ReconnectManager {
     if (error instanceof ReconnectError) {
       return TERMINAL_AUTH_ERRORS.includes(error.code as AuthErrorCode);
     }
+    if (error instanceof OpenClawError) {
+      return TERMINAL_AUTH_ERRORS.includes(error.code as AuthErrorCode);
+    }
     return false;
   }
 
@@ -205,6 +208,9 @@ export class ReconnectManager {
    */
   private isRetryableAuthError(error: Error): boolean {
     if (error instanceof ReconnectError) {
+      return RETRYABLE_AUTH_ERRORS.includes(error.code as AuthErrorCode);
+    }
+    if (error instanceof OpenClawError) {
       return RETRYABLE_AUTH_ERRORS.includes(error.code as AuthErrorCode);
     }
     return false;
