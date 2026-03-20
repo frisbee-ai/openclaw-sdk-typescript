@@ -8,6 +8,7 @@
  */
 
 import type { ConnectParams } from '../protocol/types.js';
+import { AuthError } from '../errors.js';
 
 // ============================================================================
 // Types
@@ -205,7 +206,6 @@ export class AuthHandler {
 
     // Check expiration
     if (now >= challenge.expiresAt) {
-      const { AuthError } = await import('../errors.js');
       throw new AuthError({
         code: 'CHALLENGE_EXPIRED',
         message: 'Challenge expired',
@@ -215,7 +215,6 @@ export class AuthHandler {
 
     // Sign the challenge
     if (!this.provider.signChallenge) {
-      const { AuthError } = await import('../errors.js');
       throw new AuthError({
         code: 'CHALLENGE_FAILED',
         message: 'Credentials provider does not support challenge signing',
@@ -227,7 +226,6 @@ export class AuthHandler {
       const signature = await this.provider.signChallenge(challenge.nonce, challenge.timestamp);
       return { signature, timestamp: challenge.timestamp };
     } catch (error) {
-      const { AuthError } = await import('../errors.js');
       throw new AuthError({
         code: 'CHALLENGE_FAILED',
         message: `Failed to sign challenge: ${error instanceof Error ? error.message : 'Unknown'}`,
