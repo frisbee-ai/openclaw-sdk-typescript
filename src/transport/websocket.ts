@@ -238,13 +238,13 @@ export class WebSocketTransport implements IWebSocketTransport {
       return WebSocket;
     }
 
-    // Node.js environment - require 'ws' dynamically
+    // Node.js environment - try require (CJS)
     try {
       const ws = require('ws');
       return ws.WebSocket || ws.default;
     } catch {
       throw new Error(
-        "WebSocket is not available. Please install the 'ws' package for Node.js environments."
+        "WebSocket is not available. Install 'ws' or provide WebSocketImpl via config."
       );
     }
   }
