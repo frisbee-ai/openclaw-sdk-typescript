@@ -1,6 +1,7 @@
 # OpenClaw SDK (TypeScript)
 [![OpenClaw SDK](https://img.shields.io/badge/OpenClaw-SDK-orange?logo=github)](https://openclaw.ai)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178c6?logo=typescript&color=yellow)](https://www.typescriptlang.org/)
+[![Codecov](https://codecov.io/gh/frisbee-ai/openclaw-sdk-typescript/branch/main/graph/badge.svg)](https://codecov.io/gh/frisbee-ai/openclaw-sdk-typescript)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 > Feature-complete WebSocket SDK for TypeScript with automatic reconnection, event handling, and request/response correlation.
