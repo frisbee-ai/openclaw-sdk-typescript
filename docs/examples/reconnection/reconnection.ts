@@ -6,7 +6,7 @@
  * - Stand-alone ReconnectManager (advanced)
  */
 
-import { createClient, createReconnectManager } from '../../src/index.js';
+import { createClient, createReconnectManager } from '../../../src/index.js';
 
 // ============================================================================
 // Example 1: Built-in Auto-Reconnection (Recommended)
@@ -15,14 +15,16 @@ import { createClient, createReconnectManager } from '../../src/index.js';
 async function builtinReconnection() {
   const client = createClient({
     url: 'wss://gateway.openclaw.example.com',
-    credentials: {
-      deviceId: 'your-device-id',
-      apiKey: 'your-api-key',
+    clientId: 'example-client',
+    auth: {
+      token: 'your-auth-token',
     },
-    // Enable auto-reconnection
-    autoReconnect: true,
-    maxReconnectAttempts: 5,
-    reconnectDelayMs: 1000,
+    // Enable auto-reconnection via connection config
+    connection: {
+      autoReconnect: true,
+      maxReconnectAttempts: 5,
+      reconnectDelayMs: 1000,
+    },
   });
 
   // Listen to connection state changes
@@ -34,6 +36,7 @@ async function builtinReconnection() {
   console.log('✓ Connected with built-in reconnection');
 
   // Reconnection happens automatically if disconnected
+  client.disconnect();
 }
 
 // ============================================================================
@@ -45,27 +48,21 @@ async function standaloneReconnection() {
     maxAttempts: 10,
     initialDelayMs: 1000,
     maxDelayMs: 30000,
-    fibonacci: true, // Use Fibonacci backoff
+    pauseOnAuthError: true,
+    jitterFactor: 0.3,
   });
 
-  // Listen to reconnection state changes
-  reconnectMgr.on('stateChange', state => {
-    if (state.phase === 'waiting') {
-      console.log(`Reconnecting in ${state.delayMs}ms... (attempt ${state.attempt})`);
-    } else if (state.phase === 'connected') {
-      console.log('✓ Reconnected successfully');
-    } else if (state.phase === 'failed') {
-      console.error('Reconnection failed after', state.attempt, 'attempts');
+  // Listen to reconnection events
+  reconnectMgr.onEvent(event => {
+    console.log(`Reconnect event: ${event.state}, attempt: ${event.attempt}`);
+    if (event.lastError) {
+      console.log(`  Error: ${event.lastError.message}`);
     }
   });
 
-  // Manual reconnection control
-  reconnectMgr.start();
-
-  // ... custom reconnection logic ...
-
-  // Stop reconnection when done
-  reconnectMgr.stop();
+  console.log('ReconnectManager initialized');
+  console.log('State:', reconnectMgr.getState());
+  console.log('Is reconnecting:', reconnectMgr.isReconnecting());
 }
 
 // ============================================================================
@@ -75,9 +72,9 @@ async function standaloneReconnection() {
 async function customReconnection() {
   const client = createClient({
     url: 'wss://gateway.openclaw.example.com',
-    credentials: {
-      deviceId: 'your-device-id',
-      apiKey: 'your-api-key',
+    clientId: 'example-client',
+    auth: {
+      token: 'your-auth-token',
     },
   });
 
@@ -118,8 +115,13 @@ async function customReconnection() {
 // ============================================================================
 
 async function main() {
+  console.log('=== Example 1: Built-in Auto-Reconnection ===');
   await builtinReconnection();
+
+  console.log('\n=== Example 2: Stand-alone ReconnectManager ===');
   await standaloneReconnection();
+
+  console.log('\n=== Example 3: Custom Reconnection ===');
   await customReconnection();
 }
 

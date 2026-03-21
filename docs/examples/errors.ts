@@ -14,16 +14,15 @@ import {
   isConnectionError,
   isTimeoutError,
   isAbortError,
-  type AuthError,
-  type ConnectionError,
+  OpenClawError,
 } from '../../src/index.js';
 
 async function comprehensiveErrorHandling() {
   const client = createClient({
     url: 'wss://gateway.openclaw.example.com',
-    credentials: {
-      deviceId: 'invalid-id',
-      apiKey: 'invalid-key',
+    clientId: 'example-client',
+    auth: {
+      token: 'invalid-token',
     },
   });
 
@@ -32,21 +31,15 @@ async function comprehensiveErrorHandling() {
   } catch (error) {
     // Use type guards for specific error handling
     if (isAuthError(error)) {
-      const authErr = error as AuthError;
-      console.error('Authentication failed:');
-      console.error('  Code:', authErr.errorCode);
-      console.error('  Message:', authErr.message);
-      console.error('  Retry after:', authErr.retryAfterMs, 'ms');
+      console.error('Authentication failed:', error.code, error.message);
     } else if (isConnectionError(error)) {
-      const connErr = error as ConnectionError;
-      console.error('Connection failed:');
-      console.error('  Code:', connErr.errorCode);
-      console.error('  Message:', connErr.message);
-      console.error('  Recoverable:', connErr.recoverable);
+      console.error('Connection failed:', error.code, error.message);
     } else if (isTimeoutError(error)) {
       console.error('Request timed out:', error.message);
     } else if (isAbortError(error)) {
       console.error('Request was cancelled:', error.message);
+    } else if (error instanceof OpenClawError) {
+      console.error('OpenClaw error:', error.code, error.message);
     } else {
       console.error('Unknown error:', error);
     }
@@ -56,11 +49,13 @@ async function comprehensiveErrorHandling() {
 async function requestTimeoutExample() {
   const client = createClient({
     url: 'wss://gateway.openclaw.example.com',
-    credentials: {
-      deviceId: 'your-device-id',
-      apiKey: 'your-api-key',
+    clientId: 'example-client',
+    auth: {
+      token: 'your-auth-token',
     },
-    defaultRequestTimeout: 5000, // 5 second timeout
+    connection: {
+      requestTimeoutMs: 5000, // 5 second timeout
+    },
   });
 
   await client.connect();
@@ -70,7 +65,7 @@ async function requestTimeoutExample() {
     await client.request('slow.operation', {});
   } catch (error) {
     if (isTimeoutError(error)) {
-      console.error('Request timed out after', error.timeoutMs, 'ms');
+      console.error('Request timed out');
     }
   }
 
@@ -80,9 +75,9 @@ async function requestTimeoutExample() {
 async function requestCancellationExample() {
   const client = createClient({
     url: 'wss://gateway.openclaw.example.com',
-    credentials: {
-      deviceId: 'your-device-id',
-      apiKey: 'your-api-key',
+    clientId: 'example-client',
+    auth: {
+      token: 'your-auth-token',
     },
   });
 

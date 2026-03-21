@@ -7,14 +7,14 @@
  * - Pattern-based subscription
  */
 
-import { createClient } from '../../src/index.js';
+import { createClient, type EventFrame } from '../../src/index.js';
 
 async function main() {
   const client = createClient({
     url: 'wss://gateway.openclaw.example.com',
-    credentials: {
-      deviceId: 'your-device-id',
-      apiKey: 'your-api-key',
+    clientId: 'example-client',
+    auth: {
+      token: 'your-auth-token',
     },
   });
 
@@ -25,7 +25,7 @@ async function main() {
   // Example 1: Subscribe to specific event
   // ============================================================================
 
-  const unsubscribe1 = client.on('agent.status', event => {
+  const unsubscribe1 = client.on('agent.status', (event: EventFrame) => {
     console.log('Agent status changed:', event.payload);
   });
 
@@ -33,7 +33,7 @@ async function main() {
   // Example 2: Wildcard subscription (all agent events)
   // ============================================================================
 
-  const unsubscribe2 = client.on('agent.*', event => {
+  const unsubscribe2 = client.on('agent.*', (event: EventFrame) => {
     console.log('Agent event:', event.type, event.payload);
   });
 
@@ -41,7 +41,7 @@ async function main() {
   // Example 3: Subscribe to all events
   // ============================================================================
 
-  const unsubscribe3 = client.on('*', event => {
+  const unsubscribe3 = client.on('*', (event: EventFrame) => {
     console.log('All events:', event.type, event.payload);
   });
 
@@ -49,7 +49,7 @@ async function main() {
   // Example 4: Pattern-based subscription
   // ============================================================================
 
-  const unsubscribe4 = client.on('*.updated', event => {
+  const unsubscribe4 = client.on('*.updated', (event: EventFrame) => {
     console.log('Something updated:', event.type, event.payload);
   });
 

@@ -2,7 +2,7 @@
  * Authentication Examples
  *
  * Examples showing different authentication methods:
- * - Static credentials (device + API key)
+ * - Static token via auth config
  * - Custom credentials provider with token refresh
  */
 
@@ -13,25 +13,45 @@ import {
 } from '../../src/index.js';
 
 // ============================================================================
-// Example 1: Static Credentials
+// Example 1: Static Token via auth config
 // ============================================================================
 
-async function staticCredentialsExample() {
+async function staticTokenExample() {
   const client = createClient({
     url: 'wss://gateway.openclaw.example.com',
-    credentials: {
-      deviceId: 'your-device-id',
-      apiKey: 'your-api-key',
+    clientId: 'example-client',
+    auth: {
+      token: 'your-auth-token',
     },
   });
 
   await client.connect();
-  console.log('✓ Connected with static credentials');
+  console.log('✓ Connected with static token');
   client.disconnect();
 }
 
 // ============================================================================
-// Example 2: Custom Credentials Provider
+// Example 2: Using StaticCredentialsProvider
+// ============================================================================
+
+async function staticCredentialsProviderExample() {
+  const provider = new StaticCredentialsProvider({
+    token: 'your-auth-token',
+  });
+
+  const client = createClient({
+    url: 'wss://gateway.openclaw.example.com',
+    clientId: 'example-client',
+    credentialsProvider: provider,
+  });
+
+  await client.connect();
+  console.log('✓ Connected with StaticCredentialsProvider');
+  client.disconnect();
+}
+
+// ============================================================================
+// Example 3: Custom Credentials Provider with Token Refresh
 // ============================================================================
 
 /**
@@ -41,13 +61,10 @@ class TokenRefreshProvider implements CredentialsProvider {
   private token?: string;
   private expiresAt?: number;
 
-  async getCredentials() {
+  async getToken(): Promise<string | null> {
     // Check if we have a valid token
     if (this.token && this.expiresAt && Date.now() < this.expiresAt) {
-      return {
-        token: this.token,
-        success: true,
-      };
+      return this.token;
     }
 
     // Fetch new token
@@ -60,27 +77,34 @@ class TokenRefreshProvider implements CredentialsProvider {
       }),
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as { access_token: string; expires_in: number };
 
     this.token = data.access_token;
     this.expiresAt = Date.now() + data.expires_in * 1000;
 
-    return {
-      token: this.token,
-      success: true,
-    };
+    return this.token;
   }
 
-  async shouldRefresh() {
-    if (!this.expiresAt) {
-      return true;
+  async refreshToken(_currentToken: string | null) {
+    // Fetch new token
+    const response = await fetch('https://auth.example.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: 'your-client-id',
+        clientSecret: 'your-client-secret',
+      }),
+    });
+
+    if (!response.ok) {
+      return { token: null, success: false, errorCode: 'REFRESH_FAILED' as const };
     }
-    // Refresh if token expires in less than 5 minutes
-    return Date.now() > this.expiresAt - 5 * 60 * 1000;
-  }
 
-  async refresh() {
-    return this.getCredentials();
+    const data = (await response.json()) as { access_token: string; expires_in: number };
+    this.token = data.access_token;
+    this.expiresAt = Date.now() + data.expires_in * 1000;
+
+    return { token: this.token, success: true };
   }
 }
 
@@ -89,7 +113,8 @@ async function customCredentialsExample() {
 
   const client = createClient({
     url: 'wss://gateway.openclaw.example.com',
-    credentials: provider,
+    clientId: 'example-client',
+    credentialsProvider: provider,
   });
 
   await client.connect();
@@ -102,8 +127,10 @@ async function customCredentialsExample() {
 // ============================================================================
 
 async function main() {
-  await staticCredentialsExample();
-  await customCredentialsExample();
+  await staticTokenExample();
+  await staticCredentialsProviderExample();
+  // await customCredentialsExample(); // Requires external auth server
+  void customCredentialsExample; // Keep for reference
 }
 
 main().catch(console.error);

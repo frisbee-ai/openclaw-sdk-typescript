@@ -113,4 +113,54 @@ export default [
   {
     ignores: ['dist/**', 'node_modules/**', '*.js', '*.cjs', '*.mjs', 'coverage/**'],
   },
+
+  // Example files
+  {
+    files: ['docs/examples/**/*.ts'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+        project: './tsconfig.examples.json',
+      },
+      globals: {
+        // Browser globals
+        WebSocket: 'readonly',
+        Event: 'readonly',
+        MessageEvent: 'readonly',
+        CloseEvent: 'readonly',
+        AbortSignal: 'readonly',
+        URL: 'readonly',
+        crypto: 'readonly',
+        document: 'readonly',
+        HTMLButtonElement: 'readonly',
+        HTMLDivElement: 'readonly',
+        // Node.js globals
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        Buffer: 'readonly',
+        console: 'readonly',
+        process: 'readonly',
+        require: 'readonly',
+        AbortController: 'readonly',
+        fetch: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
+    rules: {
+      ...tseslint.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      'no-undef': 'off',
+    },
+  },
 ];

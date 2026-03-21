@@ -20,9 +20,9 @@ import { createClient } from 'openclaw-sdk';
 async function browserExample() {
   const client = createClient({
     url: 'wss://gateway.openclaw.example.com',
-    credentials: {
-      deviceId: 'browser-device-id',
-      apiKey: 'browser-api-key',
+    clientId: 'browser-client-id',
+    auth: {
+      token: 'browser-auth-token',
     },
   });
 
@@ -31,7 +31,7 @@ async function browserExample() {
     console.log('✓ Connected in browser');
 
     // Listen to events
-    client.on('agent.status', event => {
+    client.on('agent.status', (event: { type: string; payload: unknown }) => {
       console.log('Agent status:', event.payload);
     });
 
@@ -55,9 +55,9 @@ function setupUIIntegration() {
 
   const client = createClient({
     url: 'wss://gateway.openclaw.example.com',
-    credentials: {
-      deviceId: 'ui-device-id',
-      apiKey: 'ui-api-key',
+    clientId: 'ui-client-id',
+    auth: {
+      token: 'ui-auth-token',
     },
   });
 
@@ -68,7 +68,7 @@ function setupUIIntegration() {
   });
 
   // Display incoming events
-  client.on('*', event => {
+  client.on('*', (event: { type: string; payload: unknown }) => {
     const eventEl = document.createElement('div');
     eventEl.className = 'event';
     eventEl.textContent = `[${event.type}] ${JSON.stringify(event.payload)}`;

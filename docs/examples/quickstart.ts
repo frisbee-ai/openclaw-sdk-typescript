@@ -11,9 +11,9 @@ async function main() {
   // Create a client with your credentials
   const client = createClient({
     url: 'wss://gateway.openclaw.example.com',
-    credentials: {
-      deviceId: 'your-device-id',
-      apiKey: 'your-api-key',
+    clientId: 'example-client',
+    auth: {
+      token: 'your-auth-token',
     },
   });
 

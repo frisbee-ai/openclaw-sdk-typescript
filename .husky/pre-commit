@@ -13,9 +13,17 @@ npx lint-staged
 echo "Running eslint..."
 npx eslint src/
 
+# Run ESLint on examples
+echo "Running eslint:examples..."
+npx eslint docs/examples/
+
 # Run TypeScript type checking
 echo "Running typecheck..."
 npx tsc --noEmit
+
+# Run TypeScript type checking on examples
+echo "Running typecheck:examples..."
+npx tsc -p tsconfig.examples.json --noEmit
 
 # Check for circular dependencies
 echo "Checking for circular dependencies..."

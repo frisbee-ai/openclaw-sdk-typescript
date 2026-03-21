@@ -42,7 +42,9 @@
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "test": "vitest",
     "lint": "eslint src --ext .ts",
+    "lint:examples": "eslint docs/examples --ext .ts",
     "typecheck": "tsc --noEmit",
+    "typecheck:examples": "tsc -p tsconfig.examples.json --noEmit",
     "format": "prettier --write \"src/**/*.ts\"",
     "check:circular": "madge src/ --circular --extensions ts",
     "docs": "typedoc",
@@ -92,6 +94,10 @@
   },
   "lint-staged": {
     "*.ts": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "docs/examples/**/*.ts": [
       "prettier --write",
       "eslint --fix"
     ]
