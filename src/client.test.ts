@@ -73,18 +73,6 @@ describe('OpenClawClient', () => {
       expect(client).toBeInstanceOf(OpenClawClient);
     });
 
-    it('should create client with flat connection config', () => {
-      const client = new OpenClawClient({
-        url: 'ws://localhost:8080',
-        clientId: 'test-client',
-        requestTimeoutMs: 5000,
-        connectTimeoutMs: 10000,
-        autoReconnect: false,
-      });
-
-      expect(client).toBeInstanceOf(OpenClawClient);
-    });
-
     it('should create client with device pairing config', () => {
       const client = new OpenClawClient({
         url: 'ws://localhost:8080',
@@ -295,11 +283,6 @@ describe('ClientConfig', () => {
         maxReconnectAttempts: 5,
         reconnectDelayMs: 1000,
       },
-      requestTimeoutMs: 30000,
-      connectTimeoutMs: 30000,
-      autoReconnect: true,
-      maxReconnectAttempts: 10,
-      reconnectDelayMs: 1000,
     };
 
     expect(config.url).toBe('ws://localhost:8080');

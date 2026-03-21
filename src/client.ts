@@ -132,16 +132,6 @@ export interface ClientConfig {
   capabilities?: string[];
   /** Logger instance for structured logging */
   logger?: Logger;
-  /** Default request timeout in milliseconds (default: 30000) */
-  requestTimeoutMs?: number;
-  /** Connection timeout in milliseconds (default: 30000) */
-  connectTimeoutMs?: number;
-  /** Whether to automatically reconnect on disconnect (default: true) */
-  autoReconnect?: boolean;
-  /** Maximum reconnection attempts (default: 10) */
-  maxReconnectAttempts?: number;
-  /** Reconnection delay in milliseconds (default: 1000) */
-  reconnectDelayMs?: number;
 }
 
 /**
@@ -292,21 +282,16 @@ export class OpenClawClient {
   }
 
   /**
-   * Normalize connection config - supports both flat and nested style.
-   * Nested config takes precedence over flat config.
+   * Normalize connection config - from nested connection object.
    */
   private normalizeConnectionConfig(config: ClientConfig): Required<ConnectionConfig> {
     const conn = config.connection ?? {};
     return {
-      requestTimeoutMs:
-        conn.requestTimeoutMs ?? config.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS,
-      connectTimeoutMs:
-        conn.connectTimeoutMs ?? config.connectTimeoutMs ?? DEFAULT_CONNECT_TIMEOUT_MS,
-      autoReconnect: conn.autoReconnect ?? config.autoReconnect ?? true,
-      maxReconnectAttempts:
-        conn.maxReconnectAttempts ?? config.maxReconnectAttempts ?? DEFAULT_MAX_RECONNECT_ATTEMPTS,
-      reconnectDelayMs:
-        conn.reconnectDelayMs ?? config.reconnectDelayMs ?? DEFAULT_RECONNECT_DELAY_MS,
+      requestTimeoutMs: conn.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS,
+      connectTimeoutMs: conn.connectTimeoutMs ?? DEFAULT_CONNECT_TIMEOUT_MS,
+      autoReconnect: conn.autoReconnect ?? true,
+      maxReconnectAttempts: conn.maxReconnectAttempts ?? DEFAULT_MAX_RECONNECT_ATTEMPTS,
+      reconnectDelayMs: conn.reconnectDelayMs ?? DEFAULT_RECONNECT_DELAY_MS,
     };
   }
 
