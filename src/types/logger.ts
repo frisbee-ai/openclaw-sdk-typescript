@@ -189,25 +189,25 @@ export class ConsoleLogger implements Logger {
 
   debug(message: string, meta?: Record<string, unknown>): void {
     if (this.shouldLog(LogLevel.Debug)) {
-      console.debug(`[${this.name}] DEBUG: ${message}`, meta ?? '');
+      console.debug(`[${this.name}] DEBUG: ${message}`, meta);
     }
   }
 
   info(message: string, meta?: Record<string, unknown>): void {
     if (this.shouldLog(LogLevel.Info)) {
-      console.info(`[${this.name}] INFO: ${message}`, meta ?? '');
+      console.info(`[${this.name}] INFO: ${message}`, meta);
     }
   }
 
   warn(message: string, meta?: Record<string, unknown>): void {
     if (this.shouldLog(LogLevel.Warn)) {
-      console.warn(`[${this.name}] WARN: ${message}`, meta ?? '');
+      console.warn(`[${this.name}] WARN: ${message}`, meta);
     }
   }
 
   error(message: string, meta?: Record<string, unknown>): void {
     if (this.shouldLog(LogLevel.Error)) {
-      console.error(`[${this.name}] ERROR: ${message}`, meta ?? '');
+      console.error(`[${this.name}] ERROR: ${message}`, meta);
     }
   }
 
