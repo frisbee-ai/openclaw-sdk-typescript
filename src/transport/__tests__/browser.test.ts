@@ -166,7 +166,18 @@ describe('BrowserWebSocketTransport', () => {
     });
 
     it('should throw when not connected', () => {
-      expect(() => transport.send('test')).toThrow();
+      expect(() => transport.send('test')).toThrow('Cannot send data');
+    });
+
+    it('should throw with correct error message when not connected', () => {
+      try {
+        transport.send('test');
+        expect.fail('Should have thrown');
+      } catch (err) {
+        expect((err as Error).message).toBe(
+          'Cannot send data: connection is closed (expected: open)'
+        );
+      }
     });
   });
 
@@ -236,6 +247,9 @@ describe('BrowserWebSocketTransport', () => {
       expect(onMessage).toHaveBeenCalled();
     });
 
+    // Note: onbinary handler is tested via websocket.test.ts since MockWebSocket
+    // in browser.test.ts only supports text messages
+
     it('should clear timeout on error before open', async () => {
       const onError = vi.fn();
       const originalSetTimeout = global.setTimeout;
@@ -280,7 +294,7 @@ describe('BrowserWebSocketTransport', () => {
       // WebSocket should be cleaned up after error - ws reference should be null
       expect((transport as any).ws).toBeNull();
       // Trying to send should throw since ws is null
-      expect(() => transport.send('test')).toThrow('Cannot send: transport is not open');
+      expect(() => transport.send('test')).toThrow('Cannot send data');
     });
 
     it('should not throw when onclose fires after error cleanup', async () => {
@@ -368,6 +382,21 @@ describe('BrowserWebSocketTransportConfig', () => {
       url: 'wss://example.com',
     };
     expect(config.url).toBe('wss://example.com');
+  });
+
+  it('should accept connectTimeoutMs in config', () => {
+    const config: BrowserWebSocketTransportConfig = {
+      url: 'wss://example.com',
+      connectTimeoutMs: 10000,
+    };
+    expect(config.connectTimeoutMs).toBe(10000);
+  });
+
+  it('should use default connectTimeoutMs when not provided', () => {
+    const config: BrowserWebSocketTransportConfig = {
+      url: 'wss://example.com',
+    };
+    expect(config.connectTimeoutMs).toBeUndefined(); // Actual default is applied in constructor
   });
 
   it('should accept event handlers in config', () => {

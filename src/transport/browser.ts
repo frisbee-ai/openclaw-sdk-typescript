@@ -6,9 +6,15 @@
  * @module
  */
 
-import type { IWebSocketTransport, ReadyStateString } from './websocket.js';
-import { ReadyState, readyStateToString } from './websocket.js';
-import type { WebSocketOpenEvent, WebSocketClose, WebSocketError } from './websocket.js';
+import { TimeoutManager } from '../utils/timeoutManager.js';
+import {
+  ReadyState,
+  readyStateToString,
+  type ReadyStateString,
+  type WebSocketError,
+  type WebSocketClose,
+  type WebSocketOpenEvent,
+} from './base.js';
 
 // ============================================================================
 // Types
@@ -20,6 +26,8 @@ import type { WebSocketOpenEvent, WebSocketClose, WebSocketError } from './webso
 export interface BrowserWebSocketTransportConfig {
   /** WebSocket URL */
   url: string;
+  /** Connection timeout in milliseconds */
+  connectTimeoutMs?: number;
   /** Event handler called when connection opens */
   onopen?: ((event: WebSocketOpenEvent) => void) | null;
   /** Event handler called when connection closes */
@@ -41,20 +49,20 @@ export interface BrowserWebSocketTransportConfig {
  *
  * Uses the native browser `WebSocket` API for WebSocket connectivity.
  */
-export class BrowserWebSocketTransport implements IWebSocketTransport {
+export class BrowserWebSocketTransport {
   private ws: WebSocket | null = null;
   private config: BrowserWebSocketTransportConfig;
-
-  // Ready state
   private _readyState: ReadyState = ReadyState.CLOSED;
+  private timeoutManager = new TimeoutManager();
 
   /**
    * Create a browser WebSocket transport.
-   *
-   * @param config - Transport configuration
    */
   constructor(config: BrowserWebSocketTransportConfig) {
-    this.config = config;
+    this.config = {
+      connectTimeoutMs: 30000,
+      ...config,
+    };
   }
 
   /**
@@ -80,9 +88,6 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
 
   /**
    * Connect to a WebSocket server.
-   *
-   * @param url - The WebSocket URL to connect to
-   * @returns Promise that resolves when connected
    */
   async connect(url: string): Promise<void> {
     if (this._readyState !== ReadyState.CLOSED) {
@@ -92,24 +97,35 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
     this._readyState = ReadyState.CONNECTING;
 
     return new Promise<void>((resolve, reject) => {
+      let settled = false;
       try {
         this.ws = new WebSocket(url);
 
         // Connection timeout
-        const timeoutId = setTimeout(() => {
-          if (this._readyState === ReadyState.CONNECTING) {
-            this._readyState = ReadyState.CLOSED;
-            if (this.ws) {
-              this.ws.close();
-              this.ws = null;
+        this.timeoutManager.set(
+          () => {
+            if (this._readyState === ReadyState.CONNECTING) {
+              this.cleanup();
+              const error: WebSocketError = {
+                message: `Connection timeout after ${this.config.connectTimeoutMs}ms`,
+                recoverable: true,
+              };
+              this.handleError(error);
+              if (!settled) {
+                settled = true;
+                reject(new Error(error.message));
+              }
             }
-            reject(new Error('WebSocket connection timeout'));
-          }
-        }, 30000);
+          },
+          this.config.connectTimeoutMs!,
+          'ws-connect'
+        );
 
         // Set up event handlers
         this.ws.onopen = () => {
-          clearTimeout(timeoutId);
+          if (settled) return;
+          settled = true;
+          this.timeoutManager.clear('ws-connect');
           this._readyState = ReadyState.OPEN;
           if (this.config.onopen) {
             this.config.onopen({ url, timestamp: Date.now() });
@@ -118,6 +134,8 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
         };
 
         this.ws.onclose = (event: CloseEvent) => {
+          this.timeoutManager.clear('ws-connect');
+          const wasConnecting = this._readyState === ReadyState.CONNECTING;
           this._readyState = ReadyState.CLOSED;
           if (this.config.onclose) {
             this.config.onclose({
@@ -127,34 +145,26 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
             });
           }
           // Clean up references after close event is handled
-          if (this.ws) {
-            this.ws.onopen = null;
-            this.ws.onclose = null;
-            this.ws.onerror = null;
-            this.ws.onmessage = null;
-            this.ws = null;
+          this.cleanup();
+          if (wasConnecting && !settled) {
+            settled = true;
+            reject(new Error(`Connection closed: ${event.reason} (${event.code})`));
           }
         };
 
         this.ws.onerror = (_event: Event) => {
-          clearTimeout(timeoutId);
-          // Check state before modifying it
+          this.timeoutManager.clear('ws-connect');
           const wasConnecting = this._readyState === ReadyState.CONNECTING;
-          // Clean up WebSocket to prevent resource leaks
-          if (this.ws) {
-            this.ws.close();
-            this.ws = null;
-          }
+          this.cleanup();
           this._readyState = ReadyState.CLOSED;
-          if (wasConnecting) {
-            reject(new Error('WebSocket connection failed'));
-          }
-          if (this.config.onerror) {
-            this.config.onerror({
-              message: 'WebSocket error',
-              original: new Error('WebSocket error'),
-              recoverable: true,
-            });
+          const error: WebSocketError = {
+            message: 'WebSocket error occurred',
+            recoverable: true,
+          };
+          this.handleError(error);
+          if (wasConnecting && !settled) {
+            settled = true;
+            reject(new Error(error.message));
           }
         };
 
@@ -170,6 +180,7 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
           }
         };
       } catch (error) {
+        this.cleanup();
         reject(error);
       }
     });
@@ -177,29 +188,56 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
 
   /**
    * Send data through the WebSocket connection.
-   *
-   * @param data - Data to send (string or ArrayBuffer)
-   * @throws Error if the connection is not open
    */
   send(data: string | ArrayBuffer): void {
     if (this._readyState !== ReadyState.OPEN || !this.ws) {
-      throw new Error('Cannot send: transport is not open');
+      throw new Error(`Cannot send data: connection is ${this.readyStateString} (expected: open)`);
     }
 
-    this.ws.send(data);
+    try {
+      this.ws.send(data);
+    } catch (err) {
+      const error: WebSocketError = {
+        message: `Failed to send data: ${err instanceof Error ? err.message : String(err)}`,
+        original: err instanceof Error ? err : undefined,
+        recoverable: false,
+      };
+      this.handleError(error);
+      throw error;
+    }
   }
 
   /**
    * Close the WebSocket connection.
-   *
-   * @param code - Optional close status code (default: 1000)
-   * @param reason - Optional close reason
    */
   close(code?: number, reason?: string): void {
-    if (this.ws) {
-      this.ws.close(code, reason);
-      this._readyState = ReadyState.CLOSING;
+    if (this._readyState === ReadyState.CLOSED) {
+      return;
     }
+
+    this.timeoutManager.clear('ws-connect');
+
+    if (this.ws) {
+      this._readyState = ReadyState.CLOSING;
+      this.ws.close(code ?? 1000, reason ?? '');
+    }
+  }
+
+  /**
+   * Handle errors consistently.
+   */
+  private handleError(error: WebSocketError): void {
+    if (this.config.onerror) {
+      this.config.onerror(error);
+    }
+  }
+
+  /**
+   * Clean up resources.
+   */
+  private cleanup(): void {
+    this._readyState = ReadyState.CLOSED;
+    this.ws = null;
   }
 }
 
@@ -209,27 +247,11 @@ export class BrowserWebSocketTransport implements IWebSocketTransport {
 
 /**
  * Create a browser WebSocket transport instance.
- *
- * @param config - Transport configuration
- * @returns A new transport instance
- *
- * @example
- * ```ts
- * import { createBrowserWebSocketTransport } from './transport/browser.js';
- *
- * const transport = createBrowserWebSocketTransport({
- *   url: "ws://localhost:8080"
- * });
- * ```
  */
 export function createBrowserWebSocketTransport(
   config: BrowserWebSocketTransportConfig
 ): BrowserWebSocketTransport {
   return new BrowserWebSocketTransport(config);
 }
-
-// ============================================================================
-// Re-exports
-// ============================================================================
 
 export default BrowserWebSocketTransport;
