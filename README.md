@@ -33,11 +33,13 @@ console.log("Connected to OpenClaw Gateway");
 ## Features
 
 - **WebSocket Transport**: Cross-platform support (Node.js and Browser)
-- **Automatic Reconnection**: Configurable reconnection with Fibonacci backoff
+- **Automatic Reconnection**: Configurable reconnection with exponential backoff
 - **Type-Safe**: Full TypeScript support with comprehensive type exports
 - **Error Handling**: Rich error types with error codes and type guards
 - **Event System**: Subscribe to gateway events with wildcard support
 - **Request Cancellation**: AbortController support for long-running requests
+- **High-Level APIs**: Chat, Agents, Sessions, Config, Cron, Nodes, Skills, DevicePairing
+- **Event Monitoring**: TickMonitor (heartbeat) and GapDetector (sequence gap detection)
 
 ## Configuration
 
@@ -96,22 +98,17 @@ For dynamic token refresh or custom auth flows:
 import { type CredentialsProvider } from "openclaw-sdk";
 
 const customProvider: CredentialsProvider = {
-  async getCredentials() {
-    return {
-      token: await getAuthToken(),
-      success: true,
-    };
+  async getToken() {
+    return getAuthToken();
   },
 
-  async shouldRefresh() {
-    return tokenWillExpireSoon();
+  async refreshToken(currentToken) {
+    const result = await refreshAuthToken();
+    return { token: result.newToken, success: true };
   },
 
-  async refresh() {
-    return {
-      token: await refreshAuthToken(),
-      success: true,
-    };
+  async getDeviceCredentials() {
+    return null; // For keypair authentication
   },
 };
 
@@ -187,8 +184,6 @@ Native browser WebSocket API is used automatically—no additional dependencies 
 
 ## Reconnection Strategies
 
-## Reconnection Strategies
-
 The SDK provides two approaches to reconnection:
 
 ### Approach 1: Built-in Reconnection (Recommended)
@@ -222,7 +217,7 @@ const client = createClient({
 - Custom reconnection logic separate from ConnectionManager
 - Reconnection state tracking for external management
 - Event-driven reconnection workflows
-- Advanced retry strategies beyond standard backoff
+- Auth-aware retry with token refresh
 
 ```typescript
 import { createReconnectManager } from "openclaw-sdk";
@@ -231,18 +226,23 @@ const reconnectMgr = createReconnectManager({
   maxAttempts: 10,
   initialDelayMs: 1000,
   maxDelayMs: 30000,
+  pauseOnAuthError: true,
+  jitterFactor: 0.3,
 });
 
-reconnectMgr.on("stateChange", (state) => {
-  if (state.phase === "waiting") {
-    console.log(`Reconnecting in ${state.delayMs}ms...`);
-  }
+reconnectMgr.onEvent((event) => {
+  console.log(`State: ${event.state}, attempt: ${event.attempt}`);
 });
 
-// Manual control
-reconnectMgr.start();
-// ... custom logic ...
-reconnectMgr.stop();
+// Use with reconnection logic
+try {
+  await reconnectMgr.reconnect(
+    async () => { /* connect function */ },
+    async () => { /* token refresh function */ }
+  );
+} catch (error) {
+  console.error("Reconnection failed:", error);
+}
 ```
 
 ### Decision Guide
@@ -254,74 +254,81 @@ reconnectMgr.stop();
 | Integration with connection lifecycle | ConnectionManager built-in |
 | Event-driven reconnection workflows | ReconnectManager stand-alone |
 
+## High-Level APIs
+
+The SDK provides typed APIs for common gateway operations:
+
+```typescript
+import {
+  ChatAPI,
+  AgentsAPI,
+  SessionsAPI,
+  ConfigAPI,
+  CronAPI,
+  NodesAPI,
+  SkillsAPI,
+  DevicePairingAPI,
+} from "openclaw-sdk";
+
+// Access via client.api
+client.api.agents.list();
+client.api.chat.send();
+client.api.sessions.create();
+```
+
+## Event Monitoring
+
+### TickMonitor (Heartbeat)
+
+Monitor connection health with tick events:
+
+```typescript
+import { createTickMonitor } from "openclaw-sdk";
+
+const tickMonitor = createTickMonitor({
+  intervalMs: 30000,
+  timeoutMs: 10000,
+});
+
+tickMonitor.on("tick", (info) => {
+  console.log("Tick:", info.timestamp);
+});
+
+tickMonitor.on("missed", (info) => {
+  console.warn("Missed tick count:", info.missedCount);
+});
+
+tickMonitor.on("recovered", () => {
+  console.log("Tick monitoring recovered");
+});
+```
+
+### GapDetector (Sequence Gap Detection)
+
+Detect and recover from message sequence gaps:
+
+```typescript
+import { createGapDetector } from "openclaw-sdk";
+
+const gapDetector = createGapDetector({
+  recovery: {
+    mode: "skip", // "skip" | "reconnect" | "snapshot"
+    onGap: (gaps) => {
+      console.log("Gap detected:", gaps);
+    },
+  },
+});
+
+// Record sequence numbers
+gapDetector.recordSequence(1);
+gapDetector.recordSequence(2);
+gapDetector.recordSequence(4); // Gap detected (missed 3)
+```
+
 ## API Reference
 
-### Main Client
+Please see: [API Docs](https://frisbee-ai.github.io/openclaw-sdk-typescript/)
 
-```typescript
-import {
-  createClient,
-  OpenClawClient,
-  type ClientConfig,
-} from "openclaw-sdk";
-```
-
-### Error Types
-
-All error classes and types are exported for proper error handling:
-
-```typescript
-import {
-  // Error classes
-  OpenClawError,
-  AuthError,
-  ConnectionError,
-  ProtocolError,
-  RequestError,
-  TimeoutError,
-  CancelledError,
-  AbortError,
-  GatewayError,
-  ReconnectError,
-
-  // Error code types
-  type AuthErrorCode,
-  type ConnectionErrorCode,
-  type ProtocolErrorCode,
-  type RequestErrorCode,
-  type GatewayErrorCode,
-  type ReconnectErrorCode,
-
-  // Error type guards
-  isOpenClawError,
-  isAuthError,
-  isConnectionError,
-  isTimeoutError,
-  isCancelledError,
-  isAbortError,
-
-  // Error factory
-  createErrorFromResponse,
-} from "openclaw-sdk";
-```
-
-### Type Guards
-
-Use type guards for safe error handling:
-
-```typescript
-try {
-  await client.connect();
-} catch (error) {
-  if (isAuthError(error)) {
-    console.error("Authentication failed:", error.errorCode);
-  } else if (isConnectionError(error)) {
-    console.error("Connection failed:", error.errorCode);
-  } else {
-    console.error("Unknown error:", error);
-  }
-}
-```
 
 ## Development
 
