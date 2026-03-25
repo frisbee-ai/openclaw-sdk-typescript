@@ -346,6 +346,7 @@ export interface SessionsPatchParams {
   sessionId: string;
   patch: unknown;
 }
+/** No fields returned. */
 export interface SessionsPatchResult {}
 export interface SessionsResetParams {
   sessionId: string;
@@ -601,6 +602,10 @@ export interface TalkStopParams {
   sessionId: string;
 }
 export interface TalkStopResult {}
+export interface TalkSpeakParams {
+  text: string;
+  language?: string;
+}
 
 // ============================================================================
 // Update Types

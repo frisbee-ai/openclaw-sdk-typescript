@@ -15,6 +15,7 @@ import type {
   BrowserEvalParams,
   BrowserEvalResult,
 } from '../protocol/api-params.js';
+import type { BrowserListResult } from '../protocol/api-common.js';
 
 import type { RequestFn } from './shared.js';
 
@@ -40,8 +41,8 @@ export class BrowserAPI {
   /**
    * List open browser tabs.
    */
-  async list(params?: BrowserListParams): Promise<unknown> {
-    return this.request('browser.list', params);
+  async list(params?: BrowserListParams): Promise<BrowserListResult> {
+    return this.request<BrowserListResult>('browser.list', params);
   }
 
   /**

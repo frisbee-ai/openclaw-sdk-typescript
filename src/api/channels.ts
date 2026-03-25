@@ -17,6 +17,7 @@ import type {
   TalkStartResult,
   TalkStopParams,
   TalkStopResult,
+  TalkSpeakParams,
 } from '../protocol/api-params.js';
 
 import type { RequestFn } from './shared.js';
@@ -69,8 +70,10 @@ export class ChannelsAPI {
 
       /**
        * Speak text in a talk session.
+       *
+       * @param params - Speak parameters
        */
-      async speak(params: { text: string; language?: string }): Promise<void> {
+      async speak(params: TalkSpeakParams): Promise<void> {
         await request('talk.speak', params);
       },
 

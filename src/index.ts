@@ -280,6 +280,7 @@ export type {
   TalkStartResult,
   TalkStopParams,
   TalkStopResult,
+  TalkSpeakParams,
   // Channels
   ChannelsStatusParams,
   ChannelsStatusResult,

@@ -55,6 +55,7 @@ import type {
   SendParams,
   SendResult,
 } from '../protocol/api-params.js';
+import type { TtsVoicesResult } from '../protocol/api-common.js';
 
 import type { RequestFn } from './shared.js';
 
@@ -133,9 +134,12 @@ export class SystemAPI {
 
   /**
    * Get available TTS voices.
+   *
+   * @param params - Optional TTS voices parameters
+   * @returns Promise resolving to available voices
    */
-  async voices(params?: TtsVoicesParams): Promise<unknown> {
-    return this.request('tts.voices', params);
+  async voices(params?: TtsVoicesParams): Promise<TtsVoicesResult> {
+    return this.request<TtsVoicesResult>('tts.voices', params);
   }
 
   /**
