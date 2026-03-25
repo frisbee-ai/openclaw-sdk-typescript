@@ -9,7 +9,6 @@
 import type {
   SessionsListParams,
   SessionsPreviewParams,
-  SessionsResolveParams,
   SessionsPatchParams,
   SessionsPatchResult,
   SessionsResetParams,
@@ -44,13 +43,6 @@ export class SessionsAPI {
    */
   async preview(params: SessionsPreviewParams): Promise<unknown> {
     return this.request('sessions.preview', params);
-  }
-
-  /**
-   * Resolve a session.
-   */
-  async resolve(params: SessionsResolveParams): Promise<unknown> {
-    return this.request('sessions.resolve', params);
   }
 
   /**

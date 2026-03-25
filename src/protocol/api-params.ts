@@ -24,23 +24,27 @@ export interface AgentWaitParams {
   timeoutMs?: number;
 }
 
-/** File entry for agent file operations */
-export interface AgentsFileEntry {
-  path: string;
-  content: string;
-}
 export interface AgentsCreateParams {
-  agentId: string;
-  files: AgentsFileEntry[];
+  name: string;
+  workspace: string;
+  emoji?: string;
+  avatar?: string;
 }
 export interface AgentsCreateResult {
+  ok: true;
   agentId: string;
+  name: string;
+  workspace: string;
 }
 export interface AgentsUpdateParams {
   agentId: string;
-  files: AgentsFileEntry[];
+  name?: string;
+  workspace?: string;
+  model?: string;
+  avatar?: string;
 }
 export interface AgentsUpdateResult {
+  ok: true;
   agentId: string;
 }
 export interface AgentsDeleteParams {
@@ -104,7 +108,8 @@ export interface NodePairVerifyParams {
 
 export interface DevicePairListParams {}
 export interface DevicePairApproveParams {
-  pairingId: string;
+  nodeId: string;
+  requestId: string;
 }
 export interface DevicePairRejectParams {
   pairingId: string;
@@ -287,9 +292,6 @@ export interface SessionsListParams {}
 export interface SessionsPreviewParams {
   sessionId: string;
 }
-export interface SessionsResolveParams {
-  sessionId: string;
-}
 export interface SessionsPatchParams {
   sessionId: string;
   patch: unknown;
@@ -341,9 +343,18 @@ export interface NodePendingEnqueueResult {}
 
 export interface PollParams {}
 export interface UpdateRunParams {}
-export interface ChatInjectParams {
-  chatId: string;
-  message: unknown;
+
+/**
+ * @deprecated Use SessionsSendParams instead. Will be removed in v2.0.
+ */
+export type ChatInjectParams = SessionsSendParams;
+export interface SessionsSendParams {
+  key: string;
+  message: string;
+  thinking?: string;
+  attachments?: unknown[];
+  timeoutMs?: number;
+  idempotencyKey?: string;
 }
 
 // ============================================================================

@@ -33,17 +33,9 @@ async function main() {
   // ============================================================================
 
   const newAgent = await client.agents.create({
-    agentId: 'my-agent',
-    files: [
-      {
-        path: 'main.ts',
-        content: '// Agent main file\nconsole.log("Hello from agent!");',
-      },
-      {
-        path: 'config.json',
-        content: '{"version": "1.0.0"}',
-      },
-    ],
+    name: 'my-agent',
+    workspace: 'default',
+    emoji: '🤖',
   });
   console.log('Created agent:', newAgent);
 
@@ -53,12 +45,7 @@ async function main() {
 
   const updated = await client.agents.update({
     agentId: 'my-agent',
-    files: [
-      {
-        path: 'main.ts',
-        content: '// Updated main file\nconsole.log("Updated agent!");',
-      },
-    ],
+    name: 'my-updated-agent',
   });
   console.log('Updated agent:', updated);
 

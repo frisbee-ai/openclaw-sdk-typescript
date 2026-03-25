@@ -37,7 +37,8 @@ async function main() {
 
     // Approve the pairing
     await client.devicePairing.approve({
-      pairingId,
+      nodeId: pairingId,
+      requestId: pendingDevices[0].id,
     });
     console.log('Device approved:', pairingId);
   }

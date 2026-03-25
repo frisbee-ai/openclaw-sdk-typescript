@@ -85,8 +85,6 @@ export type {
   AgentSummary,
 } from './protocol/api-common.js';
 
-export type { AgentsFileEntry } from './protocol/api-params.js';
-
 // API parameter types (selectively exported)
 export type {
   AgentIdentityParams,
@@ -196,7 +194,7 @@ export type {
   // Sessions
   SessionsListParams,
   SessionsPreviewParams,
-  SessionsResolveParams,
+  SessionsSendParams,
   SessionsPatchParams,
   SessionsPatchResult,
   SessionsResetParams,

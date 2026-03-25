@@ -49,11 +49,8 @@ async function main() {
     // ============================================================================
 
     await client.chat.inject({
-      chatId,
-      message: {
-        role: 'user',
-        content: 'Hello, agent!',
-      },
+      key: chatId,
+      message: 'Hello, agent!',
     });
     console.log('Message injected');
 
