@@ -13,6 +13,8 @@ import type {
   ConfigPatchParams,
   ConfigSchemaParams,
   ConfigSchemaResponse,
+  ConfigSchemaLookupParams,
+  ConfigSchemaLookupResult,
 } from '../protocol/api-params.js';
 
 import type { RequestFn } from './shared.js';
@@ -62,5 +64,12 @@ export class ConfigAPI {
    */
   async schema(params?: ConfigSchemaParams): Promise<ConfigSchemaResponse> {
     return this.request<ConfigSchemaResponse>('config.schema', params);
+  }
+
+  /**
+   * Lookup schema for a specific configuration key.
+   */
+  async schemaLookup(params: ConfigSchemaLookupParams): Promise<ConfigSchemaLookupResult> {
+    return this.request<ConfigSchemaLookupResult>('config.schema.lookup', params);
   }
 }

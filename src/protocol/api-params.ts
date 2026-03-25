@@ -114,7 +114,16 @@ export interface DevicePairApproveParams {
 export interface DevicePairRejectParams {
   pairingId: string;
 }
-
+export interface ChatAbortParams {
+  chatId: string;
+}
+export interface DeviceTokenRotateParams {
+  nodeId: string;
+}
+export interface DeviceTokenRevokeParams {
+  nodeId: string;
+  token: string;
+}
 // ============================================================================
 // Config Types
 // ============================================================================
@@ -135,6 +144,19 @@ export interface ConfigSchemaParams {
 }
 export interface ConfigSchemaResponse {
   schema: unknown;
+}
+export interface ConfigSchemaLookupParams {
+  key: string;
+}
+export interface ConfigSchemaLookupResult {
+  schema: unknown;
+}
+export interface ToolsEffectiveParams {
+  skillId?: string;
+  nodeId?: string;
+}
+export interface ToolsEffectiveResult {
+  tools: unknown[];
 }
 
 // ============================================================================
@@ -292,6 +314,15 @@ export interface SessionsListParams {}
 export interface SessionsPreviewParams {
   sessionId: string;
 }
+export interface SessionsCreateParams {
+  key?: string;
+  agentId?: string;
+  label?: string;
+  model?: string;
+  parentSessionKey?: string;
+  task?: string;
+  message?: string;
+}
 export interface SessionsPatchParams {
   sessionId: string;
   patch: unknown;
@@ -336,6 +367,29 @@ export interface NodePendingEnqueueParams {
   item: unknown;
 }
 export interface NodePendingEnqueueResult {}
+export interface NodeDescribeParams {
+  nodeId: string;
+}
+export interface NodeDescribeResult {
+  nodeId: string;
+  status: string;
+  metadata?: unknown;
+}
+export interface NodePendingPullParams {
+  nodeId: string;
+  max?: number;
+}
+export interface NodePendingPullResult {
+  items: unknown[];
+}
+export interface NodePendingAckParams {
+  nodeId: string;
+  itemId: string;
+}
+export interface NodeRenameParams {
+  nodeId: string;
+  name: string;
+}
 
 // ============================================================================
 // Poll / Update / ChatInject Types

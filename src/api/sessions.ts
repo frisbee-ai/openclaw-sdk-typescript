@@ -9,6 +9,8 @@
 import type {
   SessionsListParams,
   SessionsPreviewParams,
+  SessionsCreateParams,
+  SessionsSendParams,
   SessionsPatchParams,
   SessionsPatchResult,
   SessionsResetParams,
@@ -43,6 +45,55 @@ export class SessionsAPI {
    */
   async preview(params: SessionsPreviewParams): Promise<unknown> {
     return this.request('sessions.preview', params);
+  }
+
+  /**
+   * Create a new session.
+   */
+  async create(params?: SessionsCreateParams): Promise<unknown> {
+    return this.request('sessions.create', params);
+  }
+
+  /**
+   * Send a message to a session.
+   */
+  async send(params: SessionsSendParams): Promise<unknown> {
+    return this.request('sessions.send', params);
+  }
+
+  /**
+   * Abort a running session.
+   */
+  async abort(params: { key: string; runId?: string }): Promise<void> {
+    await this.request('sessions.abort', params);
+  }
+
+  /**
+   * Subscribe to session events.
+   */
+  async subscribe(params: { key: string }): Promise<unknown> {
+    return this.request('sessions.subscribe', params);
+  }
+
+  /**
+   * Unsubscribe from session events.
+   */
+  async unsubscribe(params: { key: string }): Promise<void> {
+    await this.request('sessions.unsubscribe', params);
+  }
+
+  /**
+   * Subscribe to session messages.
+   */
+  async messagesSubscribe(params: { key: string }): Promise<unknown> {
+    return this.request('sessions.messages.subscribe', params);
+  }
+
+  /**
+   * Unsubscribe from session messages.
+   */
+  async messagesUnsubscribe(params: { key: string }): Promise<void> {
+    await this.request('sessions.messages.unsubscribe', params);
   }
 
   /**

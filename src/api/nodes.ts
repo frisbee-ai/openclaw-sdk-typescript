@@ -15,6 +15,12 @@ import type {
   NodePendingDrainResult,
   NodePendingEnqueueParams,
   NodePendingEnqueueResult,
+  NodeDescribeParams,
+  NodeDescribeResult,
+  NodePendingPullParams,
+  NodePendingPullResult,
+  NodePendingAckParams,
+  NodeRenameParams,
   NodePairRequestParams,
   NodePairListParams,
   NodePairApproveParams,
@@ -69,6 +75,34 @@ export class NodesAPI {
    */
   async pendingEnqueue(params: NodePendingEnqueueParams): Promise<NodePendingEnqueueResult> {
     return this.request<NodePendingEnqueueResult>('node.pending.enqueue', params);
+  }
+
+  /**
+   * Describe a node.
+   */
+  async describe(params: NodeDescribeParams): Promise<NodeDescribeResult> {
+    return this.request<NodeDescribeResult>('node.describe', params);
+  }
+
+  /**
+   * Pull pending items from a node.
+   */
+  async pendingPull(params: NodePendingPullParams): Promise<NodePendingPullResult> {
+    return this.request<NodePendingPullResult>('node.pending.pull', params);
+  }
+
+  /**
+   * Acknowledge a pending item.
+   */
+  async pendingAck(params: NodePendingAckParams): Promise<void> {
+    await this.request('node.pending.ack', params);
+  }
+
+  /**
+   * Rename a node.
+   */
+  async rename(params: NodeRenameParams): Promise<void> {
+    await this.request('node.rename', params);
   }
 
   /**

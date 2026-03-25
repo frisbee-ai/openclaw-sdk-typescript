@@ -10,6 +10,8 @@ import type {
   DevicePairListParams,
   DevicePairApproveParams,
   DevicePairRejectParams,
+  DeviceTokenRotateParams,
+  DeviceTokenRevokeParams,
 } from '../protocol/api-params.js';
 
 import type { RequestFn } from './shared.js';
@@ -45,5 +47,27 @@ export class DevicePairingAPI {
    */
   async reject(params: DevicePairRejectParams): Promise<void> {
     await this.request('device.pair.reject', params);
+  }
+
+  /**
+   * Token operations.
+   */
+  get token() {
+    const request = this.request;
+    return {
+      /**
+       * Rotate device token.
+       */
+      async rotate(params: DeviceTokenRotateParams): Promise<void> {
+        await request('device.token.rotate', params);
+      },
+
+      /**
+       * Revoke device token.
+       */
+      async revoke(params: DeviceTokenRevokeParams): Promise<void> {
+        await request('device.token.revoke', params);
+      },
+    };
   }
 }

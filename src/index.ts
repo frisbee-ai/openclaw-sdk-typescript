@@ -98,6 +98,9 @@ export type {
   DevicePairListParams,
   DevicePairApproveParams,
   DevicePairRejectParams,
+  ChatAbortParams,
+  DeviceTokenRotateParams,
+  DeviceTokenRevokeParams,
   AgentsCreateParams,
   AgentsCreateResult,
   AgentsUpdateParams,
@@ -127,6 +130,12 @@ export type {
   NodePendingDrainResult,
   NodePendingEnqueueParams,
   NodePendingEnqueueResult,
+  NodeDescribeParams,
+  NodeDescribeResult,
+  NodePendingPullParams,
+  NodePendingPullResult,
+  NodePendingAckParams,
+  NodeRenameParams,
   // TTS
   TtsSpeakParams,
   TtsSpeakResult,
@@ -171,6 +180,10 @@ export type {
   ConfigPatchParams,
   ConfigSchemaParams,
   ConfigSchemaResponse,
+  ConfigSchemaLookupParams,
+  ConfigSchemaLookupResult,
+  ToolsEffectiveParams,
+  ToolsEffectiveResult,
   // Wizard
   WizardStartParams,
   WizardNextParams,
@@ -194,6 +207,7 @@ export type {
   // Sessions
   SessionsListParams,
   SessionsPreviewParams,
+  SessionsCreateParams,
   SessionsSendParams,
   SessionsPatchParams,
   SessionsPatchResult,
@@ -413,3 +427,8 @@ export { CronAPI } from './api/cron.js';
 export { NodesAPI } from './api/nodes.js';
 export { SkillsAPI } from './api/skills.js';
 export { DevicePairingAPI } from './api/devicePairing.js';
+export { BrowserAPI } from './api/browser.js';
+export { PushAPI } from './api/push.js';
+export { ExecApprovalsAPI } from './api/execApprovals.js';
+export { SystemAPI } from './api/system.js';
+export { ChannelsAPI } from './api/channels.js';

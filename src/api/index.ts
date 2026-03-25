@@ -17,3 +17,8 @@ export { CronAPI } from './cron.js';
 export { NodesAPI } from './nodes.js';
 export { SkillsAPI } from './skills.js';
 export { DevicePairingAPI } from './devicePairing.js';
+export { BrowserAPI } from './browser.js';
+export { PushAPI } from './push.js';
+export { ExecApprovalsAPI } from './execApprovals.js';
+export { SystemAPI } from './system.js';
+export { ChannelsAPI } from './channels.js';

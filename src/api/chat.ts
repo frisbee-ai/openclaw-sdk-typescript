@@ -15,6 +15,7 @@ import type {
   ChatDeleteResult,
   ChatTitleParams,
   ChatTitleResult,
+  ChatAbortParams,
 } from '../protocol/api-params.js';
 import type { ChatListResult } from '../protocol/api-common.js';
 
@@ -50,6 +51,15 @@ export class ChatAPI {
    */
   async inject(params: ChatInjectParams): Promise<void> {
     await this.request('chat.inject', params);
+  }
+
+  /**
+   * Abort a running chat.
+   *
+   * @param params - Chat abort parameters
+   */
+  async abort(params: ChatAbortParams): Promise<void> {
+    await this.request('chat.abort', params);
   }
 
   /**

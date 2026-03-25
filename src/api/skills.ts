@@ -14,6 +14,8 @@ import type {
   SkillsBinsResult,
   SkillsInstallParams,
   SkillsUpdateParams,
+  ToolsEffectiveParams,
+  ToolsEffectiveResult,
 } from '../protocol/api-params.js';
 
 import type { RequestFn } from './shared.js';
@@ -69,6 +71,13 @@ export class SkillsAPI {
        */
       async catalog(params?: ToolsCatalogParams): Promise<ToolsCatalogResult> {
         return request<ToolsCatalogResult>('tools.catalog', params);
+      },
+
+      /**
+       * Get effective tools for a skill or node.
+       */
+      async effective(params?: ToolsEffectiveParams): Promise<ToolsEffectiveResult> {
+        return request<ToolsEffectiveResult>('tools.effective', params);
       },
     };
   }
