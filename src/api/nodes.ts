@@ -106,6 +106,20 @@ export class NodesAPI {
   }
 
   /**
+   * Get the result of a node invoke.
+   */
+  async invokeResult(params: { nodeId: string; runId: string }): Promise<unknown> {
+    return this.request('node.invoke.result', params);
+  }
+
+  /**
+   * Refresh node canvas capabilities.
+   */
+  async canvasCapabilityRefresh(params: { nodeId: string }): Promise<void> {
+    await this.request('node.canvas.capability.refresh', params);
+  }
+
+  /**
    * Node pairing operations.
    */
   get pairing() {

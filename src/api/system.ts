@@ -10,6 +10,14 @@ import type {
   TtsSpeakParams,
   TtsSpeakResult,
   TtsVoicesParams,
+  TtsStatusParams,
+  TtsStatusResult,
+  TtsProvidersParams,
+  TtsProvidersResult,
+  TtsEnableParams,
+  TtsDisableParams,
+  TtsConvertParams,
+  TtsSetProviderParams,
   WizardStartParams,
   WizardNextParams,
   WizardCancelParams,
@@ -17,6 +25,35 @@ import type {
   WizardNextResult,
   WizardStartResult,
   WizardStatusResult,
+  LogsTailParams,
+  LogsTailResult,
+  DoctorMemoryStatusParams,
+  DoctorMemoryStatusResult,
+  UsageStatusParams,
+  UsageStatusResult,
+  UsageCostParams,
+  UsageCostResult,
+  ModelsListParams,
+  ModelsListResult,
+  VoiceWakeGetParams,
+  VoiceWakeSetParams,
+  GatewayIdentityGetParams,
+  GatewayIdentityGetResult,
+  SystemPresenceParams,
+  SystemPresenceResult,
+  SystemEventParams,
+  SystemEventResult,
+  LastHeartbeatParams,
+  LastHeartbeatResult,
+  SetHeartbeatsParams,
+  WakeParams,
+  UpdateRunParams,
+  BrowserRequestParams,
+  BrowserRequestResult,
+  AgentParams,
+  AgentResult,
+  SendParams,
+  SendResult,
 } from '../protocol/api-params.js';
 
 import type { RequestFn } from './shared.js';
@@ -33,6 +70,10 @@ import type { RequestFn } from './shared.js';
 export class SystemAPI {
   constructor(private request: RequestFn) {}
 
+  // -------------------------------------------------------------------------
+  // Health & Status
+  // -------------------------------------------------------------------------
+
   /**
    * Get system health status.
    */
@@ -48,6 +89,42 @@ export class SystemAPI {
   }
 
   /**
+   * Get doctor memory status.
+   */
+  async doctorMemoryStatus(params?: DoctorMemoryStatusParams): Promise<DoctorMemoryStatusResult> {
+    return this.request<DoctorMemoryStatusResult>('doctor.memory.status', params);
+  }
+
+  /**
+   * Tail system logs.
+   */
+  async logsTail(params?: LogsTailParams): Promise<LogsTailResult> {
+    return this.request<LogsTailResult>('logs.tail', params);
+  }
+
+  // -------------------------------------------------------------------------
+  // Usage
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get usage status.
+   */
+  async usageStatus(params?: UsageStatusParams): Promise<UsageStatusResult> {
+    return this.request<UsageStatusResult>('usage.status', params);
+  }
+
+  /**
+   * Get usage cost.
+   */
+  async usageCost(params?: UsageCostParams): Promise<UsageCostResult> {
+    return this.request<UsageCostResult>('usage.cost', params);
+  }
+
+  // -------------------------------------------------------------------------
+  // TTS
+  // -------------------------------------------------------------------------
+
+  /**
    * TTS speak text.
    */
   async speak(params: TtsSpeakParams): Promise<TtsSpeakResult> {
@@ -60,6 +137,175 @@ export class SystemAPI {
   async voices(params?: TtsVoicesParams): Promise<unknown> {
     return this.request('tts.voices', params);
   }
+
+  /**
+   * Get TTS status.
+   */
+  async ttsStatus(params?: TtsStatusParams): Promise<TtsStatusResult> {
+    return this.request<TtsStatusResult>('tts.status', params);
+  }
+
+  /**
+   * Get available TTS providers.
+   */
+  async ttsProviders(params?: TtsProvidersParams): Promise<TtsProvidersResult> {
+    return this.request<TtsProvidersResult>('tts.providers', params);
+  }
+
+  /**
+   * Enable TTS.
+   */
+  async ttsEnable(params?: TtsEnableParams): Promise<void> {
+    await this.request('tts.enable', params);
+  }
+
+  /**
+   * Disable TTS.
+   */
+  async ttsDisable(params?: TtsDisableParams): Promise<void> {
+    await this.request('tts.disable', params);
+  }
+
+  /**
+   * Convert text to speech.
+   */
+  async ttsConvert(params: TtsConvertParams): Promise<unknown> {
+    return this.request('tts.convert', params);
+  }
+
+  /**
+   * Set TTS provider.
+   */
+  async ttsSetProvider(params: TtsSetProviderParams): Promise<void> {
+    await this.request('tts.setProvider', params);
+  }
+
+  // -------------------------------------------------------------------------
+  // Models
+  // -------------------------------------------------------------------------
+
+  /**
+   * List available models.
+   */
+  async modelsList(params?: ModelsListParams): Promise<ModelsListResult> {
+    return this.request<ModelsListResult>('models.list', params);
+  }
+
+  // -------------------------------------------------------------------------
+  // Update
+  // -------------------------------------------------------------------------
+
+  /**
+   * Run system update.
+   */
+  async updateRun(params?: UpdateRunParams): Promise<void> {
+    await this.request('update.run', params);
+  }
+
+  // -------------------------------------------------------------------------
+  // VoiceWake
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get voice wake configuration.
+   */
+  async voiceWakeGet(params?: VoiceWakeGetParams): Promise<unknown> {
+    return this.request('voicewake.get', params);
+  }
+
+  /**
+   * Set voice wake configuration.
+   */
+  async voiceWakeSet(params: VoiceWakeSetParams): Promise<void> {
+    await this.request('voicewake.set', params);
+  }
+
+  // -------------------------------------------------------------------------
+  // Gateway Identity
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get gateway identity.
+   */
+  async gatewayIdentityGet(params?: GatewayIdentityGetParams): Promise<GatewayIdentityGetResult> {
+    return this.request<GatewayIdentityGetResult>('gateway.identity.get', params);
+  }
+
+  // -------------------------------------------------------------------------
+  // System Presence & Events
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get system presence.
+   */
+  async systemPresence(params?: SystemPresenceParams): Promise<SystemPresenceResult> {
+    return this.request<SystemPresenceResult>('system-presence', params);
+  }
+
+  /**
+   * Send a system event.
+   */
+  async systemEvent(params: SystemEventParams): Promise<SystemEventResult> {
+    return this.request<SystemEventResult>('system-event', params);
+  }
+
+  // -------------------------------------------------------------------------
+  // Heartbeat
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get last heartbeat.
+   */
+  async lastHeartbeat(params?: LastHeartbeatParams): Promise<LastHeartbeatResult> {
+    return this.request<LastHeartbeatResult>('last-heartbeat', params);
+  }
+
+  /**
+   * Set heartbeat interval.
+   */
+  async setHeartbeats(params: SetHeartbeatsParams): Promise<void> {
+    await this.request('set-heartbeats', params);
+  }
+
+  // -------------------------------------------------------------------------
+  // Wake
+  // -------------------------------------------------------------------------
+
+  /**
+   * Wake the system.
+   */
+  async wake(params?: WakeParams): Promise<void> {
+    await this.request('wake', params);
+  }
+
+  // -------------------------------------------------------------------------
+  // Low-Level Generic Methods
+  // -------------------------------------------------------------------------
+
+  /**
+   * Generic agent method.
+   */
+  async agent(params: AgentParams): Promise<AgentResult> {
+    return this.request<AgentResult>('agent', params);
+  }
+
+  /**
+   * Generic send method.
+   */
+  async send(params: SendParams): Promise<SendResult> {
+    return this.request<SendResult>('send', params);
+  }
+
+  /**
+   * Generic browser request method.
+   */
+  async browserRequest(params: BrowserRequestParams): Promise<BrowserRequestResult> {
+    return this.request<BrowserRequestResult>('browser.request', params);
+  }
+
+  // -------------------------------------------------------------------------
+  // Wizard
+  // -------------------------------------------------------------------------
 
   /**
    * Start a wizard flow.

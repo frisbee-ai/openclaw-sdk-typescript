@@ -50,6 +50,13 @@ export class DevicePairingAPI {
   }
 
   /**
+   * Remove a device pairing.
+   */
+  async remove(params: { pairingId: string }): Promise<void> {
+    await this.request('device.pair.remove', params);
+  }
+
+  /**
    * Token operations.
    */
   get token() {

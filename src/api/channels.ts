@@ -68,6 +68,13 @@ export class ChannelsAPI {
       },
 
       /**
+       * Speak text in a talk session.
+       */
+      async speak(params: { text: string; language?: string }): Promise<void> {
+        await request('talk.speak', params);
+      },
+
+      /**
        * Start a talk session.
        */
       async start(params?: TalkStartParams): Promise<TalkStartResult> {

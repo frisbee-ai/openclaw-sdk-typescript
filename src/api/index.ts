@@ -22,3 +22,5 @@ export { PushAPI } from './push.js';
 export { ExecApprovalsAPI } from './execApprovals.js';
 export { SystemAPI } from './system.js';
 export { ChannelsAPI } from './channels.js';
+export { SecretsAPI } from './secrets.js';
+export { UsageAPI } from './usage.js';

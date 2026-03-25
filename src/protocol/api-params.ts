@@ -305,6 +305,25 @@ export interface ExecApprovalsSetParams {
 export interface ExecApprovalsSnapshot {
   approvals: unknown[];
 }
+export interface ExecApprovalsNodeGetParams {
+  nodeId: string;
+}
+export interface ExecApprovalsNodeSetParams {
+  nodeId: string;
+  enabled: boolean;
+}
+export interface ExecApprovalRequestParams {
+  nodeId: string;
+  prompt: string;
+}
+export interface ExecApprovalWaitDecisionParams {
+  requestId: string;
+  timeoutMs?: number;
+}
+export interface ExecApprovalResolveParams {
+  requestId: string;
+  approved: boolean;
+}
 
 // ============================================================================
 // Sessions Types
@@ -608,4 +627,178 @@ export interface UpdateApplyResult {
 export interface DiagnosticsSnapshotParams {}
 export interface DiagnosticsSnapshotResult {
   snapshot: unknown;
+}
+
+// ============================================================================
+// Secrets Extended Types
+// ============================================================================
+
+export interface SecretsReloadParams {}
+export interface SecretsResolveParams {
+  key: string;
+}
+
+// ============================================================================
+// Usage Extended Types
+// ============================================================================
+
+export interface UsageStatusParams {}
+export interface UsageCostParams {}
+export interface UsageStatusResult {
+  status: string;
+  [key: string]: unknown;
+}
+export interface UsageCostResult {
+  cost: number;
+  currency?: string;
+  [key: string]: unknown;
+}
+
+// ============================================================================
+// TTS Extended Types
+// ============================================================================
+
+export interface TtsStatusParams {}
+export interface TtsStatusResult {
+  enabled: boolean;
+  [key: string]: unknown;
+}
+export interface TtsProvidersParams {}
+export interface TtsProvidersResult {
+  providers: string[];
+  current: string;
+}
+export interface TtsEnableParams {}
+export interface TtsDisableParams {}
+export interface TtsConvertParams {
+  text: string;
+  voice?: string;
+  format?: string;
+}
+export interface TtsSetProviderParams {
+  provider: string;
+}
+
+// ============================================================================
+// Models Types
+// ============================================================================
+
+export interface ModelsListParams {}
+export interface ModelsListResult {
+  models: { id: string; name: string; [key: string]: unknown }[];
+}
+
+// ============================================================================
+// VoiceWake Extended Types
+// ============================================================================
+
+export interface VoiceWakeGetParams {}
+export interface VoiceWakeSetParams {
+  enabled?: boolean;
+  sensitivity?: number;
+  keywords?: string[];
+}
+
+// ============================================================================
+// Gateway Identity Types
+// ============================================================================
+
+export interface GatewayIdentityGetParams {}
+export interface GatewayIdentityGetResult {
+  id: string;
+  version: string;
+  [key: string]: unknown;
+}
+
+// ============================================================================
+// Doctor Extended Types
+// ============================================================================
+
+export interface DoctorMemoryStatusParams {}
+export interface DoctorMemoryStatusResult {
+  used: number;
+  total: number;
+  [key: string]: unknown;
+}
+
+// ============================================================================
+// System Presence / Event Types
+// ============================================================================
+
+export interface SystemPresenceParams {}
+export interface SystemPresenceResult {
+  presence: string;
+  [key: string]: unknown;
+}
+export interface SystemEventParams {
+  event: string;
+  payload?: unknown;
+}
+export interface SystemEventResult {}
+
+// ============================================================================
+// Heartbeat Types
+// ============================================================================
+
+export interface LastHeartbeatParams {}
+export interface LastHeartbeatResult {
+  timestamp: number;
+  [key: string]: unknown;
+}
+export interface SetHeartbeatsParams {
+  intervalMs: number;
+}
+
+// ============================================================================
+// Wake Types
+// ============================================================================
+
+export interface WakeParams {}
+
+// ============================================================================
+// Browser Request Types
+// ============================================================================
+
+export interface BrowserRequestParams {
+  action: string;
+  params?: unknown;
+}
+export interface BrowserRequestResult {
+  result: unknown;
+}
+
+// ============================================================================
+// Agent / Send Low-Level Types
+// ============================================================================
+
+export interface AgentParams {
+  action: string;
+  params?: unknown;
+}
+export interface AgentResult {
+  result: unknown;
+}
+export interface SendParams {
+  channel: string;
+  message: unknown;
+}
+export interface SendResult {
+  sent: boolean;
+}
+
+// ============================================================================
+// Node Canvas Types
+// ============================================================================
+
+export interface NodeCanvasCapabilityRefreshParams {
+  nodeId: string;
+}
+
+// ============================================================================
+// Chat Send Types
+// ============================================================================
+
+export interface ChatSendParams {
+  chatId: string;
+  message: unknown;
 }

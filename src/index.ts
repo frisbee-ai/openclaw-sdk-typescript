@@ -164,15 +164,64 @@ export type {
   SecretsSetResult,
   SecretsDeleteParams,
   SecretsDeleteResult,
+  SecretsReloadParams,
+  SecretsResolveParams,
   // Usage
   UsageSummaryParams,
   UsageSummaryResult,
   UsageDetailsParams,
   UsageDetailsResult,
+  UsageStatusParams,
+  UsageStatusResult,
+  UsageCostParams,
+  UsageCostResult,
   // Doctor
   DoctorCheckParams,
   DoctorFixParams,
   DoctorFixResult,
+  DoctorMemoryStatusParams,
+  DoctorMemoryStatusResult,
+  // TTS extended
+  TtsStatusParams,
+  TtsStatusResult,
+  TtsProvidersParams,
+  TtsProvidersResult,
+  TtsEnableParams,
+  TtsDisableParams,
+  TtsConvertParams,
+  TtsSetProviderParams,
+  // Models
+  ModelsListParams,
+  ModelsListResult,
+  // VoiceWake extended
+  VoiceWakeGetParams,
+  VoiceWakeSetParams,
+  // Gateway Identity
+  GatewayIdentityGetParams,
+  GatewayIdentityGetResult,
+  // System Presence / Event
+  SystemPresenceParams,
+  SystemPresenceResult,
+  SystemEventParams,
+  SystemEventResult,
+  // Heartbeat
+  LastHeartbeatParams,
+  LastHeartbeatResult,
+  SetHeartbeatsParams,
+  // Wake
+  WakeParams,
+  // Browser Request
+  BrowserRequestParams,
+  BrowserRequestResult,
+  // Agent / Send
+  AgentParams,
+  AgentResult,
+  SendParams,
+  SendResult,
+  // Node Canvas
+  NodeCanvasCapabilityRefreshParams,
+  // Chat Send
+  ChatSendParams,
   // Config extended
   ConfigGetParams,
   ConfigSetParams,
@@ -204,6 +253,11 @@ export type {
   ExecApprovalsGetParams,
   ExecApprovalsSetParams,
   ExecApprovalsSnapshot,
+  ExecApprovalsNodeGetParams,
+  ExecApprovalsNodeSetParams,
+  ExecApprovalRequestParams,
+  ExecApprovalWaitDecisionParams,
+  ExecApprovalResolveParams,
   // Sessions
   SessionsListParams,
   SessionsPreviewParams,
@@ -249,6 +303,7 @@ export type {
   UpdateCheckResult,
   UpdateApplyParams,
   UpdateApplyResult,
+  UpdateRunParams,
   // Diagnostics
   DiagnosticsSnapshotParams,
   DiagnosticsSnapshotResult,
@@ -432,3 +487,5 @@ export { PushAPI } from './api/push.js';
 export { ExecApprovalsAPI } from './api/execApprovals.js';
 export { SystemAPI } from './api/system.js';
 export { ChannelsAPI } from './api/channels.js';
+export { SecretsAPI } from './api/secrets.js';
+export { UsageAPI } from './api/usage.js';

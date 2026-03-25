@@ -16,6 +16,7 @@ import type {
   ChatTitleParams,
   ChatTitleResult,
   ChatAbortParams,
+  ChatSendParams,
 } from '../protocol/api-params.js';
 import type { ChatListResult } from '../protocol/api-common.js';
 
@@ -60,6 +61,15 @@ export class ChatAPI {
    */
   async abort(params: ChatAbortParams): Promise<void> {
     await this.request('chat.abort', params);
+  }
+
+  /**
+   * Send a message to a chat.
+   *
+   * @param params - Chat send parameters
+   */
+  async send(params: ChatSendParams): Promise<void> {
+    await this.request('chat.send', params);
   }
 
   /**
