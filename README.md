@@ -39,7 +39,7 @@ console.log("Connected to OpenClaw Gateway");
 - **Error Handling**: Rich error types with error codes and type guards
 - **Event System**: Subscribe to gateway events with wildcard support
 - **Request Cancellation**: AbortController support for long-running requests
-- **High-Level APIs**: Chat, Agents, Sessions, Config, Cron, Nodes, Skills, DevicePairing
+- **High-Level APIs**: 15 typed APIs (Chat, Agents, Sessions, Config, Cron, Nodes, Skills, DevicePairing, Browser, Push, ExecApprovals, System, Channels, Secrets, Usage)
 - **Event Monitoring**: TickMonitor (heartbeat) and GapDetector (sequence gap detection)
 
 ## Configuration
@@ -257,10 +257,11 @@ try {
 
 ## High-Level APIs
 
-The SDK provides typed APIs for common gateway operations:
+The SDK provides typed APIs for all gateway operations:
 
 ```typescript
 import {
+  // Core APIs
   ChatAPI,
   AgentsAPI,
   SessionsAPI,
@@ -269,13 +270,45 @@ import {
   NodesAPI,
   SkillsAPI,
   DevicePairingAPI,
+  // Extended APIs
+  BrowserAPI,
+  PushAPI,
+  ExecApprovalsAPI,
+  SystemAPI,
+  ChannelsAPI,
+  SecretsAPI,
+  UsageAPI,
 } from "openclaw-sdk";
 
 // Access via client.api
 client.api.agents.list();
 client.api.chat.send();
 client.api.sessions.create();
+client.api.browser.open();
+client.api.push.register();
+client.api.system.tts.speak();
+client.api.channels.talk.start();
 ```
+
+### API Overview
+
+| API | Description | Key Methods |
+|-----|-------------|-------------|
+| `ChatAPI` | Chat session management | `send()`, `list()`, `history()`, `delete()` |
+| `AgentsAPI` | Agent lifecycle | `create()`, `update()`, `delete()`, `list()` |
+| `SessionsAPI` | Session management | `create()`, `send()`, `patch()`, `reset()` |
+| `ConfigAPI` | Configuration management | `get()`, `set()`, `apply()`, `patch()`, `schema()` |
+| `CronAPI` | Scheduled jobs | `add()`, `update()`, `remove()`, `run()`, `status()` |
+| `NodesAPI` | Node execution | `invoke()`, `list()`, `describe()`, `rename()` |
+| `SkillsAPI` | Skill management | `install()`, `update()`, `bins()`, `catalog()` |
+| `DevicePairingAPI` | Device pairing | `approve()`, `reject()`, `verify()` |
+| `BrowserAPI` | Browser automation | `open()`, `list()`, `screenshot()`, `eval()` |
+| `PushAPI` | Push notifications | `register()`, `unregister()`, `send()` |
+| `ExecApprovalsAPI` | Execution approvals | `get()`, `set()`, `waitDecision()`, `resolve()` |
+| `SystemAPI` | System utilities | TTS, VoiceWake, Models, Doctor, etc. |
+| `ChannelsAPI` | Channel management | `status()`, `logout()`, Talk mode control |
+| `SecretsAPI` | Secret management | `get()`, `set()`, `delete()`, `resolve()` |
+| `UsageAPI` | Usage statistics | `summary()`, `details()`, `status()`, `cost()` |
 
 ## Event Monitoring
 
