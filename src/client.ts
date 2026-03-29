@@ -42,25 +42,6 @@ import { SkillsAPI } from './api/skills.js';
 import { DevicePairingAPI } from './api/devicePairing.js';
 
 // ============================================================================
-// Default Configuration Constants
-// ============================================================================
-
-const DEFAULT_REQUEST_TIMEOUT_MS = 30000;
-const DEFAULT_CONNECT_TIMEOUT_MS = 30000;
-const DEFAULT_MAX_RECONNECT_ATTEMPTS = 10;
-const DEFAULT_RECONNECT_DELAY_MS = 1000;
-
-/** Default no-op logger used when no logger is configured */
-const NOOP_LOGGER: Logger = {
-  name: 'openclaw-sdk',
-  level: LogLevel.Error,
-  debug() {},
-  info() {},
-  warn() {},
-  error() {},
-};
-
-// ============================================================================
 // Configuration Types
 // ============================================================================
 
@@ -79,8 +60,6 @@ export interface ConnectionConfig {
   /** Reconnection delay in milliseconds */
   reconnectDelayMs?: number;
 }
-
-// ============================================================================
 
 /**
  * Configuration for the OpenClaw client.
@@ -150,6 +129,25 @@ export interface RequestOptions {
 }
 
 // ============================================================================
+// Default Configuration Constants
+// ============================================================================
+
+const DEFAULT_REQUEST_TIMEOUT_MS = 30000;
+const DEFAULT_CONNECT_TIMEOUT_MS = 30000;
+const DEFAULT_MAX_RECONNECT_ATTEMPTS = 10;
+const DEFAULT_RECONNECT_DELAY_MS = 1000;
+
+/** Default no-op logger used when no logger is configured */
+const NOOP_LOGGER: Logger = {
+  name: 'openclaw-sdk',
+  level: LogLevel.Error,
+  debug() {},
+  info() {},
+  warn() {},
+  error() {},
+};
+
+// ============================================================================
 // Main Client Class
 // ============================================================================
 
@@ -176,7 +174,7 @@ export class OpenClawClient {
   private gapDetector: GapDetector | null = null;
   private tickHandlerUnsub: (() => void) | null = null;
 
-  // API namespaces (created once, reused)
+  // API namespaces
   private _chatAPI: ChatAPI;
   private _agentsAPI: AgentsAPI;
   private _sessionsAPI: SessionsAPI;
@@ -187,7 +185,7 @@ export class OpenClawClient {
   private _devicePairingAPI: DevicePairingAPI;
   private logger: Logger;
 
-  // Event handler storage - using Set for O(1) add/remove
+  // Event handler storage
   private stateChangeHandlers: Set<(state: ConnectionState) => void> = new Set();
   private errorHandlers: Set<(error: Error) => void> = new Set();
   private messageHandlers: Set<(frame: GatewayFrame) => void> = new Set();
@@ -195,97 +193,100 @@ export class OpenClawClient {
 
   /**
    * Create a new OpenClaw client instance.
-   *
-   * @param config - Client configuration
+   * Supports backward-compatible construction with ClientConfig, or internal construction with pre-built managers.
    */
-  constructor(config: ClientConfig) {
-    // Validate URL scheme early (fail-fast)
+  constructor(
+    config: ClientConfig,
+    _internal?: {
+      connectionManager?: ConnectionManager;
+      requestManager?: RequestManager;
+      eventManager?: EventManager;
+      protocolNegotiator?: ProtocolNegotiator;
+      policyManager?: PolicyManager;
+      stateMachine?: ConnectionStateMachine;
+      authHandler?: AuthHandler;
+      logger?: Logger;
+    }
+  ) {
+    // Validate URL scheme
     let parsed: URL;
     try {
       parsed = new URL(config.url);
     } catch {
-      // URL constructor throws for malformed URLs - let it propagate
       throw new Error(`Invalid WebSocket URL: ${config.url}`);
     }
     if (!['ws:', 'wss:'].includes(parsed.protocol)) {
       throw new Error(`Invalid URL scheme: ${parsed.protocol}. Expected ws: or wss:`);
     }
 
-    // Normalize connection config - supports both flat and nested style
-    const normalizedConfig = this.normalizeConnectionConfig(config);
     this._config = config;
-    this._normalizedConfig = normalizedConfig;
-
-    // Set up logger
+    this._normalizedConfig = this.normalizeConnectionConfig(config);
     this.logger = config.logger ?? NOOP_LOGGER;
 
-    // Create WebSocket transport
-    const transport: IWebSocketTransport = new WebSocketTransport({
-      connectTimeoutMs: normalizedConfig.connectTimeoutMs,
-    });
+    if (_internal) {
+      // ClientBuilder path: use pre-built managers
+      this.connectionManager = _internal.connectionManager!;
+      this.requestManager = _internal.requestManager!;
+      this.eventManager = _internal.eventManager!;
+      this.protocolNegotiator = _internal.protocolNegotiator!;
+      this.policyManager = _internal.policyManager!;
+      this.stateMachine = _internal.stateMachine!;
+      this.authHandler = _internal.authHandler ?? null;
+    } else {
+      // Backward-compatible path: create managers
+      const normalizedConfig = this._normalizedConfig;
 
-    // Create auth handler if credentials provider is configured
-    if (config.credentialsProvider) {
-      this.authHandler = createAuthHandler(config.credentialsProvider);
-    }
+      const transport: IWebSocketTransport = new WebSocketTransport({
+        connectTimeoutMs: normalizedConfig.connectTimeoutMs,
+      });
 
-    // Create reconnect manager with auth-aware retry
-    const reconnectMgr = createReconnectManager(
-      {
-        maxAttempts: normalizedConfig.maxReconnectAttempts,
-        initialDelayMs: normalizedConfig.reconnectDelayMs,
-        maxDelayMs: 30000,
-        pauseOnAuthError: true,
-        maxAuthRetries: 3,
-        jitterFactor: 0.3,
-      },
-      this.logger
-    );
-
-    // Create connection manager with event handlers
-    this.connectionManager = createConnectionManager(
-      transport,
-      {
-        defaultRequestTimeout: normalizedConfig.requestTimeoutMs,
-        autoReconnect: normalizedConfig.autoReconnect,
-        reconnectDelayMs: normalizedConfig.reconnectDelayMs,
-        maxReconnectAttempts: normalizedConfig.maxReconnectAttempts,
-      },
-      reconnectMgr,
-      this.authHandler ?? undefined
-    );
-
-    // Set up connection manager event handlers
-    this.setupConnectionHandlers();
-
-    // Create request manager
-    this.requestManager = createRequestManager();
-
-    // Create event manager for server-sent event subscriptions
-    this.eventManager = createEventManager(this.logger);
-
-    // Handle server-initiated request cancellation
-    this.eventManager.on(
-      'request.cancelled',
-      (frame: { payload?: { requestId?: string; reason?: string } }) => {
-        const requestId = frame.payload?.requestId;
-        if (requestId) {
-          this.requestManager.rejectRequest(
-            requestId,
-            new Error(`Request cancelled by server: ${frame.payload?.reason ?? 'unknown'}`)
-          );
-        }
+      if (config.credentialsProvider) {
+        this.authHandler = createAuthHandler(config.credentialsProvider);
       }
-    );
 
-    // Create protocol negotiator for version validation
-    this.protocolNegotiator = createProtocolNegotiator({ min: 3, max: 3 });
+      const reconnectMgr = createReconnectManager(
+        {
+          maxAttempts: normalizedConfig.maxReconnectAttempts,
+          initialDelayMs: normalizedConfig.reconnectDelayMs,
+          maxDelayMs: 30000,
+          pauseOnAuthError: true,
+          maxAuthRetries: 3,
+          jitterFactor: 0.3,
+        },
+        this.logger
+      );
 
-    // Create policy manager for server policies
-    this.policyManager = createPolicyManager();
+      this.connectionManager = createConnectionManager(
+        transport,
+        {
+          defaultRequestTimeout: normalizedConfig.requestTimeoutMs,
+          autoReconnect: normalizedConfig.autoReconnect,
+          reconnectDelayMs: normalizedConfig.reconnectDelayMs,
+          maxReconnectAttempts: normalizedConfig.maxReconnectAttempts,
+        },
+        reconnectMgr,
+        this.authHandler ?? undefined
+      );
 
-    // Create state machine for transition validation
-    this.stateMachine = createConnectionStateMachine(this.logger);
+      this.requestManager = createRequestManager();
+      this.eventManager = createEventManager(this.logger);
+      this.eventManager.on(
+        'request.cancelled',
+        (frame: { payload?: { requestId?: string; reason?: string } }) => {
+          const requestId = frame.payload?.requestId;
+          if (requestId) {
+            this.requestManager.rejectRequest(
+              requestId,
+              new Error(`Request cancelled by server: ${frame.payload?.reason ?? 'unknown'}`)
+            );
+          }
+        }
+      );
+
+      this.protocolNegotiator = createProtocolNegotiator({ min: 3, max: 3 });
+      this.policyManager = createPolicyManager();
+      this.stateMachine = createConnectionStateMachine(this.logger);
+    }
 
     // Initialize API namespaces
     const requestFn = <T = unknown>(method: string, params?: unknown): Promise<T> =>
@@ -298,6 +299,9 @@ export class OpenClawClient {
     this._nodesAPI = new NodesAPI(requestFn);
     this._skillsAPI = new SkillsAPI(requestFn);
     this._devicePairingAPI = new DevicePairingAPI(requestFn);
+
+    // Set up connection handlers
+    this.setupConnectionHandlers();
   }
 
   /**
@@ -398,15 +402,6 @@ export class OpenClawClient {
 
   /**
    * Check if the client is currently connected.
-   *
-   * @returns True if the connection state is 'ready'
-   *
-   * @example
-   * ```ts
-   * if (client.isConnected) {
-   *   console.log("Ready to send requests");
-   * }
-   * ```
    */
   get isConnected(): boolean {
     return this.connectionManager.getState() === 'ready';
@@ -414,14 +409,6 @@ export class OpenClawClient {
 
   /**
    * Get the current connection state.
-   *
-   * @returns The current ConnectionState ('disconnected' | 'connecting' | 'ready' | 'closing')
-   *
-   * @example
-   * ```ts
-   * console.log("State:", client.connectionState);
-   * // Output: State: ready
-   * ```
    */
   get connectionState(): ConnectionState {
     return this.connectionManager.getState();
@@ -512,8 +499,6 @@ export class OpenClawClient {
   /**
    * Chat API for chat session operations.
    *
-   * @example
-   * ```ts
    * const { chats } = await client.chat.list();
    * await client.chat.inject({ chatId: "chat-123", message: { role: "user", content: "Hello" } });
    * ```
@@ -525,8 +510,6 @@ export class OpenClawClient {
   /**
    * Agents API for agent lifecycle and file operations.
    *
-   * @example
-   * ```ts
    * const { agents } = await client.agents.list();
    * await client.agents.create({ agentId: "my-agent", files: [] });
    * ```
@@ -538,8 +521,6 @@ export class OpenClawClient {
   /**
    * Sessions API for session management operations.
    *
-   * @example
-   * ```ts
    * const sessions = await client.sessions.list();
    * await client.sessions.reset({ sessionId: "sess-123" });
    * ```
@@ -551,8 +532,6 @@ export class OpenClawClient {
   /**
    * Config API for gateway configuration operations.
    *
-   * @example
-   * ```ts
    * const config = await client.config.get();
    * await client.config.set({ key: "theme", value: "dark" });
    * ```
@@ -564,8 +543,6 @@ export class OpenClawClient {
   /**
    * Cron API for scheduled job operations.
    *
-   * @example
-   * ```ts
    * const { jobs } = await client.cron.list();
    * await client.cron.add({ cron: "0 * * * *", prompt: "Check status" });
    * ```
@@ -577,8 +554,6 @@ export class OpenClawClient {
   /**
    * Nodes API for node management and invocation.
    *
-   * @example
-   * ```ts
    * const nodes = await client.nodes.list();
    * const result = await client.nodes.invoke({ nodeId: "node-1", target: "run" });
    * ```
@@ -590,8 +565,6 @@ export class OpenClawClient {
   /**
    * Skills API for skill and tool catalog operations.
    *
-   * @example
-   * ```ts
    * const status = await client.skills.status();
    * const { tools } = await client.skills.tools.catalog();
    * ```
@@ -603,8 +576,6 @@ export class OpenClawClient {
   /**
    * Device Pairing API for device pairing operations.
    *
-   * @example
-   * ```ts
    * const pairings = await client.devicePairing.list();
    * await client.devicePairing.approve({ pairingId: "pair-123" });
    * ```
@@ -619,8 +590,6 @@ export class OpenClawClient {
    * @returns Promise that resolves when the connection is established
    * @throws Error if connection fails
    *
-   * @example
-   * ```ts
    * const client = createClient({
    *   url: "ws://localhost:8080",
    *   clientId: "my-app"
@@ -762,8 +731,6 @@ export class OpenClawClient {
   /**
    * Disconnect from the OpenClaw Gateway.
    *
-   * @example
-   * ```ts
    * client.disconnect();
    * console.log("Disconnected:", client.isConnected);
    * ```
@@ -891,8 +858,6 @@ export class OpenClawClient {
    *
    * @param requestId - The request ID to abort
    *
-   * @example
-   * ```ts
    * // Abort a specific request
    * client.abort("req-123-456");
    * ```
@@ -919,8 +884,6 @@ export class OpenClawClient {
    * @param handler - Function to call when connection state changes
    * @returns Unsubscribe function to remove the handler
    *
-   * @example
-   * ```ts
    * const unsub = client.onStateChange((state) => {
    *   console.log("State changed to:", state);
    * });
@@ -939,8 +902,6 @@ export class OpenClawClient {
    * @param handler - Function to call when an error occurs
    * @returns Unsubscribe function to remove the handler
    *
-   * @example
-   * ```ts
    * const unsub = client.onError((error) => {
    *   console.error("Connection error:", error.message);
    * });
@@ -957,8 +918,6 @@ export class OpenClawClient {
    * @param handler - Function to call when a frame is received
    * @returns Unsubscribe function to remove the handler
    *
-   * @example
-   * ```ts
    * const unsub = client.onMessage((frame) => {
    *   console.log("Received frame:", frame.type);
    * });
@@ -975,8 +934,6 @@ export class OpenClawClient {
    * @param handler - Function to call when the connection closes
    * @returns Unsubscribe function to remove the handler
    *
-   * @example
-   * ```ts
    * const unsub = client.onClosed(() => {
    *   console.log("Connection closed");
    * });
@@ -1001,8 +958,6 @@ export class OpenClawClient {
    * @param handler - Event handler function
    * @returns Unsubscribe function
    *
-   * @example
-   * ```ts
    * // Exact match
    * const unsub1 = client.on('tick', (frame) => {
    *   console.log('Tick:', frame.payload);
@@ -1033,8 +988,6 @@ export class OpenClawClient {
    * @param handler - Event handler function
    * @returns Unsubscribe function
    *
-   * @example
-   * ```ts
    * client.once('shutdown', (frame) => {
    *   console.log('Server shutting down:', frame.payload);
    * });
@@ -1050,8 +1003,6 @@ export class OpenClawClient {
    * @param pattern - Event pattern to unsubscribe from (omit to clear all)
    * @param handler - Specific handler to remove (omit to remove all for pattern)
    *
-   * @example
-   * ```ts
    * // Remove all 'tick' handlers
    * client.off('tick');
    *
@@ -1087,8 +1038,6 @@ export class OpenClawClient {
  * @param config - Client configuration
  * @returns A new OpenClaw client instance
  *
- * @example
- * ```ts
  * const client = createClient({
  *   url: "ws://localhost:8080",
  *   clientId: "my-app",
