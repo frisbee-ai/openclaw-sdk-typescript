@@ -59,6 +59,12 @@ Plans:
 3. All existing tests still pass
 4. Public API exports in `src/index.ts` are unchanged
 
+**Plans:** 2/2 plans created
+
+Plans:
+- [ ] 02-01-PLAN.md — ClientBuilder refactor (REF-01)
+- [ ] 02-02-PLAN.md — api-params.ts split (REF-02)
+
 ---
 
 ## Phase 3: Bug Fixes
