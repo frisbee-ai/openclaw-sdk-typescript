@@ -14,10 +14,10 @@ describe('Main Entry Point Exports', () => {
       expect(typeof OpenClawClient).toBe('function');
     });
 
-    it('should export createClient factory', async () => {
-      const { createClient } = await import('./index.js');
-      expect(createClient).toBeDefined();
-      expect(typeof createClient).toBe('function');
+    it('should export ClientBuilder class', async () => {
+      const { ClientBuilder } = await import('./index.js');
+      expect(ClientBuilder).toBeDefined();
+      expect(typeof ClientBuilder).toBe('function');
     });
 
     it('should export ClientConfig type', async () => {
