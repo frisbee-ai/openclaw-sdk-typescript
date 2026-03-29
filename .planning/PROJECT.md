@@ -16,10 +16,12 @@ A production-grade WebSocket client SDK for the OpenClaw Gateway, written in Typ
 
 ### Active
 
-#### Phase 1 — Critical Reliability Fixes
-- [ ] **REL-01**: Wire AuthHandler into the reconnect path — token refresh must happen on reconnect
-- [ ] **REL-02**: Activate TickMonitor — add timer loop to auto-call checkStale(), fire onStale callback
-- [ ] **REL-03**: Implement GapDetector recovery actions — 'reconnect' triggers reconnect, 'snapshot' calls snapshot endpoint
+#### Phase 1 — Critical Reliability Fixes (COMPLETED)
+- [x] **REL-01**: Wire AuthHandler into the reconnect path — token refresh must happen on reconnect
+- [x] **REL-02**: Activate TickMonitor — add timer loop to auto-call checkStale(), fire onStale callback
+- [x] **REL-03**: Implement GapDetector recovery actions — 'reconnect' triggers reconnect, 'snapshot' calls snapshot endpoint
+
+Validated in Phase 1: All 3 critical reliability requirements implemented and verified.
 
 #### Phase 2 — Code Health (Large File Refactoring)
 - [ ] **REF-01**: Extract API namespace initialization and connection handler setup from client.ts into separate modules
