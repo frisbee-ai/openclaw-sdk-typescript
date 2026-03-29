@@ -8,7 +8,7 @@ This roadmap addresses all technical debt and reliability issues identified in t
 
 | Phase | Name | Goal | Requirements | Success Criteria |
 |-------|------|------|-------------|------------------|
-| 1 | Critical Reliability | 2/3 | In Progress|  |
+| 1 | Critical Reliability | 3/3 | Complete|  |
 | 2 | Code Health | Split client.ts and api-params.ts large files | REF-01, REF-02 | 2/2 |
 | 3 | Bug Fixes | Fix EventManager, cleanup, reconnect delay, typed errors | BUG-01–BUG-05 | 5/5 |
 | 4 | Transport Consolidation | Merge Node/Browser transport shared logic | TRANS-01 | 1/1 |
@@ -23,9 +23,9 @@ This roadmap addresses all technical debt and reliability issues identified in t
 
 ### Requirements
 
-- [ ] **REL-01**: Wire AuthHandler into the reconnect path — token refresh must happen on reconnect
-- [ ] **REL-02**: Activate TickMonitor — add timer loop to auto-call checkStale(), fire onStale callback
-- [ ] **REL-03**: Implement GapDetector recovery actions — 'reconnect' triggers reconnect, 'snapshot' calls snapshot endpoint
+- [x] **REL-01**: Wire AuthHandler into the reconnect path — token refresh must happen on reconnect
+- [x] **REL-02**: Activate TickMonitor — add timer loop to auto-call checkStale(), fire onStale callback
+- [x] **REL-03**: Implement GapDetector recovery actions — 'reconnect' triggers reconnect, 'snapshot' calls snapshot endpoint
 
 ### Success Criteria
 
@@ -34,12 +34,12 @@ This roadmap addresses all technical debt and reliability issues identified in t
 3. When a gap is detected in `reconnect` mode, `ConnectionManager.reconnect()` is called
 4. When a gap is detected in `snapshot` mode, the configured snapshot endpoint is called
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
 - [x] 01-PLAN.md — Wire AuthHandler into reconnect path via ReconnectManager
 - [x] 02-PLAN.md — Extend TimeoutManager with setInterval, wire TickMonitor timer loop
-- [ ] 03-PLAN.md — Implement GapDetector recovery actions in client.ts
+- [x] 03-PLAN.md — Implement GapDetector recovery actions in client.ts
 
 ---
 

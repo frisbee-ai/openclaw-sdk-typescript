@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-29T12:44:55.858Z"
+last_updated: "2026-03-29T14:23:50Z"
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # State: OpenClaw SDK TypeScript v2.0
@@ -19,7 +19,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** The SDK must reliably maintain a WebSocket connection with the Gateway, automatically recovering from all common failure modes.
 
-**Current focus:** Phase 01 — Critical Reliability (plan 02/03 complete)
+**Current focus:** Phase 01 — Critical Reliability (plan 03/03 complete)
 
 ## Milestone
 
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 | Phase | Name | Status | Plans | Progress |
 |-------|------|--------|-------|----------|
-| 1 | Critical Reliability | ● | 2/3 | 67% |
+| 1 | Critical Reliability | ● | 3/3 | 100% |
 | 2 | Code Health | ○ | 0/2 | 0% |
 | 3 | Bug Fixes | ○ | 0/5 | 0% |
 | 4 | Transport Consolidation | ○ | 0/1 | 0% |
@@ -43,12 +43,14 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 (— recorded during execution)
 
 - [Phase 01-critical-reliability]: ReconnectManager.reconnect(connectFn, refreshTokenFn) pattern for token refresh during reconnect
+- [Phase 01-critical-reliability]: GapDetector remains pure detector; client.ts handles recovery actions (D-05)
+- [Phase 01-critical-reliability]: Initialized state pattern in GapDetector prevents false-positive gaps on first sequence
 
 ## Open Issues
 
 - AuthHandler wiring into reconnect path needs careful design to avoid circular dependencies
 - TickMonitor timer loop must be stopped on client disconnect to prevent memory leaks (FIXED in plan 02)
-- GapDetector recovery modes must not trigger infinite reconnect loops
+- GapDetector recovery modes must not trigger infinite reconnect loops (ADDRESSED in plan 03)
 
 ## Session History
 
@@ -57,6 +59,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2026-03-29 | Initial | Codebase mapped, v2.0 requirements defined, 6-phase roadmap created |
 | 2026-03-29 | Phase 1 discuss | Context gathered for Critical Reliability (REL-01, REL-02, REL-03), 6 decisions captured |
 | 2026-03-29 | Phase 1 plan 02 | Completed REL-02: TickMonitor automatic staleness detection via TimeoutManager.setInterval() |
+| 2026-03-29 | Phase 1 plan 03 | Completed REL-03: GapDetector gap event listener with mode-based recovery dispatch |
 
 ---
 
