@@ -8,7 +8,7 @@ This roadmap addresses all technical debt and reliability issues identified in t
 
 | Phase | Name | Goal | Requirements | Success Criteria |
 |-------|------|------|-------------|------------------|
-| 1 | Critical Reliability | Fix auth/token refresh, TickMonitor auto-detection, GapDetector recovery | REL-01, REL-02, REL-03 | 3/3 |
+| 1 | Critical Reliability | 2/3 | In Progress|  |
 | 2 | Code Health | Split client.ts and api-params.ts large files | REF-01, REF-02 | 2/2 |
 | 3 | Bug Fixes | Fix EventManager, cleanup, reconnect delay, typed errors | BUG-01–BUG-05 | 5/5 |
 | 4 | Transport Consolidation | Merge Node/Browser transport shared logic | TRANS-01 | 1/1 |
@@ -34,7 +34,7 @@ This roadmap addresses all technical debt and reliability issues identified in t
 3. When a gap is detected in `reconnect` mode, `ConnectionManager.reconnect()` is called
 4. When a gap is detected in `snapshot` mode, the configured snapshot endpoint is called
 
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 01-PLAN.md — Wire AuthHandler into reconnect path via ReconnectManager

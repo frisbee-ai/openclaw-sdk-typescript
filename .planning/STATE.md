@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-29T12:41:01.000Z"
+last_updated: "2026-03-29T12:44:55.858Z"
 progress:
   total_phases: 6
   completed_phases: 0
@@ -40,7 +40,9 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 ## Decisions
 
-(None yet — recorded during execution)
+(— recorded during execution)
+
+- [Phase 01-critical-reliability]: ReconnectManager.reconnect(connectFn, refreshTokenFn) pattern for token refresh during reconnect
 
 ## Open Issues
 

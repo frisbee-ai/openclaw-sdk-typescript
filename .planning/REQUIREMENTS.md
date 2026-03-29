@@ -9,7 +9,7 @@ Requirements for v2.0 hardening release. Each maps to roadmap phases.
 
 ### Reliability
 
-- [ ] **REL-01**: Wire AuthHandler into the reconnect path — token refresh must happen on reconnect
+- [x] **REL-01**: Wire AuthHandler into the reconnect path — token refresh must happen on reconnect
 - [ ] **REL-02**: Activate TickMonitor — add timer loop to auto-call checkStale(), fire onStale callback
 - [ ] **REL-03**: Implement GapDetector recovery actions — 'reconnect' triggers reconnect, 'snapshot' calls snapshot endpoint
 
@@ -58,7 +58,7 @@ Requirements for v2.0 hardening release. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |------------|-------|--------|
-| REL-01 | Phase 1 | Pending |
+| REL-01 | Phase 1 | Complete |
 | REL-02 | Phase 1 | Pending |
 | REL-03 | Phase 1 | Pending |
 | REF-01 | Phase 2 | Pending |
