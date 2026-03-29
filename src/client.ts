@@ -25,6 +25,7 @@ import type { Policy } from './connection/policies.js';
 import { ConnectionStateMachine, createConnectionStateMachine } from './connection/state.js';
 import { AuthHandler, createAuthHandler } from './auth/provider.js';
 import type { CredentialsProvider } from './auth/provider.js';
+import { createReconnectManager } from './managers/reconnect.js';
 import { TickMonitor, createTickMonitor } from './events/tick.js';
 import type { TickMonitorConfig } from './events/tick.js';
 import { GapDetector, createGapDetector } from './events/gap.js';
@@ -223,13 +224,36 @@ export class OpenClawClient {
       connectTimeoutMs: normalizedConfig.connectTimeoutMs,
     });
 
+    // Create auth handler if credentials provider is configured
+    if (config.credentialsProvider) {
+      this.authHandler = createAuthHandler(config.credentialsProvider);
+    }
+
+    // Create reconnect manager with auth-aware retry
+    const reconnectMgr = createReconnectManager(
+      {
+        maxAttempts: normalizedConfig.maxReconnectAttempts,
+        initialDelayMs: normalizedConfig.reconnectDelayMs,
+        maxDelayMs: 30000,
+        pauseOnAuthError: true,
+        maxAuthRetries: 3,
+        jitterFactor: 0.3,
+      },
+      this.logger
+    );
+
     // Create connection manager with event handlers
-    this.connectionManager = createConnectionManager(transport, {
-      defaultRequestTimeout: normalizedConfig.requestTimeoutMs,
-      autoReconnect: normalizedConfig.autoReconnect,
-      reconnectDelayMs: normalizedConfig.reconnectDelayMs,
-      maxReconnectAttempts: normalizedConfig.maxReconnectAttempts,
-    });
+    this.connectionManager = createConnectionManager(
+      transport,
+      {
+        defaultRequestTimeout: normalizedConfig.requestTimeoutMs,
+        autoReconnect: normalizedConfig.autoReconnect,
+        reconnectDelayMs: normalizedConfig.reconnectDelayMs,
+        maxReconnectAttempts: normalizedConfig.maxReconnectAttempts,
+      },
+      reconnectMgr,
+      this.authHandler ?? undefined
+    );
 
     // Set up connection manager event handlers
     this.setupConnectionHandlers();
@@ -262,11 +286,6 @@ export class OpenClawClient {
 
     // Create state machine for transition validation
     this.stateMachine = createConnectionStateMachine(this.logger);
-
-    // Create auth handler if credentials provider is configured
-    if (config.credentialsProvider) {
-      this.authHandler = createAuthHandler(config.credentialsProvider);
-    }
 
     // Initialize API namespaces
     const requestFn = <T = unknown>(method: string, params?: unknown): Promise<T> =>

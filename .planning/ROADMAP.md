@@ -37,8 +37,8 @@ This roadmap addresses all technical debt and reliability issues identified in t
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-PLAN.md — Wire AuthHandler into reconnect path via ReconnectManager
-- [ ] 02-PLAN.md — Extend TimeoutManager with setInterval, wire TickMonitor timer loop
+- [x] 01-PLAN.md — Wire AuthHandler into reconnect path via ReconnectManager
+- [x] 02-PLAN.md — Extend TimeoutManager with setInterval, wire TickMonitor timer loop
 - [ ] 03-PLAN.md — Implement GapDetector recovery actions in client.ts
 
 ---
