@@ -22,6 +22,18 @@ export interface TimeoutHandle {
 }
 
 /**
+ * Interval handle returned by the manager
+ */
+export interface TimerHandle {
+  /** Unique identifier for this interval */
+  readonly id: string;
+  /** Whether the interval has been cleared */
+  readonly cleared: boolean;
+  /** Clear this specific interval */
+  clear: () => void;
+}
+
+/**
  * Configuration for TimeoutManager
  */
 export interface TimeoutManagerConfig {
@@ -46,6 +58,7 @@ export interface TimeoutManagerConfig {
  */
 export class TimeoutManager {
   private timeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  private intervals: Map<string, ReturnType<typeof setInterval>> = new Map();
   private config: Required<TimeoutManagerConfig>;
   private idCounter = 0;
 
@@ -87,6 +100,54 @@ export class TimeoutManager {
       cleared: false,
       clear: () => this.clear(id),
     };
+  }
+
+  /**
+   * Set a repeating interval.
+   *
+   * @param callback - Function to execute on each interval
+   * @param ms - Interval in milliseconds
+   * @param name - Optional name for debugging
+   * @returns TimerHandle for clearing the interval
+   */
+  setInterval(callback: () => void, ms: number, name?: string): TimerHandle {
+    const id = name ?? `interval_${++this.idCounter}`;
+
+    // Clear any existing interval with same name
+    if (this.intervals.has(id)) {
+      if (this.config.warnOnClear) {
+        console.warn(`TimeoutManager: Overwriting existing interval "${id}"`);
+      }
+      this.clearInterval(id);
+    }
+
+    const intervalId = setInterval(() => {
+      callback();
+    }, ms);
+
+    this.intervals.set(id, intervalId);
+
+    return {
+      id,
+      cleared: false,
+      clear: () => this.clearInterval(id),
+    };
+  }
+
+  /**
+   * Clear a specific interval by ID.
+   *
+   * @param id - The interval ID to clear
+   * @returns true if interval was found and cleared
+   */
+  clearInterval(id: string): boolean {
+    const intervalId = this.intervals.get(id);
+    if (intervalId) {
+      clearInterval(intervalId);
+      this.intervals.delete(id);
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -138,20 +199,26 @@ export class TimeoutManager {
    * Clear all timeouts.
    */
   clearAll(): void {
+    // Clear timeouts
     for (const timeoutId of this.timeouts.values()) {
       clearTimeout(timeoutId);
     }
     this.timeouts.clear();
+    // Clear intervals
+    for (const intervalId of this.intervals.values()) {
+      clearInterval(intervalId);
+    }
+    this.intervals.clear();
   }
 
   /**
-   * Check if a specific timeout is active.
+   * Check if a specific timeout or interval is active.
    *
-   * @param id - The timeout ID to check
-   * @returns true if the timeout is active
+   * @param id - The timeout or interval ID to check
+   * @returns true if the timeout or interval is active
    */
   has(id: string): boolean {
-    return this.timeouts.has(id);
+    return this.timeouts.has(id) || this.intervals.has(id);
   }
 
   /**
