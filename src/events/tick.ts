@@ -7,6 +7,7 @@
  */
 
 import { EventEmitter } from 'events';
+import { TimeoutManager, type TimerHandle } from '../utils/timeoutManager.js';
 
 // ============================================================================
 // Types
@@ -19,6 +20,8 @@ export interface TickMonitorConfig {
   onRecovered?: () => void;
   /** Optional time provider for testing */
   getTime?: () => number;
+  /** Optional TimeoutManager instance (for timer management). Creates one if not provided. */
+  timeoutManager?: TimeoutManager;
 }
 
 export interface TickStatus {
@@ -51,6 +54,9 @@ export class TickMonitor extends EventEmitter {
   private onStale?: () => void;
   private onRecovered?: () => void;
   private getTime: () => number;
+  private timeoutManager: TimeoutManager;
+  private timerHandle?: TimerHandle;
+  private checkIntervalMs: number;
 
   /**
    * Create a tick monitor.
@@ -64,6 +70,9 @@ export class TickMonitor extends EventEmitter {
     this.onStale = config.onStale;
     this.onRecovered = config.onRecovered;
     this.getTime = config.getTime ?? (() => Date.now());
+    this.timeoutManager = config.timeoutManager ?? new TimeoutManager();
+    // Check staleness every tickIntervalMs (not multiplied by staleMultiplier)
+    this.checkIntervalMs = config.tickIntervalMs;
   }
 
   /**
@@ -71,6 +80,15 @@ export class TickMonitor extends EventEmitter {
    */
   start(): void {
     this.started = true;
+    // Schedule periodic checkStale() calls using TimeoutManager's setInterval
+    // The interval is based on tickIntervalMs (not staleMultiplier) since checkStale() computes staleness internally
+    this.timerHandle = this.timeoutManager.setInterval(
+      () => {
+        this.checkStale();
+      },
+      this.checkIntervalMs,
+      'tickMonitor:staleCheck'
+    );
   }
 
   /**
@@ -78,6 +96,11 @@ export class TickMonitor extends EventEmitter {
    */
   stop(): void {
     this.started = false;
+    // Clear the periodic timer
+    if (this.timerHandle) {
+      this.timerHandle.clear();
+      this.timerHandle = undefined;
+    }
   }
 
   /**
