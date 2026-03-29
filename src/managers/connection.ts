@@ -11,6 +11,8 @@ import type { IWebSocketTransport } from '../transport/websocket.js';
 import type { ConnectionState } from '../protocol/connection-state.js';
 import type { ConnectParams, HelloOk } from '../protocol/connection.js';
 import type { GatewayFrame, ResponseFrame } from '../protocol/frames.js';
+import type { ReconnectManager } from './reconnect.js';
+import type { AuthHandler } from '../auth/provider.js';
 
 // ============================================================================
 // Constants
@@ -135,13 +137,24 @@ export class ConnectionManager {
   /** Server info from handshake */
   private serverInfo?: HelloOk;
 
+  /** Reconnect manager for auth-aware reconnection */
+  private reconnectManager: ReconnectManager | null = null;
+
+  /** Auth handler for token refresh */
+  private authHandler: AuthHandler | null = null;
+
   /**
    * Create a new connection manager
    *
    * @param transport - WebSocket transport instance
    * @param config - Optional configuration
    */
-  constructor(transport: IWebSocketTransport, config: ConnectionManagerConfig = {}) {
+  constructor(
+    transport: IWebSocketTransport,
+    config: ConnectionManagerConfig = {},
+    reconnectManager?: ReconnectManager,
+    authHandler?: AuthHandler
+  ) {
     this.transport = transport;
     this.config = {
       defaultRequestTimeout: config.defaultRequestTimeout ?? 30000,
@@ -149,6 +162,13 @@ export class ConnectionManager {
       reconnectDelayMs: config.reconnectDelayMs ?? 1000,
       maxReconnectAttempts: config.maxReconnectAttempts ?? 5,
     };
+
+    if (reconnectManager) {
+      this.reconnectManager = reconnectManager;
+    }
+    if (authHandler) {
+      this.authHandler = authHandler;
+    }
 
     // Set up transport event handlers
     this.setupTransportHandlers();
@@ -406,20 +426,66 @@ export class ConnectionManager {
    * Schedule a reconnection attempt
    */
   private scheduleReconnect(): void {
-    this.setState('reconnecting');
-
-    this.reconnectTimerId = setTimeout(() => {
-      this.reconnectAttempts++;
-      const params = this.connectParams;
-
-      if (params) {
-        this.connect(this.currentUrl, params).catch(error => {
-          this.handleError(`Reconnection attempt ${this.reconnectAttempts} failed`, error, true);
+    if (this.reconnectManager && this.authHandler) {
+      // Use ReconnectManager for backoff + token refresh
+      this.reconnectManager
+        .reconnect(
+          () => this.doReconnect(),
+          () => this.authHandler!.refreshToken()
+        )
+        .catch(error => {
+          this.handleError('ReconnectManager failed', error, true);
         });
-      } else {
-        this.setState('disconnected');
-      }
-    }, this.config.reconnectDelayMs);
+    } else {
+      // Fallback: basic immediate reconnect (preserves existing behavior when ReconnectManager not wired)
+      this.setState('reconnecting');
+      this.reconnectTimerId = setTimeout(() => {
+        this.reconnectAttempts++;
+        const params = this.connectParams;
+        if (params) {
+          this.connect(this.currentUrl, params).catch(error => {
+            this.handleError(`Reconnection attempt ${this.reconnectAttempts} failed`, error, true);
+          });
+        } else {
+          this.setState('disconnected');
+        }
+      }, this.config.reconnectDelayMs);
+    }
+  }
+
+  /**
+   * Trigger a reconnection attempt.
+   * Uses ReconnectManager if available, otherwise falls back to scheduleReconnect.
+   */
+  reconnect(): void {
+    if (this.reconnectManager && this.authHandler) {
+      // Use ReconnectManager with token refresh
+      this.reconnectManager
+        .reconnect(
+          () => this.doReconnect(),
+          () => this.authHandler!.refreshToken()
+        )
+        .catch(error => {
+          this.handleError('ReconnectManager failed', error, true);
+        });
+    } else {
+      // Fallback to basic reconnection
+      this.scheduleReconnect();
+    }
+  }
+
+  /**
+   * Internal reconnect implementation (called by ReconnectManager).
+   */
+  private async doReconnect(): Promise<void> {
+    if (this.state === 'ready' || this.state === 'disconnected') {
+      return;
+    }
+    const params = this.connectParams;
+    const url = this.currentUrl;
+    if (params && url) {
+      await this.connect(url, params);
+    }
   }
 
   /**
@@ -562,9 +628,11 @@ export class ConnectionManager {
  */
 export function createConnectionManager(
   transport: IWebSocketTransport,
-  config?: ConnectionManagerConfig
+  config?: ConnectionManagerConfig,
+  reconnectManager?: ReconnectManager,
+  authHandler?: AuthHandler
 ): ConnectionManager {
-  return new ConnectionManager(transport, config);
+  return new ConnectionManager(transport, config, reconnectManager, authHandler);
 }
 
 // ============================================================================
