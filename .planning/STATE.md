@@ -19,7 +19,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** The SDK must reliably maintain a WebSocket connection with the Gateway, automatically recovering from all common failure modes.
 
-**Current focus:** Phase 01 — Critical Reliability (plan 03/03 complete)
+**Current focus:** Phase 02 — Code Health (context gathered)
 
 ## Milestone
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | Phase | Name | Status | Plans | Progress |
 |-------|------|--------|-------|----------|
 | 1 | Critical Reliability | ● | 3/3 | 100% |
-| 2 | Code Health | ○ | 0/2 | 0% |
+| 2 | Code Health | ◐ | 0/2 | context |
 | 3 | Bug Fixes | ○ | 0/5 | 0% |
 | 4 | Transport Consolidation | ○ | 0/1 | 0% |
 | 5 | Hardening | ○ | 0/7 | 0% |
