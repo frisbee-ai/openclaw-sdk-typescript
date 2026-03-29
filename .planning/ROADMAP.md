@@ -34,6 +34,13 @@ This roadmap addresses all technical debt and reliability issues identified in t
 3. When a gap is detected in `reconnect` mode, `ConnectionManager.reconnect()` is called
 4. When a gap is detected in `snapshot` mode, the configured snapshot endpoint is called
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-PLAN.md — Wire AuthHandler into reconnect path via ReconnectManager
+- [ ] 02-PLAN.md — Extend TimeoutManager with setInterval, wire TickMonitor timer loop
+- [ ] 03-PLAN.md — Implement GapDetector recovery actions in client.ts
+
 ---
 
 ## Phase 2: Code Health
