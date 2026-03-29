@@ -19,7 +19,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** The SDK must reliably maintain a WebSocket connection with the Gateway, automatically recovering from all common failure modes.
 
-**Current focus:** Phase 02 — Code Health (context gathered)
+**Current focus:** Phase 02 — Code Health (2 plans created, verified)
 
 ## Milestone
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | Phase | Name | Status | Plans | Progress |
 |-------|------|--------|-------|----------|
 | 1 | Critical Reliability | ● | 3/3 | 100% |
-| 2 | Code Health | ◐ | 0/2 | context |
+| 2 | Code Health | ◐ | 2/2 | plans |
 | 3 | Bug Fixes | ○ | 0/5 | 0% |
 | 4 | Transport Consolidation | ○ | 0/1 | 0% |
 | 5 | Hardening | ○ | 0/7 | 0% |
@@ -45,6 +45,8 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 - [Phase 01-critical-reliability]: ReconnectManager.reconnect(connectFn, refreshTokenFn) pattern for token refresh during reconnect
 - [Phase 01-critical-reliability]: GapDetector remains pure detector; client.ts handles recovery actions (D-05)
 - [Phase 01-critical-reliability]: Initialized state pattern in GapDetector prevents false-positive gaps on first sequence
+- [Phase 02-code-health]: ClientBuilder is primary entry point, fluent chainable API (D-01, D-02, D-03)
+- [Phase 02-code-health]: api-params.ts types co-located next to respective src/api/*.ts files (D-04)
 
 ## Open Issues
 
