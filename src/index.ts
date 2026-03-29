@@ -87,20 +87,23 @@ export type {
 
 // API parameter types (selectively exported)
 export type {
+  // Chat
+  ChatListParams,
+  ChatHistoryParams,
+  ChatHistoryResult,
+  ChatDeleteParams,
+  ChatDeleteResult,
+  ChatTitleParams,
+  ChatTitleResult,
+  ChatAbortParams,
+  ChatSendParams,
+} from './protocol/params/chat.js';
+
+export type {
+  // Agents
   AgentIdentityParams,
   AgentIdentityResult,
   AgentWaitParams,
-  NodePairRequestParams,
-  NodePairListParams,
-  NodePairApproveParams,
-  NodePairRejectParams,
-  NodePairVerifyParams,
-  DevicePairListParams,
-  DevicePairApproveParams,
-  DevicePairRejectParams,
-  ChatAbortParams,
-  DeviceTokenRotateParams,
-  DeviceTokenRevokeParams,
   AgentsCreateParams,
   AgentsCreateResult,
   AgentsUpdateParams,
@@ -115,114 +118,33 @@ export type {
   AgentsFilesSetResult,
   AgentsListParams,
   AgentsListResult,
-  CronListParams,
-  CronStatusParams,
-  CronAddParams,
-  CronUpdateParams,
-  CronRemoveParams,
-  CronRunParams,
-  CronRunsParams,
-  NodeListParams,
-  NodeInvokeParams,
-  NodeInvokeResultParams,
-  NodeEventParams,
-  NodePendingDrainParams,
-  NodePendingDrainResult,
-  NodePendingEnqueueParams,
-  NodePendingEnqueueResult,
-  NodeDescribeParams,
-  NodeDescribeResult,
-  NodePendingPullParams,
-  NodePendingPullResult,
-  NodePendingAckParams,
-  NodeRenameParams,
-  // TTS
-  TtsSpeakParams,
-  TtsSpeakResult,
-  TtsVoicesParams,
-  // Browser
-  BrowserOpenParams,
-  BrowserOpenResult,
-  BrowserListParams,
-  BrowserScreenshotParams,
-  BrowserScreenshotResult,
-  BrowserEvalParams,
-  BrowserEvalResult,
-  // Chat extended
-  ChatListParams,
-  ChatHistoryParams,
-  ChatHistoryResult,
-  ChatDeleteParams,
-  ChatDeleteResult,
-  ChatTitleParams,
-  ChatTitleResult,
-  // Secrets
-  SecretsListParams,
-  SecretsGetParams,
-  SecretsGetResult,
-  SecretsSetParams,
-  SecretsSetResult,
-  SecretsDeleteParams,
-  SecretsDeleteResult,
-  SecretsReloadParams,
-  SecretsResolveParams,
-  // Usage
-  UsageSummaryParams,
-  UsageSummaryResult,
-  UsageDetailsParams,
-  UsageDetailsResult,
-  UsageStatusParams,
-  UsageStatusResult,
-  UsageCostParams,
-  UsageCostResult,
-  // Doctor
-  DoctorCheckParams,
-  DoctorFixParams,
-  DoctorFixResult,
-  DoctorMemoryStatusParams,
-  DoctorMemoryStatusResult,
-  // TTS extended
-  TtsStatusParams,
-  TtsStatusResult,
-  TtsProvidersParams,
-  TtsProvidersResult,
-  TtsEnableParams,
-  TtsDisableParams,
-  TtsConvertParams,
-  TtsSetProviderParams,
-  // Models
-  ModelsListParams,
-  ModelsListResult,
-  // VoiceWake extended
-  VoiceWakeGetParams,
-  VoiceWakeSetParams,
-  // Gateway Identity
-  GatewayIdentityGetParams,
-  GatewayIdentityGetResult,
-  // System Presence / Event
-  SystemPresenceParams,
-  SystemPresenceResult,
-  SystemEventParams,
-  SystemEventResult,
-  // Heartbeat
-  LastHeartbeatParams,
-  LastHeartbeatResult,
-  SetHeartbeatsParams,
-  // Wake
-  WakeParams,
-  // Browser Request
-  BrowserRequestParams,
-  BrowserRequestResult,
-  // Agent / Send
-  AgentParams,
-  AgentResult,
-  SendParams,
-  SendResult,
-  // Node Canvas
-  NodeCanvasCapabilityRefreshParams,
-  // Chat Send
-  ChatSendParams,
-  // Config extended
+} from './protocol/params/agents.js';
+
+// Node Pairing types from nodes.js
+export type {
+  NodePairRequestParams,
+  NodePairListParams,
+  NodePairApproveParams,
+  NodePairRejectParams,
+  NodePairVerifyParams,
+} from './protocol/params/nodes.js';
+
+export type {
+  // Sessions
+  SessionsListParams,
+  SessionsPreviewParams,
+  SessionsCreateParams,
+  SessionsSendParams,
+  SessionsPatchParams,
+  SessionsPatchResult,
+  SessionsResetParams,
+  SessionsDeleteParams,
+  SessionsCompactParams,
+  SessionsUsageParams,
+} from './protocol/params/sessions.js';
+
+export type {
+  // Config
   ConfigGetParams,
   ConfigSetParams,
   ConfigApplyParams,
@@ -241,6 +163,39 @@ export type {
   WizardNextResult,
   WizardStartResult,
   WizardStatusResult,
+} from './protocol/params/config.js';
+
+export type {
+  // Cron
+  CronListParams,
+  CronStatusParams,
+  CronAddParams,
+  CronUpdateParams,
+  CronRemoveParams,
+  CronRunParams,
+  CronRunsParams,
+} from './protocol/params/cron.js';
+
+export type {
+  // Nodes
+  NodeListParams,
+  NodeInvokeParams,
+  NodeInvokeResultParams,
+  NodeEventParams,
+  NodePendingDrainParams,
+  NodePendingDrainResult,
+  NodePendingEnqueueParams,
+  NodePendingEnqueueResult,
+  NodeDescribeParams,
+  NodeDescribeResult,
+  NodePendingPullParams,
+  NodePendingPullResult,
+  NodePendingAckParams,
+  NodeRenameParams,
+  NodeCanvasCapabilityRefreshParams,
+} from './protocol/params/nodes.js';
+
+export type {
   // Skills
   SkillsStatusParams,
   ToolsCatalogParams,
@@ -249,6 +204,43 @@ export type {
   SkillsBinsResult,
   SkillsInstallParams,
   SkillsUpdateParams,
+  VoiceWakeGetParams,
+  VoiceWakeSetParams,
+} from './protocol/params/skills.js';
+
+export type {
+  // Device Pairing
+  DevicePairListParams,
+  DevicePairApproveParams,
+  DevicePairRejectParams,
+  DeviceTokenRotateParams,
+  DeviceTokenRevokeParams,
+} from './protocol/params/devicePairing.js';
+
+export type {
+  // Browser
+  BrowserOpenParams,
+  BrowserOpenResult,
+  BrowserListParams,
+  BrowserScreenshotParams,
+  BrowserScreenshotResult,
+  BrowserEvalParams,
+  BrowserEvalResult,
+  BrowserRequestParams,
+  BrowserRequestResult,
+} from './protocol/params/browser.js';
+
+export type {
+  // Push
+  PushRegisterParams,
+  PushRegisterResult,
+  PushUnregisterParams,
+  PushUnregisterResult,
+  PushSendParams,
+  PushSendResult,
+} from './protocol/params/push.js';
+
+export type {
   // Exec Approvals
   ExecApprovalsGetParams,
   ExecApprovalsSetParams,
@@ -258,21 +250,58 @@ export type {
   ExecApprovalRequestParams,
   ExecApprovalWaitDecisionParams,
   ExecApprovalResolveParams,
-  // Sessions
-  SessionsListParams,
-  SessionsPreviewParams,
-  SessionsCreateParams,
-  SessionsSendParams,
-  SessionsPatchParams,
-  SessionsPatchResult,
-  SessionsResetParams,
-  SessionsDeleteParams,
-  SessionsCompactParams,
-  SessionsUsageParams,
-  // Logs
+} from './protocol/params/execApprovals.js';
+
+export type {
+  // System
+  DoctorCheckParams,
+  DoctorFixParams,
+  DoctorFixResult,
+  DoctorMemoryStatusParams,
+  DoctorMemoryStatusResult,
+  GatewayIdentityGetParams,
+  GatewayIdentityGetResult,
+  SystemPresenceParams,
+  SystemPresenceResult,
+  SystemEventParams,
+  SystemEventResult,
+  LastHeartbeatParams,
+  LastHeartbeatResult,
+  SetHeartbeatsParams,
+  WakeParams,
+  UpdateRunParams,
+  UpdateCheckParams,
+  UpdateCheckResult,
+  UpdateApplyParams,
+  UpdateApplyResult,
+  AgentParams,
+  AgentResult,
+  SendParams,
+  SendResult,
+  DiagnosticsSnapshotParams,
+  DiagnosticsSnapshotResult,
+  ModelsListParams,
+  ModelsListResult,
+  TtsSpeakParams,
+  TtsSpeakResult,
+  TtsVoicesParams,
+  TtsStatusParams,
+  TtsStatusResult,
+  TtsProvidersParams,
+  TtsProvidersResult,
+  TtsEnableParams,
+  TtsDisableParams,
+  TtsConvertParams,
+  TtsSetProviderParams,
   LogsTailParams,
   LogsTailResult,
-  // Talk
+} from './protocol/params/system.js';
+
+export type {
+  // Channels
+  ChannelsStatusParams,
+  ChannelsStatusResult,
+  ChannelsLogoutParams,
   TalkConfigParams,
   TalkConfigResult,
   TalkModeParams,
@@ -281,34 +310,38 @@ export type {
   TalkStopParams,
   TalkStopResult,
   TalkSpeakParams,
-  // Channels
-  ChannelsStatusParams,
-  ChannelsStatusResult,
-  ChannelsLogoutParams,
-  // Web Login
   WebLoginStartParams,
   WebLoginWaitParams,
   WebLoginStartResult,
   WebLoginWaitResult,
   WebLoginCancelParams,
   WebLoginCancelResult,
-  // Push
-  PushRegisterParams,
-  PushRegisterResult,
-  PushUnregisterParams,
-  PushUnregisterResult,
-  PushSendParams,
-  PushSendResult,
-  // Update
-  UpdateCheckParams,
-  UpdateCheckResult,
-  UpdateApplyParams,
-  UpdateApplyResult,
-  UpdateRunParams,
-  // Diagnostics
-  DiagnosticsSnapshotParams,
-  DiagnosticsSnapshotResult,
-} from './protocol/api-params.js';
+} from './protocol/params/channels.js';
+
+export type {
+  // Secrets
+  SecretsListParams,
+  SecretsGetParams,
+  SecretsGetResult,
+  SecretsSetParams,
+  SecretsSetResult,
+  SecretsDeleteParams,
+  SecretsDeleteResult,
+  SecretsReloadParams,
+  SecretsResolveParams,
+} from './protocol/params/secrets.js';
+
+export type {
+  // Usage
+  UsageSummaryParams,
+  UsageSummaryResult,
+  UsageDetailsParams,
+  UsageDetailsResult,
+  UsageStatusParams,
+  UsageStatusResult,
+  UsageCostParams,
+  UsageCostResult,
+} from './protocol/params/usage.js';
 
 export type {
   WizardStep,

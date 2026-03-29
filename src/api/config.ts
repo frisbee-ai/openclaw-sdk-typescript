@@ -15,7 +15,7 @@ import type {
   ConfigSchemaResponse,
   ConfigSchemaLookupParams,
   ConfigSchemaLookupResult,
-} from '../protocol/api-params.js';
+} from '../protocol/params/config.js';
 
 import type { RequestFn } from './shared.js';
 

@@ -17,7 +17,7 @@ import type {
   ChatTitleResult,
   ChatAbortParams,
   ChatSendParams,
-} from '../protocol/api-params.js';
+} from '../protocol/params/chat.js';
 import type { ChatListResult } from '../protocol/api-common.js';
 
 import type { RequestFn } from './shared.js';

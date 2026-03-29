@@ -12,7 +12,7 @@ import type {
   DevicePairRejectParams,
   DeviceTokenRotateParams,
   DeviceTokenRevokeParams,
-} from '../protocol/api-params.js';
+} from '../protocol/params/devicePairing.js';
 
 import type { RequestFn } from './shared.js';
 

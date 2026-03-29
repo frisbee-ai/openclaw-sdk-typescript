@@ -15,7 +15,7 @@ import type {
   ExecApprovalRequestParams,
   ExecApprovalWaitDecisionParams,
   ExecApprovalResolveParams,
-} from '../protocol/api-params.js';
+} from '../protocol/params/execApprovals.js';
 
 import type { RequestFn } from './shared.js';
 

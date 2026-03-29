@@ -13,7 +13,7 @@ import type {
   PushUnregisterResult,
   PushSendParams,
   PushSendResult,
-} from '../protocol/api-params.js';
+} from '../protocol/params/push.js';
 
 import type { RequestFn } from './shared.js';
 

@@ -7,6 +7,7 @@
  */
 
 import type {
+  // System types (defined in system.ts)
   TtsSpeakParams,
   TtsSpeakResult,
   TtsVoicesParams,
@@ -18,25 +19,12 @@ import type {
   TtsDisableParams,
   TtsConvertParams,
   TtsSetProviderParams,
-  WizardStartParams,
-  WizardNextParams,
-  WizardCancelParams,
-  WizardStatusParams,
-  WizardNextResult,
-  WizardStartResult,
-  WizardStatusResult,
   LogsTailParams,
   LogsTailResult,
   DoctorMemoryStatusParams,
   DoctorMemoryStatusResult,
-  UsageStatusParams,
-  UsageStatusResult,
-  UsageCostParams,
-  UsageCostResult,
   ModelsListParams,
   ModelsListResult,
-  VoiceWakeGetParams,
-  VoiceWakeSetParams,
   GatewayIdentityGetParams,
   GatewayIdentityGetResult,
   SystemPresenceParams,
@@ -48,13 +36,32 @@ import type {
   SetHeartbeatsParams,
   WakeParams,
   UpdateRunParams,
-  BrowserRequestParams,
-  BrowserRequestResult,
   AgentParams,
   AgentResult,
   SendParams,
   SendResult,
-} from '../protocol/api-params.js';
+} from '../protocol/params/system.js';
+// Wizard types from config.ts
+import type {
+  WizardStartParams,
+  WizardNextParams,
+  WizardCancelParams,
+  WizardStatusParams,
+  WizardNextResult,
+  WizardStartResult,
+  WizardStatusResult,
+} from '../protocol/params/config.js';
+// Usage types from usage.ts
+import type {
+  UsageStatusParams,
+  UsageStatusResult,
+  UsageCostParams,
+  UsageCostResult,
+} from '../protocol/params/usage.js';
+// VoiceWake types from skills.ts
+import type { VoiceWakeGetParams, VoiceWakeSetParams } from '../protocol/params/skills.js';
+// BrowserRequest types from browser.ts
+import type { BrowserRequestParams, BrowserRequestResult } from '../protocol/params/browser.js';
 import type { TtsVoicesResult } from '../protocol/api-common.js';
 
 import type { RequestFn } from './shared.js';

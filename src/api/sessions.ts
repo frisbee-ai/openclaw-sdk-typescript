@@ -17,7 +17,7 @@ import type {
   SessionsDeleteParams,
   SessionsCompactParams,
   SessionsUsageParams,
-} from '../protocol/api-params.js';
+} from '../protocol/params/sessions.js';
 
 import type { RequestFn } from './shared.js';
 

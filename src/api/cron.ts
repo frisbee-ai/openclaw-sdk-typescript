@@ -14,7 +14,7 @@ import type {
   CronRemoveParams,
   CronRunParams,
   CronRunsParams,
-} from '../protocol/api-params.js';
+} from '../protocol/params/cron.js';
 import type { CronJob, CronRunLogEntry } from '../protocol/api-common.js';
 
 import type { RequestFn } from './shared.js';

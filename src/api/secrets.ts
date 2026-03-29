@@ -6,7 +6,7 @@
  * @module api/secrets
  */
 
-import type { SecretsReloadParams, SecretsResolveParams } from '../protocol/api-params.js';
+import type { SecretsReloadParams, SecretsResolveParams } from '../protocol/params/secrets.js';
 
 import type { RequestFn } from './shared.js';
 

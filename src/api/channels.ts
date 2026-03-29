@@ -18,7 +18,7 @@ import type {
   TalkStopParams,
   TalkStopResult,
   TalkSpeakParams,
-} from '../protocol/api-params.js';
+} from '../protocol/params/channels.js';
 
 import type { RequestFn } from './shared.js';
 

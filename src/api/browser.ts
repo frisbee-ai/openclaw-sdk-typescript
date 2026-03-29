@@ -14,7 +14,7 @@ import type {
   BrowserScreenshotResult,
   BrowserEvalParams,
   BrowserEvalResult,
-} from '../protocol/api-params.js';
+} from '../protocol/params/browser.js';
 import type { BrowserListResult } from '../protocol/api-common.js';
 
 import type { RequestFn } from './shared.js';

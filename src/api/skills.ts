@@ -16,7 +16,7 @@ import type {
   SkillsUpdateParams,
   ToolsEffectiveParams,
   ToolsEffectiveResult,
-} from '../protocol/api-params.js';
+} from '../protocol/params/skills.js';
 
 import type { RequestFn } from './shared.js';
 

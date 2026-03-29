@@ -26,7 +26,7 @@ import type {
   NodePairApproveParams,
   NodePairRejectParams,
   NodePairVerifyParams,
-} from '../protocol/api-params.js';
+} from '../protocol/params/nodes.js';
 
 import type { RequestFn } from './shared.js';
 

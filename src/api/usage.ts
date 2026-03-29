@@ -11,7 +11,7 @@ import type {
   UsageStatusResult,
   UsageCostParams,
   UsageCostResult,
-} from '../protocol/api-params.js';
+} from '../protocol/params/usage.js';
 
 import type { RequestFn } from './shared.js';
 

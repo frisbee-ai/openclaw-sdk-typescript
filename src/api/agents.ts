@@ -24,7 +24,7 @@ import type {
   AgentsFilesGetResult,
   AgentsFilesSetParams,
   AgentsFilesSetResult,
-} from '../protocol/api-params.js';
+} from '../protocol/params/agents.js';
 
 import type { RequestFn } from './shared.js';
 
