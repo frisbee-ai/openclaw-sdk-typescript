@@ -18,7 +18,7 @@ must_haves:
   artifacts:
     - path: "src/managers/connection.ts"
       provides: "ReconnectManager integration with token refresh"
-      exports: ["ConnectionManager.reconnect()"]
+      exports: ["ConnectionManager.reconnect()", "createConnectionManager(transport, config, reconnectManager?, authHandler?)"]
     - path: "src/client.ts"
       provides: "ReconnectManager instantiation and wiring"
   key_links:
@@ -63,15 +63,24 @@ From src/auth/provider.ts:
 async refreshToken(): Promise<RefreshResult | null>
 ```
 
-From src/managers/connection.ts:
+From src/managers/connection.ts (TO BE MODIFIED):
 ```typescript
-// Existing constructor signature:
-constructor(transport: IWebSocketTransport, config?: ConnectionManagerConfig)
-// New parameter to add:
-reconnectManager?: ReconnectManager
-authHandler?: AuthHandler
+// New constructor signature:
+constructor(
+  transport: IWebSocketTransport,
+  config?: ConnectionManagerConfig,
+  reconnectManager?: ReconnectManager,
+  authHandler?: AuthHandler
+)
+
+// New factory signature:
+export function createConnectionManager(
+  transport: IWebSocketTransport,
+  config?: ConnectionManagerConfig,
+  reconnectManager?: ReconnectManager,
+  authHandler?: AuthHandler
+): ConnectionManager
 ```
-</interfaces>
 </context>
 
 <tasks>
@@ -80,9 +89,17 @@ authHandler?: AuthHandler
   <name>Task 1: Modify ConnectionManager to accept ReconnectManager and AuthHandler</name>
   <files>src/managers/connection.ts</files>
   <action>
+    Add imports at the top of the file (after existing imports):
+    ```typescript
+    import type { ReconnectManager } from './reconnect.js';
+    import type { AuthHandler } from '../auth/provider.js';
+    ```
+
     Add to ConnectionManager class fields:
-    - `private reconnectManager: ReconnectManager | null = null`
-    - `private authHandler: AuthHandler | null = null`
+    ```typescript
+    private reconnectManager: ReconnectManager | null = null;
+    private authHandler: AuthHandler | null = null;
+    ```
 
     Modify constructor signature to accept two new optional parameters:
     ```typescript
@@ -183,6 +200,8 @@ authHandler?: AuthHandler
     - grep -n "authHandler" src/managers/connection.ts shows the field and usage in refreshToken call
     - grep -n "doReconnect" src/managers/connection.ts finds the private method
     - grep -n "reconnect()" src/managers/connection.ts finds the public reconnect() method
+    - grep -n "import type.*ReconnectManager" src/managers/connection.ts finds the import
+    - grep -n "import type.*AuthHandler" src/managers/connection.ts finds the import
     - TypeScript compiles without errors (npm run typecheck passes)
   </acceptance_criteria>
 </task>
@@ -219,7 +238,7 @@ authHandler?: AuthHandler
     }, reconnectMgr, this.authHandler);
     ```
 
-    Note: Update the createConnectionManager call to include the new parameters (reconnectMgr and authHandler) after the config object.
+    Note: The createConnectionManager factory now accepts 4 parameters: transport, config, reconnectManager (optional), authHandler (optional) - matching the ConnectionManager constructor signature.
   </action>
   <verify>
     <automated>npm run typecheck 2>&1 | head -30</automated>

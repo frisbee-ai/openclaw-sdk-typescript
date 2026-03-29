@@ -19,7 +19,7 @@ must_haves:
   artifacts:
     - path: "src/utils/timeoutManager.ts"
       provides: "setInterval method for repeated timer execution"
-      exports: ["TimeoutManager.setInterval", "TimerHandle"]
+      exports: ["TimeoutManager.setInterval", "TimeoutManager.clearInterval", "TimerHandle"]
     - path: "src/events/tick.ts"
       provides: "TickMonitor timer loop using TimeoutManager"
   key_links:
@@ -55,7 +55,7 @@ export interface TimeoutHandle {
   clear: () => void;
 }
 
-// New interface to add:
+// New interface to add (MUST be exported):
 export interface TimerHandle {
   readonly id: string;
   readonly cleared: boolean;
@@ -81,7 +81,6 @@ private checkIntervalMs: number;
 // - stop() - clears the periodic timer
 ```
 </interfaces>
-</context>
 
 <tasks>
 
@@ -89,7 +88,7 @@ private checkIntervalMs: number;
   <name>Task 1: Add setInterval method to TimeoutManager</name>
   <files>src/utils/timeoutManager.ts</files>
   <action>
-    Add a new `TimerHandle` interface at the top with the other interface definitions (after TimeoutHandle):
+    Add a new `TimerHandle` interface at the top with the other interface definitions (after TimeoutHandle). CRITICAL: It MUST be exported:
     ```typescript
     /**
      * Interval handle returned by setInterval
@@ -189,11 +188,12 @@ private checkIntervalMs: number;
   <verify>
     <automated>npm run typecheck 2>&1 | head -30</automated>
   </verify>
-  <done>TimeoutManager has setInterval, clearInterval, and TimerHandle interface</done>
+  <done>TimeoutManager has setInterval, clearInterval, and TimerHandle interface (exported)</done>
   <read_first>
     - src/utils/timeoutManager.ts
   </read_first>
   <acceptance_criteria>
+    - grep -n "^export interface TimerHandle" src/utils/timeoutManager.ts finds the exported interface
     - grep -n "setInterval" src/utils/timeoutManager.ts finds the new method
     - grep -n "TimerHandle" src/utils/timeoutManager.ts finds the interface
     - grep -n "clearInterval" src/utils/timeoutManager.ts finds the method

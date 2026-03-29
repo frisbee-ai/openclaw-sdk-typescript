@@ -93,7 +93,6 @@ export interface GapInfo {
   detectedAt: number;
 }
 ```
-</interfaces>
 </context>
 
 <tasks>
@@ -248,6 +247,8 @@ export interface GapInfo {
       }
     }
     ```
+
+    Note: The `fetch()` API is used for HTTP POST. This is supported natively in Node.js 22+ and modern browsers. Verification of snapshot HTTP calls must be performed in a Node.js 22+ environment.
   </action>
   <verify>
     <automated>npm run typecheck 2>&1 | head -30</automated>
@@ -262,6 +263,7 @@ export interface GapInfo {
     - grep -n "connectionManager.reconnect" src/client.ts finds the reconnect call
     - grep -n "snapshotEndpoint" src/client.ts finds the endpoint usage
     - TypeScript compiles without errors (npm run typecheck passes)
+    - NOTE: Snapshot HTTP calls (fetch) must be verified in Node.js 22+ environment
   </acceptance_criteria>
 </task>
 
@@ -271,6 +273,7 @@ export interface GapInfo {
 - npm run typecheck passes with no errors
 - npm run build passes (ESM + CJS)
 - npm test -- --run passes
+- Node.js version check: node --version (must be 22+) for snapshot endpoint testing
 </verification>
 
 <success_criteria>
