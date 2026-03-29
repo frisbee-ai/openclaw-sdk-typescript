@@ -701,7 +701,61 @@ export class OpenClawClient {
           recovery: { mode: 'reconnect', ...this._config.gapDetector.recovery },
           ...this._config.gapDetector,
         });
+
+        // Wire gap recovery actions per D-05: client.ts handles recovery, GapDetector remains pure
+        this.gapDetector.on('gap', (gaps: import('./events/gap.js').GapInfo[]) => {
+          const mode = this._config.gapDetector?.recovery?.mode ?? 'skip';
+          this.logger.debug('Gap detected', { mode, gapCount: gaps.length });
+
+          if (mode === 'reconnect') {
+            // Reconnect mode: trigger reconnection
+            this.connectionManager.reconnect();
+          } else if (mode === 'snapshot') {
+            // Snapshot mode: call the configured HTTP endpoint
+            const endpoint = this._config.gapDetector?.recovery?.snapshotEndpoint;
+            if (endpoint) {
+              this.performSnapshotRecovery(endpoint, gaps).catch(error => {
+                this.logger.error('Snapshot recovery failed', { error: String(error) });
+              });
+            } else {
+              this.logger.warn('Gap detected in snapshot mode but no snapshotEndpoint configured');
+            }
+          }
+          // 'skip' mode: no action, just log
+        });
       }
+    }
+  }
+
+  /**
+   * Perform snapshot recovery by fetching state from the snapshot endpoint.
+   */
+  private async performSnapshotRecovery(
+    endpoint: string,
+    gaps: import('./events/gap.js').GapInfo[]
+  ): Promise<void> {
+    try {
+      // eslint-disable-next-line no-undef -- fetch is a global in Node 22+ and browsers
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gaps,
+          clientId: this._config.clientId,
+          timestamp: Date.now(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Snapshot endpoint returned ${response.status}: ${response.statusText}`);
+      }
+
+      this.logger.info('Snapshot recovery completed', { endpoint });
+    } catch (error) {
+      this.logger.error('Snapshot recovery failed', { endpoint, error: String(error) });
+      throw error;
     }
   }
 

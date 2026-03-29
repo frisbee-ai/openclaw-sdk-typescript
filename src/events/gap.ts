@@ -49,6 +49,7 @@ export class GapDetector extends EventEmitter {
   private maxGaps: number;
   private lastSequence: number | null = null;
   private gaps: GapInfo[] = [];
+  private initialized = false;
 
   /**
    * Create a gap detector.
@@ -70,8 +71,8 @@ export class GapDetector extends EventEmitter {
     // Deferred side-effects list — executed after all state updates
     const deferred: Array<() => void> = [];
 
-    // Check for gap if we have a previous sequence
-    if (this.lastSequence !== null) {
+    // Check for gap if we have a previous sequence AND are initialized
+    if (this.lastSequence !== null && this.initialized) {
       const expected = this.lastSequence + 1;
 
       // Only detect gaps for sequences after the last one
@@ -101,6 +102,11 @@ export class GapDetector extends EventEmitter {
 
     // 3. Update lastSequence BEFORE executing side-effects
     this.lastSequence = seq;
+
+    // 4. Mark as initialized after first sequence
+    if (!this.initialized) {
+      this.initialized = true;
+    }
 
     // 4. Execute deferred side-effects — state is already consistent
     // Continue executing remaining ops even if one throws
@@ -142,11 +148,19 @@ export class GapDetector extends EventEmitter {
   }
 
   /**
+   * Check if the detector has been initialized (received first sequence).
+   */
+  isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  /**
    * Reset sequence tracking.
    */
   reset(): void {
     this.lastSequence = null;
     this.gaps = [];
+    this.initialized = false;
   }
 }
 
