@@ -50,7 +50,7 @@ Plans:
 ### Requirements
 
 - [ ] **REF-01**: Extract API namespace initialization and connection handler setup from client.ts into separate modules
-- [ ] **REF-02**: Split api-params.ts into per-domain files (chat.ts, agents.ts, sessions.ts, etc.)
+- [x] **REF-02**: Split api-params.ts into per-domain files (chat.ts, agents.ts, sessions.ts, etc.)
 
 ### Success Criteria
 
@@ -63,7 +63,7 @@ Plans:
 
 Plans:
 - [ ] 02-01-PLAN.md — ClientBuilder refactor (REF-01)
-- [ ] 02-02-PLAN.md — api-params.ts split (REF-02)
+- [x] 02-02-PLAN.md — api-params.ts split (REF-02)
 
 ---
 

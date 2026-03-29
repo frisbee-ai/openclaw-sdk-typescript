@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
-status: Ready to plan
-last_updated: "2026-03-29T14:31:36.526Z"
+status: Executing Phase 02
+last_updated: "2026-03-29T17:01:50.438Z"
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 5
+  completed_plans: 4
 ---
 
 # State: OpenClaw SDK TypeScript v2.0
@@ -19,7 +19,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** The SDK must reliably maintain a WebSocket connection with the Gateway, automatically recovering from all common failure modes.
 
-**Current focus:** Phase 02 — Code Health (2 plans created, verified)
+**Current focus:** Phase 02 — code-health
 
 ## Milestone
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | Phase | Name | Status | Plans | Progress |
 |-------|------|--------|-------|----------|
 | 1 | Critical Reliability | ● | 3/3 | 100% |
-| 2 | Code Health | ◐ | 2/2 | plans |
+| 2 | Code Health | ◐ | 2/2 | 1/2 |
 | 3 | Bug Fixes | ○ | 0/5 | 0% |
 | 4 | Transport Consolidation | ○ | 0/1 | 0% |
 | 5 | Hardening | ○ | 0/7 | 0% |
@@ -47,6 +47,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 - [Phase 01-critical-reliability]: Initialized state pattern in GapDetector prevents false-positive gaps on first sequence
 - [Phase 02-code-health]: ClientBuilder is primary entry point, fluent chainable API (D-01, D-02, D-03)
 - [Phase 02-code-health]: api-params.ts types co-located next to respective src/api/*.ts files (D-04)
+- [Phase 02-code-health]: Types co-located next to their API classes (D-04); Shared types stay in api-common.ts (D-05); api-params.ts deleted after migration (D-06)
 
 ## Open Issues
 
@@ -62,7 +63,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2026-03-29 | Phase 1 discuss | Context gathered for Critical Reliability (REL-01, REL-02, REL-03), 6 decisions captured |
 | 2026-03-29 | Phase 1 plan 02 | Completed REL-02: TickMonitor automatic staleness detection via TimeoutManager.setInterval() |
 | 2026-03-29 | Phase 1 plan 03 | Completed REL-03: GapDetector gap event listener with mode-based recovery dispatch |
-
+| 2026-03-29 | Phase 2 plan 02 | Completed REF-02: Split api-params.ts into 15 per-domain type files |
 ---
 
-*Last updated: 2026-03-29 after Phase 1 plan 02 execution*
+*Last updated: 2026-03-29 after Phase 2 plan 02 execution*
