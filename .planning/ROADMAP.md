@@ -10,7 +10,7 @@ This roadmap addresses all technical debt and reliability issues identified in t
 |-------|------|------|-------------|------------------|
 | 1 | Critical Reliability | 3/3 | Complete|  |
 | 2 | Code Health | Split client.ts and api-params.ts large files | REF-01, REF-02 | 3/3 |
-| 3 | Bug Fixes | 1/2 | In Progress|  |
+| 3 | Bug Fixes | 2/2 | Complete   | 2026-03-30 |
 | 4 | Transport Consolidation | Merge Node/Browser transport shared logic | TRANS-01 | 1/1 |
 | 5 | Hardening | Protocol fallbacks, message size limits, test coverage, docs | HARD-01–HARD-07 | 7/7 |
 | 6 | Observability | Optional metrics hook | OBS-01 | 1/1 |
@@ -88,11 +88,11 @@ Plans:
 4. `ws.send()` errors propagate as `ConnectionError` subclasses
 5. Duplicate server responses are handled silently without throwing
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 03-01-PLAN.md — Fix EventManager once/off (BUG-01) and client abort cleanup (BUG-02)
-- [ ] 03-02-PLAN.md — Fix reconnect delay (BUG-03), typed send error (BUG-04), silent duplicate response (BUG-05)
+- [x] 03-02-PLAN.md — Fix reconnect delay (BUG-03), typed send error (BUG-04), silent duplicate response (BUG-05)
 
 ---
 
