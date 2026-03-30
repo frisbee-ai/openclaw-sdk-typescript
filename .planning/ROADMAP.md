@@ -13,7 +13,7 @@ This roadmap addresses all technical debt and reliability issues identified in t
 | 3 | Bug Fixes | 2/2 | Complete   | 2026-03-30 |
 | 4 | Transport Consolidation | 1/1 | Complete   | 2026-03-30 |
 | 5 | Hardening | Protocol fallbacks, message size limits, test coverage, docs | HARD-01–HARD-07 | 7/7 |
-| 6 | Observability | 1/2 | In Progress|  |
+| 6 | Observability | 2/2 | Complete|  |
 
 ---
 
@@ -151,7 +151,7 @@ Plans:
 
 ### Requirements
 
-- [ ] **OBS-01**: Add optional metrics hook for request latency, connection uptime, message throughput
+- [x] **OBS-01**: Add optional metrics hook for request latency, connection uptime, message throughput
 
 ### Success Criteria
 
@@ -161,11 +161,11 @@ Plans:
 4. Message throughput is reported (messages/sec)
 5. Metrics collection has zero overhead when disabled
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans executed
 
 Plans:
 - [x] 06-01-PLAN.md — Create MetricsCollector interface, add to ClientConfig, export from index.ts
-- [ ] 06-02-PLAN.md — Wire metrics into client.ts request(), ConnectionStateMachine, WebSocketTransport
+- [x] 06-02-PLAN.md — Wire metrics into client.ts request(), ConnectionStateMachine, WebSocketTransport
 
 ---
 
