@@ -9,7 +9,7 @@
 // Main client exports
 export { OpenClawClient } from './client.js';
 export { ClientBuilder } from './client-builder.js';
-export type { ClientConfig, ConnectionConfig, RequestOptions } from './client.js';
+export type { ClientConfig, ConnectionConfig, RequestOptions } from './client-config.js';
 
 // ============================================================================
 // Error Types

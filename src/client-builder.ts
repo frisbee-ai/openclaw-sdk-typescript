@@ -24,9 +24,6 @@ import { createPolicyManager } from './connection/policies.js';
 import { createConnectionStateMachine } from './connection/state.js';
 import type { ConnectionConfig, ClientConfig } from './client-config.js';
 
-// Re-export types for backward compatibility
-export type { ConnectionConfig, ClientConfig } from './client-config.js';
-
 // ============================================================================
 // Default Configuration Constants
 // ============================================================================

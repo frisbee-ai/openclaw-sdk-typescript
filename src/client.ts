@@ -10,21 +10,18 @@
 import type { ConnectionState } from './protocol/connection-state.js';
 import type { ConnectParams, HelloOk, Snapshot } from './protocol/connection.js';
 import type { GatewayFrame, ResponseFrame } from './protocol/frames.js';
-import type { IWebSocketTransport } from './transport/websocket.js';
-import { WebSocketTransport } from './transport/websocket.js';
 import type { ConnectionEventHandlers } from './managers/connection.js';
-import { ConnectionManager, createConnectionManager } from './managers/connection.js';
-import { RequestManager, createRequestManager } from './managers/request.js';
-import { EventManager, createEventManager } from './managers/event.js';
+import type { ConnectionManager } from './managers/connection.js';
+import type { RequestManager } from './managers/request.js';
+import type { EventManager } from './managers/event.js';
 import type { EventPattern, EventHandler, UnsubscribeFn } from './managers/event.js';
 import { createErrorFromResponse, ConnectionError } from './errors.js';
-import { ProtocolNegotiator, createProtocolNegotiator } from './connection/protocol.js';
+import type { ProtocolNegotiator } from './connection/protocol.js';
 import type { NegotiatedProtocol } from './connection/protocol.js';
-import { PolicyManager, createPolicyManager } from './connection/policies.js';
+import type { PolicyManager } from './connection/policies.js';
 import type { Policy } from './connection/policies.js';
-import { ConnectionStateMachine, createConnectionStateMachine } from './connection/state.js';
-import { AuthHandler, createAuthHandler } from './auth/provider.js';
-import { createReconnectManager } from './managers/reconnect.js';
+import type { ConnectionStateMachine } from './connection/state.js';
+import type { AuthHandler } from './auth/provider.js';
 import { TickMonitor, createTickMonitor } from './events/tick.js';
 import { GapDetector, createGapDetector } from './events/gap.js';
 import type { Logger } from './types/logger.js';
@@ -38,9 +35,6 @@ import { NodesAPI } from './api/nodes.js';
 import { SkillsAPI } from './api/skills.js';
 import { DevicePairingAPI } from './api/devicePairing.js';
 import type { ConnectionConfig, ClientConfig, RequestOptions } from './client-config.js';
-
-// Re-export types from client-config for backward compatibility
-export type { ConnectionConfig, ClientConfig, RequestOptions } from './client-config.js';
 
 // ============================================================================
 // Default Configuration Constants
@@ -107,7 +101,7 @@ export class OpenClawClient {
 
   /**
    * Create a new OpenClaw client instance.
-   * Supports backward-compatible construction with ClientConfig, or internal construction with pre-built managers.
+   * Internal construction via _internal with pre-built managers (thin facade pattern).
    */
   constructor(
     config: ClientConfig,
@@ -176,74 +170,9 @@ export class OpenClawClient {
       // Set up connection handlers
       this.setupConnectionHandlers();
     } else {
-      // Backward-compatible path: create managers
-      const normalizedConfig = this._normalizedConfig;
-
-      const transport: IWebSocketTransport = new WebSocketTransport({
-        connectTimeoutMs: normalizedConfig.connectTimeoutMs,
-      });
-
-      if (config.credentialsProvider) {
-        this.authHandler = createAuthHandler(config.credentialsProvider);
-      }
-
-      const reconnectMgr = createReconnectManager(
-        {
-          maxAttempts: normalizedConfig.maxReconnectAttempts,
-          initialDelayMs: normalizedConfig.reconnectDelayMs,
-          maxDelayMs: 30000,
-          pauseOnAuthError: true,
-          maxAuthRetries: 3,
-          jitterFactor: 0.3,
-        },
-        this.logger
+      throw new Error(
+        'OpenClawClient must be constructed via ClientBuilder.build() — direct construction is not supported'
       );
-
-      this.connectionManager = createConnectionManager(
-        transport,
-        {
-          defaultRequestTimeout: normalizedConfig.requestTimeoutMs,
-          autoReconnect: normalizedConfig.autoReconnect,
-          reconnectDelayMs: normalizedConfig.reconnectDelayMs,
-          maxReconnectAttempts: normalizedConfig.maxReconnectAttempts,
-        },
-        reconnectMgr,
-        this.authHandler ?? undefined
-      );
-
-      this.requestManager = createRequestManager();
-      this.eventManager = createEventManager(this.logger);
-      this.eventManager.on(
-        'request.cancelled',
-        (frame: { payload?: { requestId?: string; reason?: string } }) => {
-          const requestId = frame.payload?.requestId;
-          if (requestId) {
-            this.requestManager.rejectRequest(
-              requestId,
-              new Error(`Request cancelled by server: ${frame.payload?.reason ?? 'unknown'}`)
-            );
-          }
-        }
-      );
-
-      this.protocolNegotiator = createProtocolNegotiator({ min: 3, max: 3 });
-      this.policyManager = createPolicyManager();
-      this.stateMachine = createConnectionStateMachine(this.logger);
-
-      // Initialize API namespaces
-      const requestFn = <T = unknown>(method: string, params?: unknown): Promise<T> =>
-        this.request<T>(method, params);
-      this._chatAPI = new ChatAPI(requestFn);
-      this._agentsAPI = new AgentsAPI(requestFn);
-      this._sessionsAPI = new SessionsAPI(requestFn);
-      this._configAPI = new ConfigAPI(requestFn);
-      this._cronAPI = new CronAPI(requestFn);
-      this._nodesAPI = new NodesAPI(requestFn);
-      this._skillsAPI = new SkillsAPI(requestFn);
-      this._devicePairingAPI = new DevicePairingAPI(requestFn);
-
-      // Set up connection handlers
-      this.setupConnectionHandlers();
     }
   }
 

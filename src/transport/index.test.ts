@@ -14,11 +14,8 @@ describe('Transport Module Type Exports', () => {
     expect(true).toBe(true);
   });
 
-  it('should export WebSocketTransport class', async () => {
-    const { WebSocketTransport } = await import('./index.js');
-    expect(WebSocketTransport).toBeDefined();
-    expect(typeof WebSocketTransport).toBe('function');
-  });
+  // WebSocketTransport is no longer re-exported from transport/index.ts (backward compat removed)
+  // Use createWebSocketTransport or import from websocket.js directly instead
 
   it('should have createWebSocketTransport as default export', async () => {
     const transportModule = await import('./index.js');

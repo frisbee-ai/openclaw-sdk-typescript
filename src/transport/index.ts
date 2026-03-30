@@ -15,7 +15,7 @@
  * Uses runtime detection (not build-time) to determine platform.
  * This allows the same bundle to work in both Node.js and browser.
  */
-const isBrowser = typeof (globalThis as { window?: unknown }).window !== "undefined";
+const isBrowser = typeof (globalThis as { window?: unknown }).window !== 'undefined';
 
 /**
  * Get the current platform.
@@ -25,19 +25,19 @@ const isBrowser = typeof (globalThis as { window?: unknown }).window !== "undefi
  * - "browser": Force browser transport
  * - undefined: Auto-detect based on runtime
  */
-const platform: "node" | "browser" =
-  ((process.env.FORCE_PLATFORM as string) || (isBrowser ? "browser" : "node")) as "node" | "browser";
+const platform: 'node' | 'browser' = ((process.env.FORCE_PLATFORM as string) ||
+  (isBrowser ? 'browser' : 'node')) as 'node' | 'browser';
 
 // ============================================================================
 // Type Exports
 // ============================================================================
 
 // Re-export types from websocket.ts
-export type { IWebSocketTransport, ReadyState, ReadyStateString } from "./websocket.js";
+export type { IWebSocketTransport, ReadyState, ReadyStateString } from './websocket.js';
 
 // Import types for use in function signatures
-import type { NodeWebSocketTransportConfig } from "./node.js";
-import type { BrowserWebSocketTransportConfig } from "./browser.js";
+import type { NodeWebSocketTransportConfig } from './node.js';
+import type { BrowserWebSocketTransportConfig } from './browser.js';
 
 // Re-export types from node.ts (used by both transports)
 export type {
@@ -46,10 +46,10 @@ export type {
   WebSocketOpenEvent,
   WebSocketClose,
   WebSocketError,
-} from "./node.js";
+} from './node.js';
 
 // Re-export type from browser.ts
-export type { BrowserWebSocketTransportConfig } from "./browser.js";
+export type { BrowserWebSocketTransportConfig } from './browser.js';
 
 // ============================================================================
 // Factory Functions (Dynamic Import)
@@ -76,11 +76,11 @@ export type { BrowserWebSocketTransportConfig } from "./browser.js";
 export async function createWebSocketTransport(
   config: NodeWebSocketTransportConfig | BrowserWebSocketTransportConfig
 ): Promise<unknown> {
-  if (platform === "node") {
-    const { createNodeWebSocketTransport } = await import("./node.js");
+  if (platform === 'node') {
+    const { createNodeWebSocketTransport } = await import('./node.js');
     return createNodeWebSocketTransport(config as NodeWebSocketTransportConfig);
   } else {
-    const { createBrowserWebSocketTransport } = await import("./browser.js");
+    const { createBrowserWebSocketTransport } = await import('./browser.js');
     return createBrowserWebSocketTransport(config as BrowserWebSocketTransportConfig);
   }
 }
@@ -96,7 +96,7 @@ export async function createWebSocketTransport(
 export async function createNodeWebSocketTransport(
   config: NodeWebSocketTransportConfig
 ): Promise<unknown> {
-  const { createNodeWebSocketTransport: factory } = await import("./node.js");
+  const { createNodeWebSocketTransport: factory } = await import('./node.js');
   return factory(config);
 }
 
@@ -111,20 +111,9 @@ export async function createNodeWebSocketTransport(
 export async function createBrowserWebSocketTransport(
   config: BrowserWebSocketTransportConfig
 ): Promise<unknown> {
-  const { createBrowserWebSocketTransport: factory } = await import("./browser.js");
+  const { createBrowserWebSocketTransport: factory } = await import('./browser.js');
   return factory(config);
 }
-
-// ============================================================================
-// Backward Compatibility
-// ============================================================================
-
-/**
- * Re-export the generic WebSocketTransport from websocket.ts for backward compatibility.
- *
- * This allows existing code that imports from the old location to continue working.
- */
-export { WebSocketTransport } from "./websocket.js";
 
 // ============================================================================
 // Default Export
