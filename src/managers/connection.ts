@@ -13,6 +13,7 @@ import type { ConnectParams, HelloOk } from '../protocol/connection.js';
 import type { GatewayFrame, ResponseFrame } from '../protocol/frames.js';
 import type { ReconnectManager } from './reconnect.js';
 import type { AuthHandler } from '../auth/provider.js';
+import type { MetricsCollector } from '../metrics/collector.js';
 
 // ============================================================================
 // Constants
@@ -156,7 +157,8 @@ export class ConnectionManager {
     transport: IWebSocketTransport,
     config: ConnectionManagerConfig = {},
     reconnectManager?: ReconnectManager,
-    authHandler?: AuthHandler
+    authHandler?: AuthHandler,
+    metricsCollector?: MetricsCollector
   ) {
     this.transport = transport;
     this.config = {
@@ -171,6 +173,14 @@ export class ConnectionManager {
     }
     if (authHandler) {
       this.authHandler = authHandler;
+    }
+
+    // Wire metrics collector to transport
+    if (metricsCollector) {
+      const transportAny = this.transport as any;
+      if (typeof transportAny.setMetricsCollector === 'function') {
+        transportAny.setMetricsCollector(metricsCollector);
+      }
     }
 
     // Set up transport event handlers
@@ -639,9 +649,10 @@ export function createConnectionManager(
   transport: IWebSocketTransport,
   config?: ConnectionManagerConfig,
   reconnectManager?: ReconnectManager,
-  authHandler?: AuthHandler
+  authHandler?: AuthHandler,
+  metricsCollector?: MetricsCollector
 ): ConnectionManager {
-  return new ConnectionManager(transport, config, reconnectManager, authHandler);
+  return new ConnectionManager(transport, config, reconnectManager, authHandler, metricsCollector);
 }
 
 // ============================================================================
