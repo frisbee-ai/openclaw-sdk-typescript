@@ -114,7 +114,7 @@ export class ReconnectManager {
       debug() {},
       info() {},
       warn() {},
-       
+
       error(message: string, meta?: Record<string, unknown>) {
         console.error(message, meta ?? '');
       },
@@ -242,6 +242,12 @@ export class ReconnectManager {
     this.attempt = 0;
     this.authRetries = 0;
     this.state = 'reconnecting';
+
+    // Add initial delay before first attempt to prevent thundering herd
+    const initialDelay = Math.floor(
+      this.config.initialDelayMs * this.config.jitterFactor * Math.random()
+    );
+    await this.delay(initialDelay);
 
     while (!this.aborted && this.attempt < this.config.maxAttempts) {
       this.attempt++;
