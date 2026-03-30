@@ -16,7 +16,7 @@ Requirements for v2.0 hardening release. Each maps to roadmap phases.
 ### Refactoring
 
 - [ ] **REF-01**: Extract API namespace initialization and connection handler setup from client.ts into separate modules
-- [ ] **REF-02**: Split api-params.ts into per-domain files (chat.ts, agents.ts, sessions.ts, etc.)
+- [x] **REF-02**: Split api-params.ts into per-domain files (chat.ts, agents.ts, sessions.ts, etc.)
 
 ### Bug Fixes
 
@@ -62,7 +62,7 @@ Requirements for v2.0 hardening release. Each maps to roadmap phases.
 | REL-02 | Phase 1 | Pending |
 | REL-03 | Phase 1 | Pending |
 | REF-01 | Phase 2 | Pending |
-| REF-02 | Phase 2 | Pending |
+| REF-02 | Phase 2 | Complete |
 | BUG-01 | Phase 3 | Pending |
 | BUG-02 | Phase 3 | Pending |
 | BUG-03 | Phase 3 | Pending |
