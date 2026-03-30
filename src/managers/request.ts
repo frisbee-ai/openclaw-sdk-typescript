@@ -9,6 +9,7 @@
  */
 
 import type { ResponseFrame } from '../protocol/frames.js';
+import { type Logger, LogLevel } from '../types/logger.js';
 
 // ============================================================================
 // Types
@@ -43,6 +44,18 @@ interface RequestEntry {
 export class RequestManager {
   /** Map of pending requests by ID */
   private pendingRequests: Map<string, RequestEntry> = new Map();
+
+  /** Logger for debug messages */
+  private logger: Logger = {
+    name: 'request-manager',
+    level: LogLevel.Error,
+    debug() {},
+    info() {},
+    warn() {},
+    error(message: string, meta?: Record<string, unknown>) {
+      console.error(message, meta ?? '');
+    },
+  };
 
   /**
    * Add a new pending request
@@ -96,7 +109,10 @@ export class RequestManager {
     const entry = this.pendingRequests.get(id);
 
     if (!entry) {
-      throw new Error(`No pending request with ID "${id}"`);
+      // Duplicate server response — this is expected in retry scenarios
+      // Log at debug level and return silently without throwing
+      this.logger.debug(`Duplicate response received for request ID "${id}" — ignoring`);
+      return;
     }
 
     // Clean up the timeout timer
