@@ -71,5 +71,6 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2026-03-30 | Phase 3 plan 01 | Completed BUG-01 (EventManager once() token cleanup) and BUG-02 (redundant abort handler cleanup) |
 | 2026-03-30 | Phase 3 plan 02 | Completed BUG-03 (reconnect initial delay), BUG-04 (WebSocket send typed error), BUG-05 (silent duplicate response handling) |
 | 2026-03-30 | Phase 4 plan 02 | Completed TRANS-01 gap closure: refactored BrowserWebSocketTransport to thin subclass extending WebSocketTransport |
+| 2026-03-31 | Phase 5 discuss | Context gathered for Hardening (HARD-01/02/03), 3 decisions captured |
 
-*Last updated: 2026-03-30 after plan 04-02 completion*
+*Last updated: 2026-03-31 after phase 5 context capture*
