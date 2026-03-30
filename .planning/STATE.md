@@ -7,7 +7,7 @@ last_updated: "2026-03-31T00:44:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 10
+  total_plans: 12
   completed_plans: 10
 ---
 
@@ -19,7 +19,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** The SDK must reliably maintain a WebSocket connection with the Gateway, automatically recovering from all common failure modes.
 
-**Current focus:** Phase 04 — transport-consolidation
+**Current focus:** Phase 06 — observability
 
 ## Milestone
 
@@ -32,11 +32,11 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | Phase | Name | Status | Plans | Progress |
 |-------|------|--------|-------|----------|
 | 1 | Critical Reliability | ● | 3/3 | 100% |
-| 2 | Code Health | ● | 2/2 | 100% |
+| 2 | Code Health | ● | 3/3 | 100% |
 | 3 | Bug Fixes | ● | 2/5 | 100% |
 | 4 | Transport Consolidation | ● | 1/1 | 100% |
-| 5 | Hardening | ○ | 4/7 | 57% |
-| 6 | Observability | ○ | 0/1 | 0% |
+| 5 | Hardening | ● | 4/7 | 100% |
+| 6 | Observability | ○ | 0/2 | 0% |
 
 ## Decisions
 
@@ -52,6 +52,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 - [Phase 02-code-health]: Types co-located next to their API classes (D-04); Shared types stay in api-common.ts (D-05); api-params.ts deleted after migration (D-06)
 - [Phase 04-transport-consolidation]: TRANS-01 complete: WebSocketTransport abstract base class with NodeWebSocketTransport and BrowserWebSocketTransport thin subclasses (only createWebSocketInstance and serialize overrides); gap closure: browser.ts refactored to thin subclass (plan 02)
 - [Phase 05-hardening]: HARD-01: ProtocolNegotiator refactored with v3→v2→v1 fallback loop (DEFAULT_PROTOCOL_VERSIONS array); HARD-02: maxPayload from HelloOk.policy propagated to WebSocketTransport via setMaxPayload(), send() throws MESSAGE_TOO_LARGE; HARD-04/05: no code changes needed; HARD-06/07: @securityNote JSDoc added to StaticCredentialsProvider.signChallenge() and TlsValidator.constantTimeEqual()
+- [Phase 06-observability]: D-01: MetricsCollector is callback interface; D-02: Three signals (onRequestLatency, onConnectionStateChange, onMessageThroughput); D-03: No-op guard pattern for zero overhead; D-04: metricsCollector in ClientConfig alongside logger
 
 ## Open Issues
 
@@ -76,6 +77,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2026-03-31 | Phase 5 plan 02 | Completed HARD-02: MESSAGE_TOO_LARGE error code and WebSocket payload size validation |
 | 2026-03-31 | Phase 5 plan 03 | Completed HARD-03: Added 24 tests for cron, skills, push APIs (3 new test files) |
 | 2026-03-31 | Phase 5 plan 04 | Completed HARD-04/05 (no code needed), HARD-06/07: Added @securityNote JSDoc to StaticCredentialsProvider.signChallenge() and TlsValidator.constantTimeEqual() |
-| 2026-03-31 | Phase 5 | ✅ Phase 5 complete: all 7 hardening requirements (HARD-01 through HARD-07) implemented and verified |
+| 2026-03-31 | Phase 5 | Phase 5 complete: all 7 hardening requirements (HARD-01 through HARD-07) implemented and verified |
+| 2026-03-31 | Phase 6 plan | Phase 6 planned: 2 plans for OBS-01 MetricsCollector (interface + wiring) |
 
-*Last updated: 2026-03-31 after phase 5 complete — 893 tests passing*
+*Last updated: 2026-03-31 after phase 6 planning — 893 tests passing*

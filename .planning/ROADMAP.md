@@ -13,7 +13,7 @@ This roadmap addresses all technical debt and reliability issues identified in t
 | 3 | Bug Fixes | 2/2 | Complete   | 2026-03-30 |
 | 4 | Transport Consolidation | 1/1 | Complete   | 2026-03-30 |
 | 5 | Hardening | Protocol fallbacks, message size limits, test coverage, docs | HARD-01–HARD-07 | 7/7 |
-| 6 | Observability | Optional metrics hook | OBS-01 | 1/1 |
+| 6 | Observability | Optional metrics hook | OBS-01 | 2/2 plans |
 
 ---
 
@@ -126,8 +126,8 @@ Plans:
 ### Requirements
 
 - [ ] **HARD-01**: Add protocol version fallbacks — allow version 2 with graceful degradation
-- [ ] **HARD-02**: Add MAX_MESSAGE_SIZE validation in WebSocketTransport before buffering
-- [ ] **HARD-03**: Add missing API test coverage for cron, skills, browser, push, usage namespaces
+- [x] **HARD-02**: Add MAX_MESSAGE_SIZE validation in WebSocketTransport before buffering
+- [x] **HARD-03**: Add missing API test coverage for cron, skills, browser, push, usage namespaces
 - [ ] **HARD-04**: Add missing NodesAPI pairing sub-namespace types (Promise<unknown> → typed results)
 - [ ] **HARD-05**: Use fixed-size ring buffer for GapDetector gaps array
 - [x] **HARD-06**: Document private key / password in-memory limitations in StaticCredentialsProvider
@@ -160,6 +160,12 @@ Plans:
 3. Connection state changes are reported
 4. Message throughput is reported (messages/sec)
 5. Metrics collection has zero overhead when disabled
+
+**Plans:** 2/2 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Create MetricsCollector interface, add to ClientConfig, export from index.ts
+- [ ] 06-02-PLAN.md — Wire metrics into client.ts request(), ConnectionStateMachine, WebSocketTransport
 
 ---
 
