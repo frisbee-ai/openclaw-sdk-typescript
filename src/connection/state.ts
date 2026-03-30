@@ -5,6 +5,7 @@
  */
 
 import type { ConnectionState } from '../protocol/connection-state.js';
+import type { MetricsCollector } from '../metrics/collector.js';
 import { type Logger, LogLevel } from '../types/logger.js';
 
 // ============================================================================
@@ -58,6 +59,8 @@ export class ConnectionStateMachine {
   private listeners: Set<StateChangeListener> = new Set();
   private listenerErrorHandler: StateChangeListenerErrorHandler | null = null;
   private logger: Logger;
+  private lastStateAt: number = Date.now();
+  private metricsCollector: MetricsCollector | undefined;
 
   constructor(logger?: Logger) {
     this.logger = logger ?? {
@@ -71,6 +74,15 @@ export class ConnectionStateMachine {
         console.error(message, meta ?? '');
       },
     };
+  }
+
+  /**
+   * Set the metrics collector for observability reporting.
+   *
+   * @param collector - Metrics collector instance or undefined to disable
+   */
+  setMetricsCollector(collector: MetricsCollector | undefined): void {
+    this.metricsCollector = collector;
   }
 
   /**
@@ -219,6 +231,13 @@ export class ConnectionStateMachine {
           this.logger.error('Error in state change listener:', { error: String(error) });
         }
       }
+    }
+
+    // Report state change metrics if collector is registered
+    if (this.metricsCollector) {
+      const durationMs = Date.now() - this.lastStateAt;
+      this.metricsCollector.onConnectionStateChange?.(event.current, durationMs);
+      this.lastStateAt = Date.now();
     }
   }
 }
