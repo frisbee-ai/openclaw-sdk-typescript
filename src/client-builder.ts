@@ -11,6 +11,7 @@ import type { CredentialsProvider } from './auth/provider.js';
 import { createAuthHandler } from './auth/provider.js';
 import type { TickMonitorConfig } from './events/tick.js';
 import type { GapDetectorConfig } from './events/gap.js';
+import type { MetricsCollector } from './metrics/collector.js';
 import { type Logger, LogLevel } from './types/logger.js';
 import { OpenClawClient } from './client.js';
 import type { IWebSocketTransport } from './transport/websocket.js';
@@ -76,6 +77,7 @@ export class ClientBuilder {
 
   private tickConfig?: Partial<TickMonitorConfig>;
   private gapConfig?: Partial<GapDetectorConfig>;
+  private metricsCollector?: MetricsCollector;
   private logger: Logger = NOOP_LOGGER;
 
   /**
@@ -183,6 +185,17 @@ export class ClientBuilder {
   }
 
   /**
+   * Set the metrics collector for observability telemetry.
+   *
+   * @param collector - Metrics collector instance
+   * @returns This builder for chaining
+   */
+  withMetrics(collector: MetricsCollector): this {
+    this.metricsCollector = collector;
+    return this;
+  }
+
+  /**
    * Build the OpenClawClient instance.
    *
    * Creates all managers and passes them to OpenClawClient via _internal,
@@ -224,6 +237,7 @@ export class ClientBuilder {
       tickMonitor: this.tickConfig,
       gapDetector: this.gapConfig,
       logger: this.logger,
+      metricsCollector: this.metricsCollector,
     };
 
     // If token was provided via withAuth(), add it to auth config
@@ -263,7 +277,8 @@ export class ClientBuilder {
         maxReconnectAttempts: normalizedConfig.maxReconnectAttempts,
       },
       reconnectMgr,
-      authHandler ?? undefined
+      authHandler ?? undefined,
+      this.metricsCollector
     );
 
     const requestManager = createRequestManager();
