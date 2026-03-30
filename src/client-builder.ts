@@ -268,7 +268,7 @@ export class ClientBuilder {
 
     const requestManager = createRequestManager();
     const eventManager = createEventManager(this.logger);
-    const protocolNegotiator = createProtocolNegotiator({ min: 3, max: 3 });
+    const protocolNegotiator = createProtocolNegotiator();
     const policyManager = createPolicyManager();
     const stateMachine = createConnectionStateMachine(this.logger);
 

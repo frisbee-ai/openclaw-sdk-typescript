@@ -25,11 +25,12 @@ export interface NegotiatedProtocol {
   max: number;
 }
 
-// Default protocol version
-export const DEFAULT_PROTOCOL_VERSION: ProtocolVersionRange = {
-  min: 3,
-  max: 3,
-};
+// Default protocol versions (v3 → v2 → v1 fallback order)
+export const DEFAULT_PROTOCOL_VERSIONS: ProtocolVersionRange[] = [
+  { min: 3, max: 3 },
+  { min: 2, max: 2 },
+  { min: 1, max: 1 },
+];
 
 // ============================================================================
 // Protocol Negotiator
@@ -44,18 +45,18 @@ export const DEFAULT_PROTOCOL_VERSION: ProtocolVersionRange = {
  * - Client handles version mismatch gracefully
  */
 export class ProtocolNegotiator {
-  private range: ProtocolVersionRange;
+  private ranges: ProtocolVersionRange[];
   private negotiatedVersion: number | null = null;
 
-  constructor(range: Partial<ProtocolVersionRange> = {}) {
-    this.range = { ...DEFAULT_PROTOCOL_VERSION, ...range };
+  constructor(ranges: ProtocolVersionRange[] = DEFAULT_PROTOCOL_VERSIONS) {
+    this.ranges = ranges;
   }
 
   /**
    * Get the protocol version range to send in connect frame.
    */
   getRange(): ProtocolVersionRange {
-    return { ...this.range };
+    return { ...this.ranges[0] };
   }
 
   /**
@@ -77,25 +78,32 @@ export class ProtocolNegotiator {
    *
    * @param helloOk Server hello-ok response
    * @returns Negotiated protocol version
-   * @throws Error if version is out of supported range
+   * @throws Error if version is out of all supported ranges
    */
   negotiate(helloOk: HelloOk): NegotiatedProtocol {
     const serverVersion = helloOk.protocol;
 
-    // Check if server version is within our supported range
-    if (serverVersion < this.range.min || serverVersion > this.range.max) {
-      throw new Error(
-        `Protocol version ${serverVersion} is out of supported range [${this.range.min}, ${this.range.max}]`
-      );
+    // Try each range in order
+    for (const range of this.ranges) {
+      if (serverVersion >= range.min && serverVersion <= range.max) {
+        // Found a match
+        if (serverVersion < this.ranges[0].min) {
+          // Degraded — server version is lower than our preferred
+          const logger = console;
+          logger.warn(
+            `[ProtocolNegotiator] Protocol version ${serverVersion} is lower than preferred ${this.ranges[0].min}, proceeding with degraded mode`
+          );
+        }
+        this.negotiatedVersion = serverVersion;
+        return { version: serverVersion, min: range.min, max: range.max };
+      }
     }
 
-    this.negotiatedVersion = serverVersion;
-
-    return {
-      version: serverVersion,
-      min: this.range.min,
-      max: this.range.max,
-    };
+    // All ranges exhausted — throw with useful error
+    const supported = this.ranges.map(r => `${r.min}-${r.max}`).join(', ');
+    throw new Error(
+      `Protocol version ${serverVersion} is out of all supported ranges [${supported}]`
+    );
   }
 
   /**
@@ -113,21 +121,25 @@ export class ProtocolNegotiator {
 /**
  * Create a protocol negotiator.
  *
- * @param range - Optional protocol version range
+ * @param ranges - Optional ordered list of protocol version ranges (v3 → v2 → v1 fallback)
  * @returns A new ProtocolNegotiator instance
  *
  * @example
  * ```ts
  * import { createProtocolNegotiator } from './connection/protocol.js';
  *
- * const negotiator = createProtocolNegotiator({
- *   minProtocol: 1,
- *   maxProtocol: 2
- * });
+ * // Use default versions (v3, v2, v1)
+ * const negotiator = createProtocolNegotiator();
+ *
+ * // Custom version ranges
+ * const negotiator2 = createProtocolNegotiator([
+ *   { min: 2, max: 2 },
+ *   { min: 1, max: 1 },
+ * ]);
  * ```
  */
 export function createProtocolNegotiator(
-  range?: Partial<ProtocolVersionRange>
+  ranges?: ProtocolVersionRange[]
 ): ProtocolNegotiator {
-  return new ProtocolNegotiator(range);
+  return new ProtocolNegotiator(ranges);
 }

@@ -13,10 +13,7 @@ import { createProtocolNegotiator } from './protocol.js';
 describe('ProtocolNegotiator Integration', () => {
   describe('Full negotiation flow', () => {
     it('should negotiate protocol version within range', () => {
-      const negotiator = createProtocolNegotiator({
-        min: 1,
-        max: 3,
-      });
+      const negotiator = createProtocolNegotiator([{ min: 1, max: 3 }]);
 
       const helloOk = {
         type: 'hello-ok' as const,
@@ -33,10 +30,7 @@ describe('ProtocolNegotiator Integration', () => {
     });
 
     it('should handle exact version match', () => {
-      const negotiator = createProtocolNegotiator({
-        min: 2,
-        max: 2,
-      });
+      const negotiator = createProtocolNegotiator([{ min: 2, max: 2 }]);
 
       const helloOk = {
         type: 'hello-ok' as const,
@@ -53,10 +47,7 @@ describe('ProtocolNegotiator Integration', () => {
     });
 
     it('should handle server protocol within client range', () => {
-      const negotiator = createProtocolNegotiator({
-        min: 1,
-        max: 5,
-      });
+      const negotiator = createProtocolNegotiator([{ min: 1, max: 5 }]);
 
       const helloOk = {
         type: 'hello-ok' as const,
@@ -75,10 +66,7 @@ describe('ProtocolNegotiator Integration', () => {
 
   describe('Version range handling', () => {
     it('should return correct range', () => {
-      const negotiator = createProtocolNegotiator({
-        min: 1,
-        max: 3,
-      });
+      const negotiator = createProtocolNegotiator([{ min: 1, max: 3 }]);
 
       const range = negotiator.getRange();
 
@@ -87,10 +75,7 @@ describe('ProtocolNegotiator Integration', () => {
     });
 
     it('should handle single version range', () => {
-      const negotiator = createProtocolNegotiator({
-        min: 2,
-        max: 2,
-      });
+      const negotiator = createProtocolNegotiator([{ min: 2, max: 2 }]);
 
       const range = negotiator.getRange();
 
@@ -110,10 +95,7 @@ describe('ProtocolNegotiator Integration', () => {
 
   describe('Negotiation state', () => {
     it('should report negotiated state correctly', () => {
-      const negotiator = createProtocolNegotiator({
-        min: 1,
-        max: 3,
-      });
+      const negotiator = createProtocolNegotiator([{ min: 1, max: 3 }]);
 
       expect(negotiator.isNegotiated()).toBe(false);
       expect(negotiator.getNegotiatedVersion()).toBeNull();
@@ -134,10 +116,7 @@ describe('ProtocolNegotiator Integration', () => {
     });
 
     it('should reset negotiation state', () => {
-      const negotiator = createProtocolNegotiator({
-        min: 1,
-        max: 3,
-      });
+      const negotiator = createProtocolNegotiator([{ min: 1, max: 3 }]);
 
       const helloOk = {
         type: 'hello-ok' as const,
@@ -159,10 +138,7 @@ describe('ProtocolNegotiator Integration', () => {
 
   describe('Multiple negotiations', () => {
     it('should allow re-negotiation after reset', () => {
-      const negotiator = createProtocolNegotiator({
-        min: 1,
-        max: 3,
-      });
+      const negotiator = createProtocolNegotiator([{ min: 1, max: 3 }]);
 
       const helloOk1 = {
         type: 'hello-ok' as const,
