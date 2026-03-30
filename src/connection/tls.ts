@@ -184,6 +184,13 @@ function normalizeFingerprint(fingerprint: string): string {
 /**
  * Constant-time string comparison.
  * Prevents timing attacks by always comparing all bytes.
+ *
+ * @securityNote **Timing-safe comparison for equal-length strings.** Uses XOR loop
+ * over the full length of both strings. For strings of equal length, timing
+ * is proportional to length rather than to where the first difference occurs,
+ * making it resistant to timing attacks. Falls back to lexicographic comparison
+ * only when lengths differ (which can leak length difference — acceptable for
+ * this use case since unequal lengths already indicate inequality).
  */
 function constantTimeEqual(a: string, b: string): boolean {
   const len = Math.max(a.length, b.length);

@@ -130,6 +130,14 @@ export class StaticCredentialsProvider implements CredentialsProvider {
     return this.config.password ?? null;
   }
 
+  /**
+   * @securityNote **Private key held in plaintext in memory.** The private key
+   * string is stored in memory after construction. `signChallenge()` wipes
+   * the internal keyBuffer after use via crypto.privateEncrypt, but the
+   * original `privateKey` string remains in memory. For production use with
+   * sensitive keys, consider using an HSM, keyring, or hardware security module.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto
+   */
   async signChallenge(nonce: string, timestamp: number): Promise<string> {
     if (!this.config.device?.privateKey) {
       throw new Error('No private key available for signing');
