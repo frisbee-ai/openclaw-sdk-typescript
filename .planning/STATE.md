@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2 | Code Health | ● | 2/2 | 100% |
 | 3 | Bug Fixes | ● | 2/5 | 100% |
 | 4 | Transport Consolidation | ● | 1/1 | 100% |
-| 5 | Hardening | ○ | 0/7 | 0% |
+| 5 | Hardening | ○ | 1/7 | 14% |
 | 6 | Observability | ○ | 0/1 | 0% |
 
 ## Decisions
@@ -71,6 +71,6 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2026-03-30 | Phase 3 plan 01 | Completed BUG-01 (EventManager once() token cleanup) and BUG-02 (redundant abort handler cleanup) |
 | 2026-03-30 | Phase 3 plan 02 | Completed BUG-03 (reconnect initial delay), BUG-04 (WebSocket send typed error), BUG-05 (silent duplicate response handling) |
 | 2026-03-30 | Phase 4 plan 02 | Completed TRANS-01 gap closure: refactored BrowserWebSocketTransport to thin subclass extending WebSocketTransport |
-| 2026-03-31 | Phase 5 discuss | Context gathered for Hardening (HARD-01/02/03), 3 decisions captured |
+| 2026-03-31 | Phase 5 plan 04 | Completed HARD-06/07: security JSDoc notes for StaticCredentialsProvider.signChallenge() and TlsValidator.constantTimeEqual() |
 
-*Last updated: 2026-03-31 after phase 5 context capture*
+*Last updated: 2026-03-31 after phase 5 plan 04*

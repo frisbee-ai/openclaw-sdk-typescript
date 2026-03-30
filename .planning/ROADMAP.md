@@ -130,8 +130,8 @@ Plans:
 - [ ] **HARD-03**: Add missing API test coverage for cron, skills, browser, push, usage namespaces
 - [ ] **HARD-04**: Add missing NodesAPI pairing sub-namespace types (Promise<unknown> → typed results)
 - [ ] **HARD-05**: Use fixed-size ring buffer for GapDetector gaps array
-- [ ] **HARD-06**: Document private key / password in-memory limitations in StaticCredentialsProvider
-- [ ] **HARD-07**: Document TLS constant-time comparison as best-effort fallback
+- [x] **HARD-06**: Document private key / password in-memory limitations in StaticCredentialsProvider
+- [x] **HARD-07**: Document TLS constant-time comparison as best-effort fallback
 
 ### Success Criteria
 
