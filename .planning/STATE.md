@@ -19,7 +19,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** The SDK must reliably maintain a WebSocket connection with the Gateway, automatically recovering from all common failure modes.
 
-**Current focus:** Phase 02 — code-health
+**Current focus:** Phase 03 — Bug Fixes
 
 ## Milestone
 
@@ -68,4 +68,4 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2026-03-29 | Phase 2 plan 02 | Completed REF-02: Split api-params.ts into 15 per-domain type files |
 | 2026-03-29 | Phase 2 plan 01 | Completed REF-01: ClientBuilder extraction with fluent API |
 
-*Last updated: 2026-03-29 after Phase 2 plan 02 execution*
+*Last updated: 2026-03-30 after Phase 3 context capture*
