@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2 | Code Health | ● | 2/2 | 100% |
 | 3 | Bug Fixes | ● | 2/5 | 100% |
 | 4 | Transport Consolidation | ● | 1/1 | 100% |
-| 5 | Hardening | ○ | 3/7 | 43% |
+| 5 | Hardening | ○ | 4/7 | 57% |
 | 6 | Observability | ○ | 0/1 | 0% |
 
 ## Decisions
@@ -51,7 +51,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 - [Phase 02-code-health]: createClient kept as backward-compatible factory (not removed to avoid breaking examples)
 - [Phase 02-code-health]: Types co-located next to their API classes (D-04); Shared types stay in api-common.ts (D-05); api-params.ts deleted after migration (D-06)
 - [Phase 04-transport-consolidation]: TRANS-01 complete: WebSocketTransport abstract base class with NodeWebSocketTransport and BrowserWebSocketTransport thin subclasses (only createWebSocketInstance and serialize overrides); gap closure: browser.ts refactored to thin subclass (plan 02)
-- [Phase 05-hardening]: HARD-02: maxPayload from HelloOk.policy stored in ConnectionManager._maxPayload, propagated to WebSocketTransport via setMaxPayload() after handshake; size check in WebSocketTransport.send() throws MESSAGE_TOO_LARGE (D-06, D-07, D-08, D-09)
+- [Phase 05-hardening]: HARD-01: ProtocolNegotiator refactored with v3→v2→v1 fallback loop (DEFAULT_PROTOCOL_VERSIONS array); HARD-02: maxPayload from HelloOk.policy propagated to WebSocketTransport via setMaxPayload(), send() throws MESSAGE_TOO_LARGE; HARD-04/05: no code changes needed; HARD-06/07: @securityNote JSDoc added to StaticCredentialsProvider.signChallenge() and TlsValidator.constantTimeEqual()
 
 ## Open Issues
 
@@ -72,6 +72,10 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2026-03-30 | Phase 3 plan 01 | Completed BUG-01 (EventManager once() token cleanup) and BUG-02 (redundant abort handler cleanup) |
 | 2026-03-30 | Phase 3 plan 02 | Completed BUG-03 (reconnect initial delay), BUG-04 (WebSocket send typed error), BUG-05 (silent duplicate response handling) |
 | 2026-03-30 | Phase 4 plan 02 | Completed TRANS-01 gap closure: refactored BrowserWebSocketTransport to thin subclass extending WebSocketTransport |
+| 2026-03-31 | Phase 5 plan 01 | Completed HARD-01: ProtocolNegotiator refactored with v3→v2→v1 fallback loop; degraded-mode WARNING logged when server version lower than preferred |
 | 2026-03-31 | Phase 5 plan 02 | Completed HARD-02: MESSAGE_TOO_LARGE error code and WebSocket payload size validation |
+| 2026-03-31 | Phase 5 plan 03 | Completed HARD-03: Added 24 tests for cron, skills, push APIs (3 new test files) |
+| 2026-03-31 | Phase 5 plan 04 | Completed HARD-04/05 (no code needed), HARD-06/07: Added @securityNote JSDoc to StaticCredentialsProvider.signChallenge() and TlsValidator.constantTimeEqual() |
+| 2026-03-31 | Phase 5 | ✅ Phase 5 complete: all 7 hardening requirements (HARD-01 through HARD-07) implemented and verified |
 
-*Last updated: 2026-03-31 after phase 5 plan 02*
+*Last updated: 2026-03-31 after phase 5 complete — 893 tests passing*
