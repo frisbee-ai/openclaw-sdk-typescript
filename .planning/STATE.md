@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: Executing Phase 03
-last_updated: "2026-03-30T02:58:36.716Z"
+last_updated: "2026-03-30T03:29:28.997Z"
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 8
 ---
 
 # State: OpenClaw SDK TypeScript v2.0
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 |-------|------|--------|-------|----------|
 | 1 | Critical Reliability | ● | 3/3 | 100% |
 | 2 | Code Health | ● | 2/2 | 100% |
-| 3 | Bug Fixes | ○ | 1/5 | 20% |
+| 3 | Bug Fixes | ○ | 2/5 | 40% |
 | 4 | Transport Consolidation | ○ | 0/1 | 0% |
 | 5 | Hardening | ○ | 0/7 | 0% |
 | 6 | Observability | ○ | 0/1 | 0% |
@@ -68,5 +68,6 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2026-03-29 | Phase 2 plan 02 | Completed REF-02: Split api-params.ts into 15 per-domain type files |
 | 2026-03-29 | Phase 2 plan 01 | Completed REF-01: ClientBuilder extraction with fluent API |
 | 2026-03-30 | Phase 3 plan 01 | Completed BUG-01 (EventManager once() token cleanup) and BUG-02 (redundant abort handler cleanup) |
+| 2026-03-30 | Phase 3 plan 02 | Completed BUG-03 (reconnect initial delay), BUG-04 (WebSocket send typed error), BUG-05 (silent duplicate response handling) |
 
-*Last updated: 2026-03-30 after plan 03-01 completion*
+*Last updated: 2026-03-30 after plan 03-02 completion*
