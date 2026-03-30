@@ -8,6 +8,7 @@
  */
 
 import { TimeoutManager } from '../utils/timeoutManager.js';
+import type { MetricsCollector } from '../metrics/collector.js';
 import { ConnectionError } from '../errors.js';
 
 /**
@@ -238,6 +239,10 @@ export abstract class WebSocketTransport implements IWebSocketTransport {
   private _url: string = '';
   private _readyState: ReadyState = ReadyState.CLOSED;
   private timeoutManager = new TimeoutManager();
+  private metricsCollector: MetricsCollector | undefined;
+  private messageCount: number = 0;
+  private throughputInterval: ReturnType<typeof setInterval> | null = null;
+  private readonly THROUGHPUT_PERIOD_MS: number = 1000;
 
   // Event handlers — public so ConnectionManager can access them directly
   public onopen: ((event: WebSocketOpenEvent) => void) | null = null;
@@ -411,6 +416,7 @@ export abstract class WebSocketTransport implements IWebSocketTransport {
         };
 
         this.ws.onmessage = (event: MessageEvent) => {
+          this.messageCount++;
           if (typeof event.data === 'string') {
             if (this.onmessage) {
               this.onmessage(event.data);
@@ -518,6 +524,23 @@ export abstract class WebSocketTransport implements IWebSocketTransport {
     this.config.maxPayload = maxPayload;
   }
 
+  /**
+   * Set the metrics collector for message throughput reporting.
+   *
+   * @param collector - Metrics collector instance or undefined to disable
+   */
+  setMetricsCollector(collector: MetricsCollector | undefined): void {
+    this.metricsCollector = collector;
+    if (collector && !this.throughputInterval) {
+      this.throughputInterval = setInterval(() => {
+        if (this.messageCount > 0 && this.metricsCollector) {
+          this.metricsCollector.onMessageThroughput?.(this.messageCount, this.THROUGHPUT_PERIOD_MS);
+          this.messageCount = 0;
+        }
+      }, this.THROUGHPUT_PERIOD_MS);
+    }
+  }
+
   // ========================================================================
   // Protected helpers — subclasses may call these
   // ========================================================================
@@ -537,6 +560,10 @@ export abstract class WebSocketTransport implements IWebSocketTransport {
    * Clean up resources — resets state and WebSocket reference.
    */
   protected cleanup(): void {
+    if (this.throughputInterval) {
+      clearInterval(this.throughputInterval);
+      this.throughputInterval = null;
+    }
     this._readyState = ReadyState.CLOSED;
     this.ws = null;
   }
