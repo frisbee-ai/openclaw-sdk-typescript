@@ -46,8 +46,10 @@ Validated in Phase 1: All 3 critical reliability requirements implemented and ve
 - [ ] **HARD-06**: Document private key / password in-memory limitations in StaticCredentialsProvider
 - [ ] **HARD-07**: Document TLS constant-time comparison as best-effort fallback
 
-#### Phase 6 — Observability (Nice to Have)
-- [ ] **OBS-01**: Add optional metrics hook for request latency, connection uptime, message throughput
+#### Phase 6 — Observability (COMPLETED)
+- [x] **OBS-01**: Add optional metrics hook for request latency, connection uptime, message throughput
+
+Validated in Phase 6: MetricsCollector interface added with zero-overhead callback pattern.
 
 ### Out of Scope
 
@@ -85,4 +87,4 @@ Key existing patterns:
 
 ---
 
-*Last updated: 2026-03-30 after Phase 3 bug fixes completion*
+*Last updated: 2026-03-31 after Phase 6 Observability completion*
