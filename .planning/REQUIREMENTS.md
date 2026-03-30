@@ -42,7 +42,7 @@ Requirements for v2.0 hardening release. Each maps to roadmap phases.
 
 ### Observability
 
-- [ ] **OBS-01**: Add optional metrics hook for request latency, connection uptime, message throughput
+- [x] **OBS-01**: Add optional metrics hook for request latency, connection uptime, message throughput
 
 ## Out of Scope
 
@@ -76,7 +76,7 @@ Requirements for v2.0 hardening release. Each maps to roadmap phases.
 | HARD-05 | Phase 5 | Pending |
 | HARD-06 | Phase 5 | Pending |
 | HARD-07 | Phase 5 | Pending |
-| OBS-01 | Phase 6 | Pending |
+| OBS-01 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 18 total
