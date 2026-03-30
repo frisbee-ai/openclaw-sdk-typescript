@@ -9,7 +9,7 @@ This roadmap addresses all technical debt and reliability issues identified in t
 | Phase | Name | Goal | Requirements | Success Criteria |
 |-------|------|------|-------------|------------------|
 | 1 | Critical Reliability | 3/3 | Complete|  |
-| 2 | Code Health | Split client.ts and api-params.ts large files | REF-01, REF-02 | 2/2 |
+| 2 | Code Health | Split client.ts and api-params.ts large files | REF-01, REF-02 | 3/3 |
 | 3 | Bug Fixes | Fix EventManager, cleanup, reconnect delay, typed errors | BUG-01–BUG-05 | 5/5 |
 | 4 | Transport Consolidation | Merge Node/Browser transport shared logic | TRANS-01 | 1/1 |
 | 5 | Hardening | Protocol fallbacks, message size limits, test coverage, docs | HARD-01–HARD-07 | 7/7 |
@@ -59,11 +59,12 @@ Plans:
 3. All existing tests still pass
 4. Public API exports in `src/index.ts` are unchanged
 
-**Plans:** 2/2 plans executed
+**Plans:** 3/3 plans (including gap closure)
 
 Plans:
 - [x] 02-01-PLAN.md — ClientBuilder refactor (REF-01)
 - [x] 02-02-PLAN.md — api-params.ts split (REF-02)
+- [x] 02-03-PLAN.md — Complete manager extraction, remove createClient (gap closure)
 
 ---
 
@@ -173,7 +174,7 @@ Plans:
 **Success criteria:**
 1. `client.ts` is reduced to ≤800 lines
 2. `api-params.ts` is split into separate files under `src/protocol/params/`
-3. All existing tests still pass
+3. All existing tests pass
 4. Public API exports in `src/index.ts` are unchanged
 
 ### Phase 3: Bug Fixes
