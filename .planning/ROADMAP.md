@@ -11,7 +11,7 @@ This roadmap addresses all technical debt and reliability issues identified in t
 | 1 | Critical Reliability | 3/3 | Complete|  |
 | 2 | Code Health | Split client.ts and api-params.ts large files | REF-01, REF-02 | 3/3 |
 | 3 | Bug Fixes | 2/2 | Complete   | 2026-03-30 |
-| 4 | Transport Consolidation | Merge Node/Browser transport shared logic | TRANS-01 | 1/1 |
+| 4 | Transport Consolidation | 1/1 | Complete   | 2026-03-30 |
 | 5 | Hardening | Protocol fallbacks, message size limits, test coverage, docs | HARD-01–HARD-07 | 7/7 |
 | 6 | Observability | Optional metrics hook | OBS-01 | 1/1 |
 

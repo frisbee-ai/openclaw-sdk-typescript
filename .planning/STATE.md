@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
-status: Ready to plan
-last_updated: "2026-03-30T03:44:14.215Z"
+status: Executing Phase 04
+last_updated: "2026-03-30T15:37:15.604Z"
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  completed_phases: 4
+  total_plans: 9
+  completed_plans: 9
 ---
 
 # State: OpenClaw SDK TypeScript v2.0
@@ -19,7 +19,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** The SDK must reliably maintain a WebSocket connection with the Gateway, automatically recovering from all common failure modes.
 
-**Current focus:** Phase 03 — bug-fixes
+**Current focus:** Phase 04 — transport-consolidation
 
 ## Milestone
 
@@ -50,6 +50,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 - [Phase 02-code-health]: ClientBuilder uses ClientConfig imported from client.ts (avoids circular deps)
 - [Phase 02-code-health]: createClient kept as backward-compatible factory (not removed to avoid breaking examples)
 - [Phase 02-code-health]: Types co-located next to their API classes (D-04); Shared types stay in api-common.ts (D-05); api-params.ts deleted after migration (D-06)
+- [Phase 04-transport-consolidation]: TRANS-01 complete: WebSocketTransport abstract base class with NodeWebSocketTransport and BrowserWebSocketTransport thin subclasses (only createWebSocketInstance and serialize overrides)
 
 ## Open Issues
 

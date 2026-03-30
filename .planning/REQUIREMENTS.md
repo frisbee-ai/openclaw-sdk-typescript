@@ -28,7 +28,7 @@ Requirements for v2.0 hardening release. Each maps to roadmap phases.
 
 ### Transport
 
-- [ ] **TRANS-01**: Extract shared logic from Node and Browser transports into base WebSocketTransport
+- [x] **TRANS-01**: Extract shared logic from Node and Browser transports into base WebSocketTransport
 
 ### Hardening
 
@@ -68,7 +68,7 @@ Requirements for v2.0 hardening release. Each maps to roadmap phases.
 | BUG-03 | Phase 3 | Pending |
 | BUG-04 | Phase 3 | Pending |
 | BUG-05 | Phase 3 | Pending |
-| TRANS-01 | Phase 4 | Pending |
+| TRANS-01 | Phase 4 | Complete |
 | HARD-01 | Phase 5 | Pending |
 | HARD-02 | Phase 5 | Pending |
 | HARD-03 | Phase 5 | Pending |
