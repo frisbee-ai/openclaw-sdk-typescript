@@ -157,23 +157,97 @@ export class EventManager {
 
   /**
    * Subscribe to event once.
+   *
+   * @returns Object with `token` for use with `off(token)` and `unsubscribe` function.
    */
   once<T = unknown>(
     pattern: EventPattern,
     handler: EventHandler<T>,
     namespace?: string
-  ): UnsubscribeFn {
+  ): { token: object; unsubscribe: UnsubscribeFn } {
+    const onceToken = {};
     const wrapped: EventHandler<T> = event => {
-      this.off(pattern, wrapped, namespace);
+      // Call off(token) overload directly to avoid TypeScript overload resolution issues
+      (this.off as (token: object) => void)(onceToken);
       handler(event);
     };
-    return this.on(pattern, wrapped, namespace);
+
+    // Register with onceToken so off(token) can find it
+    const entry: SubscriptionEntry = {
+      pattern,
+      handler: wrapped as EventHandler<unknown>,
+      namespace: namespace ?? this.defaultNamespace,
+      priority: 0,
+      isOnce: true,
+      onceToken,
+    };
+
+    if (pattern === '*') {
+      this.wildcardSubscriptions.push(entry);
+    } else if (pattern.endsWith(':*')) {
+      const prefix = pattern.slice(0, -2);
+      const existing = this.prefixSubscriptions.get(prefix) ?? [];
+      existing.push(entry);
+      this.prefixSubscriptions.set(prefix, existing);
+    } else {
+      const existing = this.subscriptions.get(pattern) ?? [];
+      existing.push(entry);
+      this.subscriptions.set(pattern, existing);
+    }
+
+    return {
+      token: onceToken,
+      unsubscribe: () => this.off(onceToken),
+    };
   }
+
+  /**
+   * Unsubscribe from events by token (returned from once()).
+   */
+  off(token: object): void;
+
+  /**
+   * Unsubscribe from events by pattern/handler/namespace.
+   */
+  off<T = unknown>(pattern?: EventPattern, handler?: EventHandler<T>, namespace?: string): void;
 
   /**
    * Unsubscribe from events.
    */
-  off<T = unknown>(pattern?: EventPattern, handler?: EventHandler<T>, namespace?: string): void {
+  off<T = unknown>(
+    tokenOrPattern?: EventPattern | object,
+    handler?: EventHandler<T>,
+    namespace?: string
+  ): void {
+    // Token-based lookup (once() subscriptions)
+    if (tokenOrPattern !== undefined && typeof tokenOrPattern === 'object') {
+      const token = tokenOrPattern;
+
+      const removeByToken = (entries: SubscriptionEntry[]) => {
+        const idx = entries.findIndex(e => e.onceToken === token);
+        if (idx !== -1) {
+          entries.splice(idx, 1);
+          return true;
+        }
+        return false;
+      };
+
+      // Search all subscription types
+      if (removeByToken(this.wildcardSubscriptions)) return;
+
+      for (const [, entries] of this.prefixSubscriptions) {
+        if (removeByToken(entries)) return;
+      }
+
+      for (const [, entries] of this.subscriptions) {
+        if (removeByToken(entries)) return;
+      }
+
+      return;
+    }
+
+    const pattern = tokenOrPattern as EventPattern | undefined;
+
     if (!pattern) {
       // Clear all
       if (namespace) {
@@ -237,10 +311,12 @@ export class EventManager {
 
     const called = new Set<EventHandler>();
 
-    // 1. Exact match
+    // 1. Exact match — iterate over a copy since handlers may call off() during emit
     const exactHandlers = this.subscriptions.get(eventName);
     if (exactHandlers) {
-      for (const entry of exactHandlers) {
+      // Create a copy to avoid iteration issues when off() removes entries
+      const entriesCopy = [...exactHandlers];
+      for (const entry of entriesCopy) {
         called.add(entry.handler);
         this.safeCall(entry.handler, payload, eventName, entry.pattern);
       }
@@ -249,7 +325,8 @@ export class EventManager {
     // 2. Prefix wildcard matches — O(k) where k is number of registered prefixes
     for (const [prefix, entries] of this.prefixSubscriptions) {
       if (eventName.startsWith(prefix + ':')) {
-        for (const entry of entries) {
+        const entriesCopy = [...entries];
+        for (const entry of entriesCopy) {
           if (!called.has(entry.handler)) {
             called.add(entry.handler);
             this.safeCall(entry.handler, payload, eventName, entry.pattern);
@@ -258,8 +335,9 @@ export class EventManager {
       }
     }
 
-    // 3. Global wildcard
-    for (const entry of this.wildcardSubscriptions) {
+    // 3. Global wildcard — iterate over a copy
+    const wildcardCopy = [...this.wildcardSubscriptions];
+    for (const entry of wildcardCopy) {
       if (!called.has(entry.handler)) {
         this.safeCall(entry.handler, payload, eventName, entry.pattern);
       }

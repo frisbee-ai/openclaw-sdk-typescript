@@ -8,6 +8,7 @@
  */
 
 import { TimeoutManager } from '../utils/timeoutManager.js';
+import { ConnectionError } from '../errors.js';
 
 /**
  * WebSocket ready states as defined in the WebSocket specification
@@ -421,13 +422,21 @@ export class WebSocketTransport implements IWebSocketTransport {
     try {
       this.ws.send(data);
     } catch (err) {
-      const error: WebSocketError = {
+      const wsError: WebSocketError = {
         message: `Failed to send data: ${err instanceof Error ? err.message : String(err)}`,
         original: err instanceof Error ? err : undefined,
         recoverable: false,
       };
-      this.handleError(error);
-      throw error;
+      this.handleError(wsError);
+
+      // Throw typed ConnectionError instead of raw WebSocketError
+      const connError = new ConnectionError({
+        code: 'CONNECTION_SEND_FAILED',
+        message: wsError.message,
+        retryable: false,
+        details: { originalError: err instanceof Error ? err.message : String(err) },
+      });
+      throw connError;
     }
   }
 

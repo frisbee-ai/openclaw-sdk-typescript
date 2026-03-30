@@ -125,7 +125,8 @@ export type ConnectionErrorCode =
   | 'CONNECT_TIMEOUT'
   | 'CONNECTION_REFUSED'
   | 'NETWORK_ERROR'
-  | 'PROTOCOL_ERROR';
+  | 'PROTOCOL_ERROR'
+  | 'CONNECTION_SEND_FAILED';
 
 /**
  * Connection error.

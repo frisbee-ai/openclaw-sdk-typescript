@@ -675,7 +675,6 @@ export class OpenClawClient {
 
     // Set up abort handler
     let abortHandler: (() => void) | undefined;
-    let cleanupAbortHandler: (() => void) | undefined;
 
     try {
       if (options?.signal) {
@@ -683,19 +682,6 @@ export class OpenClawClient {
           this.requestManager.abortRequest(requestId);
         };
         options.signal.addEventListener('abort', abortHandler);
-
-        // Store cleanup function
-        cleanupAbortHandler = () => {
-          if (abortHandler && options.signal) {
-            options.signal.removeEventListener('abort', abortHandler);
-            abortHandler = undefined;
-          }
-        };
-
-        // Also clean up on abort
-        options.signal.addEventListener('abort', cleanupAbortHandler, {
-          once: true,
-        });
       }
 
       // Send the request
@@ -858,14 +844,26 @@ export class OpenClawClient {
    *
    * @param pattern - Event pattern to match
    * @param handler - Event handler function
-   * @returns Unsubscribe function
+   * @returns Object with `token` for use with `off(token)` and `unsubscribe` function
    *
-   * client.once('shutdown', (frame) => {
+   * @example
+   * ```ts
+   * // Using unsubscribe function
+   * const { token, unsubscribe } = client.once('shutdown', (frame) => {
    *   console.log('Server shutting down:', frame.payload);
    * });
+   *
+   * // Or using token-based cleanup
+   * client.off(token);
    * ```
    */
-  once<T = unknown>(pattern: EventPattern, handler: EventHandler<T>): UnsubscribeFn {
+  once<T = unknown>(
+    pattern: EventPattern,
+    handler: EventHandler<T>
+  ): {
+    token: object;
+    unsubscribe: UnsubscribeFn;
+  } {
     return this.eventManager.once(pattern, handler);
   }
 
