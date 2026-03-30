@@ -11,6 +11,7 @@ import type { CredentialsProvider } from './auth/provider.js';
 import type { TickMonitorConfig } from './events/tick.js';
 import type { GapDetectorConfig } from './events/gap.js';
 import type { Logger } from './types/logger.js';
+import type { MetricsCollector } from './metrics/collector.js';
 
 /**
  * Connection behavior configuration
@@ -79,6 +80,8 @@ export interface ClientConfig {
   capabilities?: string[];
   /** Logger instance for structured logging */
   logger?: Logger;
+  /** Metrics collector for observability telemetry */
+  metricsCollector?: MetricsCollector;
 }
 
 /**
