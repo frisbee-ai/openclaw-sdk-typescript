@@ -12,7 +12,6 @@ import { createAuthHandler } from './auth/provider.js';
 import type { TickMonitorConfig } from './events/tick.js';
 import type { GapDetectorConfig } from './events/gap.js';
 import { type Logger, LogLevel } from './types/logger.js';
-import type { ConnectionConfig, ClientConfig } from './client.js';
 import { OpenClawClient } from './client.js';
 import { WebSocketTransport } from './transport/websocket.js';
 import type { IWebSocketTransport } from './transport/websocket.js';
@@ -23,6 +22,10 @@ import { createReconnectManager } from './managers/reconnect.js';
 import { createProtocolNegotiator } from './connection/protocol.js';
 import { createPolicyManager } from './connection/policies.js';
 import { createConnectionStateMachine } from './connection/state.js';
+import type { ConnectionConfig, ClientConfig } from './client-config.js';
+
+// Re-export types for backward compatibility
+export type { ConnectionConfig, ClientConfig } from './client-config.js';
 
 // ============================================================================
 // Default Configuration Constants
