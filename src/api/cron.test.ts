@@ -28,9 +28,10 @@ describe('CronAPI', () => {
       const jobs: CronJob[] = [{ id: 'job-2', cron: '*/5 * * * *', prompt: 'Poll' }];
       mockRequest.mockResolvedValue({ jobs });
 
-      const result = await api.list({ nodeId: 'node-1' });
+      // CronListParams is empty - list() takes no params
+      const result = await api.list();
 
-      expect(mockRequest).toHaveBeenCalledWith('cron.list', { nodeId: 'node-1' });
+      expect(mockRequest).toHaveBeenCalledWith('cron.list', undefined);
       expect(result).toEqual({ jobs });
     });
   });
@@ -52,9 +53,9 @@ describe('CronAPI', () => {
       const job: CronJob = { id: 'job-1', cron: '0 * * * *', prompt: 'Check status' };
       mockRequest.mockResolvedValue(job);
 
-      const result = await api.status({ id: 'job-1' });
+      const result = await api.status({ jobId: 'job-1' });
 
-      expect(mockRequest).toHaveBeenCalledWith('cron.status', { id: 'job-1' });
+      expect(mockRequest).toHaveBeenCalledWith('cron.status', { jobId: 'job-1' });
       expect(result).toEqual(job);
     });
   });
@@ -63,9 +64,9 @@ describe('CronAPI', () => {
     it('removes a cron job', async () => {
       mockRequest.mockResolvedValue(undefined);
 
-      await api.remove({ id: 'job-1' });
+      await api.remove({ jobId: 'job-1' });
 
-      expect(mockRequest).toHaveBeenCalledWith('cron.remove', { id: 'job-1' });
+      expect(mockRequest).toHaveBeenCalledWith('cron.remove', { jobId: 'job-1' });
     });
   });
 
@@ -73,9 +74,9 @@ describe('CronAPI', () => {
     it('manually triggers a cron job', async () => {
       mockRequest.mockResolvedValue(undefined);
 
-      await api.run({ id: 'job-1' });
+      await api.run({ jobId: 'job-1' });
 
-      expect(mockRequest).toHaveBeenCalledWith('cron.run', { id: 'job-1' });
+      expect(mockRequest).toHaveBeenCalledWith('cron.run', { jobId: 'job-1' });
     });
   });
 
@@ -84,9 +85,9 @@ describe('CronAPI', () => {
       const job: CronJob = { id: 'job-1', cron: '*/10 * * * *', prompt: 'Updated prompt' };
       mockRequest.mockResolvedValue(job);
 
-      const result = await api.update({ id: 'job-1', cron: '*/10 * * * *', prompt: 'Updated prompt' });
+      const result = await api.update({ jobId: 'job-1', cron: '*/10 * * * *', prompt: 'Updated prompt' });
 
-      expect(mockRequest).toHaveBeenCalledWith('cron.update', { id: 'job-1', cron: '*/10 * * * *', prompt: 'Updated prompt' });
+      expect(mockRequest).toHaveBeenCalledWith('cron.update', { jobId: 'job-1', cron: '*/10 * * * *', prompt: 'Updated prompt' });
       expect(result).toEqual(job);
     });
   });
@@ -106,9 +107,10 @@ describe('CronAPI', () => {
       const runs: CronRunLogEntry[] = [];
       mockRequest.mockResolvedValue({ runs });
 
-      const result = await api.runs({ id: 'job-1', limit: 10 });
+      // CronRunsParams is empty, so no params
+      const result = await api.runs();
 
-      expect(mockRequest).toHaveBeenCalledWith('cron.runs', { id: 'job-1', limit: 10 });
+      expect(mockRequest).toHaveBeenCalledWith('cron.runs', undefined);
       expect(result).toEqual({ runs });
     });
   });

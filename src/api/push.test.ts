@@ -24,13 +24,13 @@ describe('PushAPI', () => {
       expect(response).toEqual(result);
     });
 
-    it('registers with optional params', async () => {
-      const result: PushRegisterResult = { success: true };
+    it('registers with required params', async () => {
+      const result: PushRegisterResult = {};
       mockRequest.mockResolvedValue(result);
 
-      const response = await api.register({ token: 'token', platform: 'android', userId: 'user-123' });
+      const response = await api.register({ token: 'token', platform: 'android' });
 
-      expect(mockRequest).toHaveBeenCalledWith('push.register', { token: 'token', platform: 'android', userId: 'user-123' });
+      expect(mockRequest).toHaveBeenCalledWith('push.register', { token: 'token', platform: 'android' });
       expect(response).toEqual(result);
     });
   });

@@ -28,9 +28,9 @@ describe('SkillsAPI', () => {
       const status = { installed: ['skill-a'] };
       mockRequest.mockResolvedValue(status);
 
-      const result = await api.status({ nodeId: 'node-1' });
+      const result = await api.status({ skillId: 'skill-a' });
 
-      expect(mockRequest).toHaveBeenCalledWith('skills.status', { nodeId: 'node-1' });
+      expect(mockRequest).toHaveBeenCalledWith('skills.status', { skillId: 'skill-a' });
       expect(result).toEqual(status);
     });
   });
@@ -39,9 +39,9 @@ describe('SkillsAPI', () => {
     it('installs a skill', async () => {
       mockRequest.mockResolvedValue(undefined);
 
-      await api.install({ name: 'my-skill', version: '1.0.0' });
+      await api.install({ skillId: 'my-skill' });
 
-      expect(mockRequest).toHaveBeenCalledWith('skills.install', { name: 'my-skill', version: '1.0.0' });
+      expect(mockRequest).toHaveBeenCalledWith('skills.install', { skillId: 'my-skill' });
     });
   });
 
@@ -49,9 +49,9 @@ describe('SkillsAPI', () => {
     it('updates a skill', async () => {
       mockRequest.mockResolvedValue(undefined);
 
-      await api.update({ name: 'my-skill', version: '2.0.0' });
+      await api.update({ skillId: 'my-skill' });
 
-      expect(mockRequest).toHaveBeenCalledWith('skills.update', { name: 'my-skill', version: '2.0.0' });
+      expect(mockRequest).toHaveBeenCalledWith('skills.update', { skillId: 'my-skill' });
     });
   });
 
@@ -70,9 +70,10 @@ describe('SkillsAPI', () => {
       const bins: SkillsBinsResult = { bins: ['bin-a'] };
       mockRequest.mockResolvedValue(bins);
 
-      const result = await api.bins({ nodeId: 'node-1' });
+      // SkillsBinsParams is empty
+      const result = await api.bins();
 
-      expect(mockRequest).toHaveBeenCalledWith('skills.bins', { nodeId: 'node-1' });
+      expect(mockRequest).toHaveBeenCalledWith('skills.bins', undefined);
       expect(result).toEqual(bins);
     });
   });
@@ -93,9 +94,10 @@ describe('SkillsAPI', () => {
         const catalog: ToolsCatalogResult = { tools: [] };
         mockRequest.mockResolvedValue(catalog);
 
-        const result = await api.tools.catalog({ skill: 'my-skill' });
+        // ToolsCatalogParams is empty
+        const result = await api.tools.catalog();
 
-        expect(mockRequest).toHaveBeenCalledWith('tools.catalog', { skill: 'my-skill' });
+        expect(mockRequest).toHaveBeenCalledWith('tools.catalog', undefined);
         expect(result).toEqual(catalog);
       });
     });
@@ -115,9 +117,9 @@ describe('SkillsAPI', () => {
         const effective: ToolsEffectiveResult = { tools: ['tool-1'] };
         mockRequest.mockResolvedValue(effective);
 
-        const result = await api.tools.effective({ nodeId: 'node-1', skill: 'my-skill' });
+        const result = await api.tools.effective({ nodeId: 'node-1', skillId: 'my-skill' });
 
-        expect(mockRequest).toHaveBeenCalledWith('tools.effective', { nodeId: 'node-1', skill: 'my-skill' });
+        expect(mockRequest).toHaveBeenCalledWith('tools.effective', { nodeId: 'node-1', skillId: 'my-skill' });
         expect(result).toEqual(effective);
       });
     });
