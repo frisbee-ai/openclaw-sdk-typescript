@@ -88,6 +88,12 @@ Plans:
 4. `ws.send()` errors propagate as `ConnectionError` subclasses
 5. Duplicate server responses are handled silently without throwing
 
+**Plans:** 2/2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Fix EventManager once/off (BUG-01) and client abort cleanup (BUG-02)
+- [ ] 03-02-PLAN.md — Fix reconnect delay (BUG-03), typed send error (BUG-04), silent duplicate response (BUG-05)
+
 ---
 
 ## Phase 4: Transport Consolidation
