@@ -22,6 +22,7 @@ import type { PolicyManager } from './connection/policies.js';
 import type { Policy } from './connection/policies.js';
 import type { ConnectionStateMachine } from './connection/state.js';
 import type { AuthHandler } from './auth/provider.js';
+import type { MetricsCollector } from './metrics/collector.js';
 import { TickMonitor, createTickMonitor } from './events/tick.js';
 import { GapDetector, createGapDetector } from './events/gap.js';
 import type { Logger } from './types/logger.js';
@@ -80,6 +81,7 @@ export class OpenClawClient {
   private authHandler: AuthHandler | null = null;
   private tickMonitor: TickMonitor | null = null;
   private gapDetector: GapDetector | null = null;
+  private metricsCollector: MetricsCollector | undefined;
   private tickHandlerUnsub: (() => void) | null = null;
 
   // API namespaces
@@ -130,6 +132,7 @@ export class OpenClawClient {
     this._config = config;
     this._normalizedConfig = this.normalizeConnectionConfig(config);
     this.logger = config.logger ?? NOOP_LOGGER;
+    this.metricsCollector = config.metricsCollector;
 
     if (_internal) {
       // ClientBuilder path: use pre-built managers
@@ -140,6 +143,11 @@ export class OpenClawClient {
       this.policyManager = _internal.policyManager!;
       this.stateMachine = _internal.stateMachine!;
       this.authHandler = _internal.authHandler ?? null;
+
+      // Wire metrics collector to state machine
+      if (this.metricsCollector) {
+        this.stateMachine.setMetricsCollector(this.metricsCollector);
+      }
 
       // Set up 'request.cancelled' event handler on eventManager
       this.eventManager.on(
@@ -685,6 +693,7 @@ export class OpenClawClient {
       }
 
       // Send the request
+      const requestStartTime = this.metricsCollector ? performance.now() : 0;
       try {
         this.connectionManager.send(requestFrame);
       } catch (sendError) {
@@ -694,6 +703,12 @@ export class OpenClawClient {
 
       // Wait for response
       const response = await responsePromise;
+
+      // Report latency if metrics collector is registered
+      if (this.metricsCollector) {
+        const latencyMs = performance.now() - requestStartTime;
+        this.metricsCollector.onRequestLatency?.(method, latencyMs);
+      }
 
       if (!response.ok) {
         if (response.error) {
