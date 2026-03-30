@@ -13,8 +13,8 @@ import type { TickMonitorConfig } from './events/tick.js';
 import type { GapDetectorConfig } from './events/gap.js';
 import { type Logger, LogLevel } from './types/logger.js';
 import { OpenClawClient } from './client.js';
-import { WebSocketTransport } from './transport/websocket.js';
 import type { IWebSocketTransport } from './transport/websocket.js';
+import { createWebSocketTransport } from './transport/index.js';
 import { createConnectionManager } from './managers/connection.js';
 import { createRequestManager } from './managers/request.js';
 import { createEventManager } from './managers/event.js';
@@ -191,7 +191,7 @@ export class ClientBuilder {
    * @returns A configured OpenClawClient instance
    * @throws Error if required configuration is missing or invalid
    */
-  build(): OpenClawClient {
+  async build(): Promise<OpenClawClient> {
     // Validate URL
     let parsed: URL;
     try {
@@ -232,7 +232,8 @@ export class ClientBuilder {
     }
 
     // Create all managers (extracted from client.ts constructor)
-    const transport: IWebSocketTransport = new WebSocketTransport({
+    const transport: IWebSocketTransport = await createWebSocketTransport({
+      url: this.url,
       connectTimeoutMs: normalizedConfig.connectTimeoutMs,
     });
 

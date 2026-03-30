@@ -17,36 +17,36 @@ import {
 } from './index.js';
 
 describe('ClientBuilder', () => {
-  it('should create OpenClawClient instance', () => {
-    const client = new ClientBuilder('ws://localhost:8080', 'test-client').build();
+  it('should create OpenClawClient instance', async () => {
+    const client = await new ClientBuilder('ws://localhost:8080', 'test-client').build();
 
     expect(client).toBeInstanceOf(OpenClawClient);
   });
 
-  it('should accept minimal config', () => {
-    const client = new ClientBuilder('ws://localhost:8080', 'test').build();
+  it('should accept minimal config', async () => {
+    const client = await new ClientBuilder('ws://localhost:8080', 'test').build();
 
     expect(client).toBeDefined();
   });
 
-  it('should accept auth token', () => {
-    const client = new ClientBuilder('ws://localhost:8080', 'test-client')
+  it('should accept auth token', async () => {
+    const client = await new ClientBuilder('ws://localhost:8080', 'test-client')
       .withAuth('test-token')
       .build();
 
     expect(client).toBeInstanceOf(OpenClawClient);
   });
 
-  it('should accept nested connection config', () => {
-    const client = new ClientBuilder('ws://localhost:8080', 'test-client')
+  it('should accept nested connection config', async () => {
+    const client = await new ClientBuilder('ws://localhost:8080', 'test-client')
       .withReconnect({ requestTimeoutMs: 5000, connectTimeoutMs: 10000, autoReconnect: false })
       .build();
 
     expect(client).toBeInstanceOf(OpenClawClient);
   });
 
-  it('should accept full config', () => {
-    const client = new ClientBuilder('ws://localhost:8080', 'test-client', '1.0.0')
+  it('should accept full config', async () => {
+    const client = await new ClientBuilder('ws://localhost:8080', 'test-client', '1.0.0')
       .withAuth('token')
       .withReconnect({ autoReconnect: true, maxReconnectAttempts: 5, reconnectDelayMs: 1000 })
       .build();
@@ -57,24 +57,24 @@ describe('ClientBuilder', () => {
 
 describe('OpenClawClient', () => {
   describe('connectionState', () => {
-    it('should return initial connection state', () => {
-      const client = new ClientBuilder('ws://localhost:8080', 'test-client').build();
+    it('should return initial connection state', async () => {
+      const client = await new ClientBuilder('ws://localhost:8080', 'test-client').build();
 
       expect(client.connectionState).toBeDefined();
     });
   });
 
   describe('isConnected', () => {
-    it('should return false when not connected', () => {
-      const client = new ClientBuilder('ws://localhost:8080', 'test-client').build();
+    it('should return false when not connected', async () => {
+      const client = await new ClientBuilder('ws://localhost:8080', 'test-client').build();
 
       expect(client.isConnected).toBe(false);
     });
   });
 
   describe('onStateChange', () => {
-    it('should register state change handler', () => {
-      const client = new ClientBuilder('ws://localhost:8080', 'test-client').build();
+    it('should register state change handler', async () => {
+      const client = await new ClientBuilder('ws://localhost:8080', 'test-client').build();
 
       const handler = vi.fn();
       const unsubscribe = client.onStateChange(handler);
@@ -84,8 +84,8 @@ describe('OpenClawClient', () => {
       unsubscribe();
     });
 
-    it('should allow multiple handlers', () => {
-      const client = new ClientBuilder('ws://localhost:8080', 'test-client').build();
+    it('should allow multiple handlers', async () => {
+      const client = await new ClientBuilder('ws://localhost:8080', 'test-client').build();
 
       const handler1 = vi.fn();
       const handler2 = vi.fn();
@@ -97,8 +97,8 @@ describe('OpenClawClient', () => {
       expect(handler2).toBeDefined();
     });
 
-    it('should return unsubscribe function that removes handler', () => {
-      const client = new ClientBuilder('ws://localhost:8080', 'test-client').build();
+    it('should return unsubscribe function that removes handler', async () => {
+      const client = await new ClientBuilder('ws://localhost:8080', 'test-client').build();
 
       const handler = vi.fn();
       const unsubscribe = client.onStateChange(handler);
@@ -112,8 +112,8 @@ describe('OpenClawClient', () => {
   });
 
   describe('onError', () => {
-    it('should register error handler', () => {
-      const client = new ClientBuilder('ws://localhost:8080', 'test-client').build();
+    it('should register error handler', async () => {
+      const client = await new ClientBuilder('ws://localhost:8080', 'test-client').build();
 
       const handler = vi.fn();
       const unsubscribe = client.onError(handler);
@@ -125,8 +125,8 @@ describe('OpenClawClient', () => {
   });
 
   describe('onMessage', () => {
-    it('should register message handler', () => {
-      const client = new ClientBuilder('ws://localhost:8080', 'test-client').build();
+    it('should register message handler', async () => {
+      const client = await new ClientBuilder('ws://localhost:8080', 'test-client').build();
 
       const handler = vi.fn();
       const unsubscribe = client.onMessage(handler);
@@ -138,8 +138,8 @@ describe('OpenClawClient', () => {
   });
 
   describe('onClosed', () => {
-    it('should register closed handler', () => {
-      const client = new ClientBuilder('ws://localhost:8080', 'test-client').build();
+    it('should register closed handler', async () => {
+      const client = await new ClientBuilder('ws://localhost:8080', 'test-client').build();
 
       const handler = vi.fn();
       const unsubscribe = client.onClosed(handler);
@@ -151,16 +151,16 @@ describe('OpenClawClient', () => {
   });
 
   describe('disconnect', () => {
-    it('should have disconnect method', () => {
-      const client = new ClientBuilder('ws://localhost:8080', 'test-client').build();
+    it('should have disconnect method', async () => {
+      const client = await new ClientBuilder('ws://localhost:8080', 'test-client').build();
 
       expect(typeof client.disconnect).toBe('function');
     });
   });
 
   describe('abort', () => {
-    it('should have abort method', () => {
-      const client = new ClientBuilder('ws://localhost:8080', 'test-client').build();
+    it('should have abort method', async () => {
+      const client = await new ClientBuilder('ws://localhost:8080', 'test-client').build();
 
       expect(typeof client.abort).toBe('function');
     });
@@ -168,7 +168,7 @@ describe('OpenClawClient', () => {
 });
 
 describe('ClientConfig', () => {
-  it('should accept all config options', () => {
+  it('should accept all config options', async () => {
     const config: ClientConfig = {
       url: 'ws://localhost:8080',
       clientId: 'test-client',
@@ -198,34 +198,34 @@ describe('ClientConfig', () => {
   });
 
   describe('url validation', () => {
-    it('should accept ws:// URL scheme', () => {
+    it('should accept ws:// URL scheme', async () => {
       expect(() => new ClientBuilder('ws://localhost:8080', 'test').build()).not.toThrow();
     });
 
-    it('should accept wss:// URL scheme', () => {
+    it('should accept wss:// URL scheme', async () => {
       expect(() => new ClientBuilder('wss://localhost:8080', 'test').build()).not.toThrow();
     });
 
-    it('should reject http:// URL scheme', () => {
-      expect(() => new ClientBuilder('http://localhost:8080', 'test').build()).toThrow(
+    it('should reject http:// URL scheme', async () => {
+      await expect(new ClientBuilder('http://localhost:8080', 'test').build()).rejects.toThrow(
         'Invalid URL scheme: http:. Expected ws: or wss:'
       );
     });
 
-    it('should reject https:// URL scheme', () => {
-      expect(() => new ClientBuilder('https://localhost:8080', 'test').build()).toThrow(
+    it('should reject https:// URL scheme', async () => {
+      await expect(new ClientBuilder('https://localhost:8080', 'test').build()).rejects.toThrow(
         'Invalid URL scheme: https:. Expected ws: or wss:'
       );
     });
 
-    it('should reject file:// URL scheme', () => {
-      expect(() => new ClientBuilder('file:///path/to/socket', 'test').build()).toThrow(
+    it('should reject file:// URL scheme', async () => {
+      await expect(new ClientBuilder('file:///path/to/socket', 'test').build()).rejects.toThrow(
         'Invalid URL scheme: file:. Expected ws: or wss:'
       );
     });
 
-    it('should reject malformed URLs', () => {
-      expect(() => new ClientBuilder('not-a-valid-url', 'test').build()).toThrow(
+    it('should reject malformed URLs', async () => {
+      await expect(new ClientBuilder('not-a-valid-url', 'test').build()).rejects.toThrow(
         'Invalid WebSocket URL: not-a-valid-url'
       );
     });
@@ -233,7 +233,7 @@ describe('ClientConfig', () => {
 });
 
 describe('ConnectionConfig', () => {
-  it('should accept all connection options', () => {
+  it('should accept all connection options', async () => {
     const config: ConnectionConfig = {
       requestTimeoutMs: 5000,
       connectTimeoutMs: 10000,
@@ -248,26 +248,26 @@ describe('ConnectionConfig', () => {
 });
 
 describe('RequestOptions', () => {
-  it('should accept signal option', () => {
+  it('should accept signal option', async () => {
     const controller = new AbortController();
     const options: RequestOptions = { signal: controller.signal };
 
     expect(options.signal).toBe(controller.signal);
   });
 
-  it('should accept expectFinal option', () => {
+  it('should accept expectFinal option', async () => {
     const options: RequestOptions = { expectFinal: true };
 
     expect(options.expectFinal).toBe(true);
   });
 
-  it('should accept expectFinalTimeoutMs option', () => {
+  it('should accept expectFinalTimeoutMs option', async () => {
     const options: RequestOptions = { expectFinalTimeoutMs: 5000 };
 
     expect(options.expectFinalTimeoutMs).toBe(5000);
   });
 
-  it('should accept all options together', () => {
+  it('should accept all options together', async () => {
     const controller = new AbortController();
     const options: RequestOptions = {
       signal: controller.signal,

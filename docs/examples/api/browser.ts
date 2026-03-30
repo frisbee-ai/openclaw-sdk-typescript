@@ -18,7 +18,7 @@ import { ClientBuilder } from '../../../src/index.js';
 // ============================================================================
 
 async function browserExample() {
-  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'browser-client-id')
+  const client = await new ClientBuilder('wss://gateway.openclaw.example.com', 'browser-client-id')
     .withAuth('browser-auth-token')
     .build();
 
@@ -43,13 +43,13 @@ async function browserExample() {
 // Browser Example with UI Integration
 // ============================================================================
 
-function setupUIIntegration() {
+async function setupUIIntegration() {
   const connectBtn = document.getElementById('connect-btn') as HTMLButtonElement;
   const disconnectBtn = document.getElementById('disconnect-btn') as HTMLButtonElement;
   const statusDiv = document.getElementById('status') as HTMLDivElement;
   const eventsDiv = document.getElementById('events') as HTMLDivElement;
 
-  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'ui-client-id')
+  const client = await new ClientBuilder('wss://gateway.openclaw.example.com', 'ui-client-id')
     .withAuth('ui-auth-token')
     .build();
 

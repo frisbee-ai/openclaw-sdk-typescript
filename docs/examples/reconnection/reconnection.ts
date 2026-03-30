@@ -13,7 +13,7 @@ import { ClientBuilder, createReconnectManager } from '../../../src/index.js';
 // ============================================================================
 
 async function builtinReconnection() {
-  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+  const client = await new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
     .withAuth('your-auth-token')
     .withReconnect({
       autoReconnect: true,
@@ -65,7 +65,7 @@ async function standaloneReconnection() {
 // ============================================================================
 
 async function customReconnection() {
-  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+  const client = await new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
     .withAuth('your-auth-token')
     .build();
 

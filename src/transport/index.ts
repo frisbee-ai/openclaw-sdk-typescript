@@ -34,19 +34,14 @@ const platform: 'node' | 'browser' = ((process.env.FORCE_PLATFORM as string) ||
 
 // Re-export types from websocket.ts
 export type { IWebSocketTransport, ReadyState, ReadyStateString } from './websocket.js';
+import type { IWebSocketTransport } from './websocket.js';
 
 // Import types for use in function signatures
 import type { NodeWebSocketTransportConfig } from './node.js';
 import type { BrowserWebSocketTransportConfig } from './browser.js';
 
 // Re-export types from node.ts (used by both transports)
-export type {
-  NodeWebSocketTransportConfig,
-  TlsValidator,
-  WebSocketOpenEvent,
-  WebSocketClose,
-  WebSocketError,
-} from './node.js';
+export type { NodeWebSocketTransportConfig, TlsValidator } from './node.js';
 
 // Re-export type from browser.ts
 export type { BrowserWebSocketTransportConfig } from './browser.js';
@@ -75,7 +70,7 @@ export type { BrowserWebSocketTransportConfig } from './browser.js';
  */
 export async function createWebSocketTransport(
   config: NodeWebSocketTransportConfig | BrowserWebSocketTransportConfig
-): Promise<unknown> {
+): Promise<IWebSocketTransport> {
   if (platform === 'node') {
     const { createNodeWebSocketTransport } = await import('./node.js');
     return createNodeWebSocketTransport(config as NodeWebSocketTransportConfig);

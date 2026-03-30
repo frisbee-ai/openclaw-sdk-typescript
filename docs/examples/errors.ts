@@ -18,7 +18,7 @@ import {
 } from '../../src/index.js';
 
 async function comprehensiveErrorHandling() {
-  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+  const client = await new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
     .withAuth('invalid-token')
     .build();
 
@@ -43,7 +43,7 @@ async function comprehensiveErrorHandling() {
 }
 
 async function requestTimeoutExample() {
-  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+  const client = await new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
     .withAuth('your-auth-token')
     .withReconnect({ requestTimeoutMs: 5000 })
     .build();
@@ -63,7 +63,7 @@ async function requestTimeoutExample() {
 }
 
 async function requestCancellationExample() {
-  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+  const client = await new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
     .withAuth('your-auth-token')
     .build();
 

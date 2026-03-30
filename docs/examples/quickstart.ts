@@ -9,7 +9,7 @@ import { ClientBuilder } from '../../src/index.js';
 
 async function main() {
   // Create a client with your credentials
-  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+  const client = await new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
     .withAuth('your-auth-token')
     .build();
 

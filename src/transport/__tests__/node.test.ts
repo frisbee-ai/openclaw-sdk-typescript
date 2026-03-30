@@ -14,6 +14,13 @@ vi.mock('ws', () => {
   class MockWebSocket {
     private _handlers: Map<string, Function[]> = new Map();
     private _url: string;
+
+    // Browser-style handlers (used by WebSocketTransport base class)
+    onopen: ((event: Event) => void) | null = null;
+    onclose: ((event: CloseEvent) => void) | null = null;
+    onerror: ((event: Event) => void) | null = null;
+    onmessage: ((event: MessageEvent) => void) | null = null;
+
     send = vi.fn();
     readyState = 3;
     addEventListener = vi.fn();
@@ -47,7 +54,7 @@ vi.mock('ws', () => {
       }, 0);
     }
 
-    // Override on to track handlers
+    // ws-style event registration (used by ws library consumers)
     on(event: string, handler: Function): this {
       if (!this._handlers.has(event)) {
         this._handlers.set(event, []);
@@ -69,10 +76,29 @@ vi.mock('ws', () => {
       }, 0);
     }
 
-    // Helper to emit events (supports multiple parameters)
+    // Helper to emit events — calls BOTH ws-style handlers (on method) AND
+    // browser-style handlers (onopen/onclose/onerror/onmessage properties)
     _emit(event: string, ...args: unknown[]): void {
       const handlers = this._handlers.get(event) || [];
       handlers.forEach(h => h(...args));
+
+      // Also call browser-style handler if set
+      switch (event) {
+        case 'open':
+          this.onopen?.(new Event('open'));
+          break;
+        case 'close':
+          this.onclose?.(
+            new CloseEvent('close', { code: args[0] as number, reason: args[1] as string })
+          );
+          break;
+        case 'error':
+          this.onerror?.(new Event('error'));
+          break;
+        case 'message':
+          this.onmessage?.(new MessageEvent('message', { data: args[0] }));
+          break;
+      }
     }
   }
 
@@ -200,17 +226,17 @@ describe('NodeWebSocketTransport', () => {
       // Error handler should be called
     });
 
-    it('should call onmessage handler', async () => {
-      const onMessage = vi.fn();
+    it('should call onbinary handler', async () => {
+      const onBinary = vi.fn();
       const transport = createNodeWebSocketTransport({
         url: 'wss://example.com',
-        onmessage: onMessage,
+        onbinary: onBinary,
       });
 
       await transport.connect('wss://example.com/ws');
-      // Wait for test message to be sent
+      // Wait for test message to be sent (binary Buffer)
       await new Promise(resolve => setTimeout(resolve, 20));
-      expect(onMessage).toHaveBeenCalled();
+      expect(onBinary).toHaveBeenCalled();
     });
   });
 });

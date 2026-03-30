@@ -17,7 +17,7 @@ import {
 // ============================================================================
 
 async function staticTokenExample() {
-  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+  const client = await new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
     .withAuth('your-auth-token')
     .build();
 
@@ -35,7 +35,7 @@ async function staticCredentialsProviderExample() {
     token: 'your-auth-token',
   });
 
-  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+  const client = await new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
     .withAuth(provider)
     .build();
 
@@ -105,7 +105,7 @@ class TokenRefreshProvider implements CredentialsProvider {
 async function customCredentialsExample() {
   const provider = new TokenRefreshProvider();
 
-  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+  const client = await new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
     .withAuth(provider)
     .build();
 

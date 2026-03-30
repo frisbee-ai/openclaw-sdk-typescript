@@ -1,8 +1,8 @@
 /**
  * OpenClaw WebSocket Transport
  *
- * This module provides a WebSocket transport abstraction that works across
- * different environments (Node.js and browser) with a type-safe event emitter pattern.
+ * Abstract base class for WebSocket transport implementations.
+ * Provides cross-platform WebSocket connectivity for Node.js and browser environments.
  *
  * @module
  */
@@ -56,7 +56,7 @@ export function readyStateToString(state: ReadyState): ReadyStateString {
 }
 
 /**
- * WebSocket error event data
+ * WebSocket error event data (unified shape across all transports)
  */
 export interface WebSocketError {
   /** Error message */
@@ -116,15 +116,14 @@ export interface WebSocketOpenEvent {
 }
 
 /**
- * WebSocket transport configuration
+ * Base configuration for WebSocket transports.
+ *
+ * Subclasses extend this with additional platform-specific options.
+ * (e.g., NodeWebSocketTransport extends with tlsValidator)
  */
 export interface WebSocketTransportConfig {
   /** Connection timeout in milliseconds */
   connectTimeoutMs?: number;
-  /** Whether to use binary protocol */
-  useBinary?: boolean;
-  /** Custom WebSocket implementation (for testing or specific environments) */
-  WebSocketImpl?: typeof WebSocket;
 }
 
 // ============================================================================
@@ -199,80 +198,111 @@ export interface IWebSocketTransport {
 }
 
 // ============================================================================
-// Base WebSocket Transport Implementation
+// Abstract WebSocket Transport Base Class
 // ============================================================================
 
 /**
- * Base WebSocket transport implementation
+ * Abstract base class for WebSocket transport implementations.
  *
- * This class provides a cross-platform WebSocket transport that works in both
- * Node.js (with the 'ws' library) and browser environments (using native WebSocket).
+ * Provides all shared behavior (connect, send, close, error handling, cleanup).
+ * Subclasses only override:
+ *   - `createWebSocketInstance()` — how the WebSocket is instantiated
+ *   - `serialize()` — how binary data is formatted for sending
+ *
+ * @example
+ * ```ts
+ * class NodeWebSocketTransport extends WebSocketTransport {
+ *   protected createWebSocketInstance(url: string, options?: Record<string, unknown>): WebSocket {
+ *     return new WS(url, options);
+ *   }
+ *   protected serialize(data: string | ArrayBuffer): string | Buffer {
+ *     return typeof data === 'string' ? data : Buffer.from(data);
+ *   }
+ * }
+ * ```
  */
-export class WebSocketTransport implements IWebSocketTransport {
+export abstract class WebSocketTransport implements IWebSocketTransport {
+  /** The underlying WebSocket instance (set by subclass via createWebSocketInstance) */
   private ws: WebSocket | null = null;
+
   private _url: string = '';
   private _readyState: ReadyState = ReadyState.CLOSED;
-  private config: Required<WebSocketTransportConfig>;
   private timeoutManager = new TimeoutManager();
 
-  // Event handlers
+  // Event handlers — public so ConnectionManager can access them directly
   public onopen: ((event: WebSocketOpenEvent) => void) | null = null;
   public onclose: ((event: WebSocketClose) => void) | null = null;
   public onerror: ((error: WebSocketError) => void) | null = null;
   public onmessage: ((data: string) => void) | null = null;
   public onbinary: ((data: ArrayBuffer) => void) | null = null;
 
+  /** Base config — subclasses extend this with additional options */
+  private config: Required<Pick<WebSocketTransportConfig, 'connectTimeoutMs'>>;
+
   constructor(config: WebSocketTransportConfig = {}) {
     this.config = {
       connectTimeoutMs: config.connectTimeoutMs ?? 30000,
-      useBinary: config.useBinary ?? false,
-      WebSocketImpl: config.WebSocketImpl ?? this.getDefaultWebSocket(),
     };
   }
 
-  /**
-   * Get the default WebSocket implementation for the current environment
-   */
-  private getDefaultWebSocket(): typeof WebSocket {
-    // Browser environment
-    if (typeof WebSocket !== 'undefined') {
-      return WebSocket;
-    }
+  // ========================================================================
+  // Abstract methods — must be overridden by subclasses
+  // ========================================================================
 
-    // Node.js environment - try require (CJS)
-    try {
-      const ws = require('ws');
-      return ws.WebSocket || ws.default;
-    } catch {
-      throw new Error(
-        "WebSocket is not available. Install 'ws' or provide WebSocketImpl via config."
-      );
-    }
+  /**
+   * Create a WebSocket instance for the current platform.
+   *
+   * @param url - The WebSocket URL to connect to
+   * @param options - Platform-specific options (e.g., TLS options for Node.js)
+   * @returns A WebSocket instance
+   */
+  protected abstract createWebSocketInstance(
+    url: string,
+    options?: Record<string, unknown>
+  ): WebSocket;
+
+  // ========================================================================
+  // Virtual methods — subclasses can override
+  // ========================================================================
+
+  /**
+   * Serialize data before sending through the WebSocket.
+   *
+   * Base implementation returns data as-is. Node.js subclasses
+   * override to convert ArrayBuffer to Buffer.
+   *
+   * @param data - Data to serialize
+   * @returns Serialized data ready for WebSocket.send()
+   */
+  protected serialize(data: string | ArrayBuffer): string | ArrayBuffer {
+    return data;
   }
 
-  /**
-   * Get the current URL
-   */
+  // ========================================================================
+  // Public getters
+  // ========================================================================
+
+  /** The URL this transport is connected to */
   get url(): string {
     return this._url;
   }
 
-  /**
-   * Get the current ready state
-   */
+  /** Current ready state of the connection */
   get readyState(): ReadyState {
     return this._readyState;
   }
 
-  /**
-   * Get the current ready state as a string
-   */
+  /** Current ready state as string */
   get readyStateString(): ReadyStateString {
     return readyStateToString(this._readyState);
   }
 
+  // ========================================================================
+  // Shared behavior — do not override
+  // ========================================================================
+
   /**
-   * Connect to a WebSocket server
+   * Connect to a WebSocket server.
    *
    * @param url - The WebSocket URL to connect to
    * @returns Promise that resolves when the connection is established
@@ -287,12 +317,12 @@ export class WebSocketTransport implements IWebSocketTransport {
 
     return new Promise<void>((resolve, reject) => {
       let settled = false;
-      try {
-        // Create WebSocket instance
-        const WebSocketImpl = this.config.WebSocketImpl;
-        this.ws = new WebSocketImpl(url);
 
-        // Set up connection timeout
+      try {
+        // Subclass creates the platform-specific WebSocket instance
+        this.ws = this.createWebSocketInstance(url);
+
+        // Connection timeout
         this.timeoutManager.set(
           () => {
             if (this._readyState === ReadyState.CONNECTING) {
@@ -312,7 +342,7 @@ export class WebSocketTransport implements IWebSocketTransport {
           'ws-connect'
         );
 
-        // Set up event handlers
+        // Bind WebSocket event handlers
         this.ws.onopen = () => {
           if (settled) return;
           settled = true;
@@ -321,10 +351,7 @@ export class WebSocketTransport implements IWebSocketTransport {
           this._readyState = ReadyState.OPEN;
 
           if (this.onopen) {
-            this.onopen({
-              url: this._url,
-              timestamp: Date.now(),
-            });
+            this.onopen({ url: this._url, timestamp: Date.now() });
           }
 
           resolve();
@@ -332,10 +359,7 @@ export class WebSocketTransport implements IWebSocketTransport {
 
         this.ws.onclose = (event: CloseEvent) => {
           this.timeoutManager.clear('ws-connect');
-
-          // Check if we were still connecting before updating state
           const wasConnecting = this._readyState === ReadyState.CONNECTING;
-
           this._readyState = ReadyState.CLOSED;
 
           const closeEvent: WebSocketClose = {
@@ -348,7 +372,6 @@ export class WebSocketTransport implements IWebSocketTransport {
             this.onclose(closeEvent);
           }
 
-          // If we were still connecting, reject the promise (only once)
           if (wasConnecting && !settled) {
             settled = true;
             reject(new Error(`Connection closed: ${event.reason} (${event.code})`));
@@ -366,7 +389,6 @@ export class WebSocketTransport implements IWebSocketTransport {
 
           this.handleError(error);
 
-          // If we were connecting, reject the promise and update state (only once)
           if (this._readyState === ReadyState.CONNECTING && !settled) {
             settled = true;
             this._readyState = ReadyState.CLOSED;
@@ -385,7 +407,6 @@ export class WebSocketTransport implements IWebSocketTransport {
             if (event.data instanceof ArrayBuffer) {
               buffer = event.data;
             } else {
-              // Use buffer.slice to extract the relevant portion
               const sourceBuffer = event.data.buffer;
               buffer = sourceBuffer.slice(
                 event.data.byteOffset,
@@ -409,10 +430,13 @@ export class WebSocketTransport implements IWebSocketTransport {
   }
 
   /**
-   * Send data through the WebSocket connection
+   * Send data through the WebSocket connection.
+   *
+   * Uses serialize() to normalize data before sending, ensuring
+   * both Node.js and browser handle binary data correctly.
    *
    * @param data - Data to send (string or ArrayBuffer)
-   * @throws Error if the connection is not open
+   * @throws ConnectionError if the connection is not open
    */
   send(data: string | ArrayBuffer): void {
     if (this._readyState !== ReadyState.OPEN || !this.ws) {
@@ -420,7 +444,7 @@ export class WebSocketTransport implements IWebSocketTransport {
     }
 
     try {
-      this.ws.send(data);
+      this.ws.send(this.serialize(data));
     } catch (err) {
       const wsError: WebSocketError = {
         message: `Failed to send data: ${err instanceof Error ? err.message : String(err)}`,
@@ -429,7 +453,6 @@ export class WebSocketTransport implements IWebSocketTransport {
       };
       this.handleError(wsError);
 
-      // Throw typed ConnectionError instead of raw WebSocketError
       const connError = new ConnectionError({
         code: 'CONNECTION_SEND_FAILED',
         message: wsError.message,
@@ -441,7 +464,7 @@ export class WebSocketTransport implements IWebSocketTransport {
   }
 
   /**
-   * Close the WebSocket connection
+   * Close the WebSocket connection.
    *
    * @param code - Optional close status code (default: 1000)
    * @param reason - Optional close reason
@@ -459,49 +482,26 @@ export class WebSocketTransport implements IWebSocketTransport {
     }
   }
 
+  // ========================================================================
+  // Protected helpers — subclasses may call these
+  // ========================================================================
+
   /**
-   * Handle errors consistently
+   * Handle errors consistently — delegates to onerror handler.
+   *
+   * @param error - The error to handle
    */
-  private handleError(error: WebSocketError): void {
+  protected handleError(error: WebSocketError): void {
     if (this.onerror) {
       this.onerror(error);
     }
   }
 
   /**
-   * Clean up resources
+   * Clean up resources — resets state and WebSocket reference.
    */
-  private cleanup(): void {
+  protected cleanup(): void {
     this._readyState = ReadyState.CLOSED;
     this.ws = null;
   }
 }
-
-// ============================================================================
-// Factory Function
-// ============================================================================
-
-/**
- * Create a WebSocket transport instance
- *
- * @param config - Optional configuration
- * @returns A new WebSocket transport instance
- *
- * @example
- * ```ts
- * import { createWebSocketTransport } from './transport/websocket.js';
- *
- * const transport = createWebSocketTransport({
- *   connectTimeoutMs: 30000
- * });
- * ```
- */
-export function createWebSocketTransport(config?: WebSocketTransportConfig): IWebSocketTransport {
-  return new WebSocketTransport(config);
-}
-
-// ============================================================================
-// Re-exports
-// ============================================================================
-
-export default WebSocketTransport;
