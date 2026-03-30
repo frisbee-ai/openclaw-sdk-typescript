@@ -90,7 +90,7 @@ export async function createWebSocketTransport(
  */
 export async function createNodeWebSocketTransport(
   config: NodeWebSocketTransportConfig
-): Promise<unknown> {
+): Promise<IWebSocketTransport> {
   const { createNodeWebSocketTransport: factory } = await import('./node.js');
   return factory(config);
 }
@@ -105,7 +105,7 @@ export async function createNodeWebSocketTransport(
  */
 export async function createBrowserWebSocketTransport(
   config: BrowserWebSocketTransportConfig
-): Promise<unknown> {
+): Promise<IWebSocketTransport> {
   const { createBrowserWebSocketTransport: factory } = await import('./browser.js');
   return factory(config);
 }
