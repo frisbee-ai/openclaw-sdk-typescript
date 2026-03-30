@@ -11,20 +11,16 @@
 // NOTE: For browser usage, you'll need to use a bundler like
 // esbuild, webpack, or vite to bundle the SDK.
 
-import { createClient } from 'openclaw-sdk';
+import { ClientBuilder } from '../../../src/index.js';
 
 // ============================================================================
 // Basic Browser Example
 // ============================================================================
 
 async function browserExample() {
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'browser-client-id',
-    auth: {
-      token: 'browser-auth-token',
-    },
-  });
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'browser-client-id')
+    .withAuth('browser-auth-token')
+    .build();
 
   try {
     await client.connect();
@@ -53,16 +49,12 @@ function setupUIIntegration() {
   const statusDiv = document.getElementById('status') as HTMLDivElement;
   const eventsDiv = document.getElementById('events') as HTMLDivElement;
 
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'ui-client-id',
-    auth: {
-      token: 'ui-auth-token',
-    },
-  });
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'ui-client-id')
+    .withAuth('ui-auth-token')
+    .build();
 
   // Update connection state
-  client.on('connectionStateChange', state => {
+  client.onStateChange(state => {
     statusDiv.textContent = `Status: ${state}`;
     statusDiv.className = state === 'ready' ? 'connected' : 'disconnected';
   });

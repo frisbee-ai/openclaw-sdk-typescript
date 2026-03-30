@@ -6,29 +6,24 @@
  * - Stand-alone ReconnectManager (advanced)
  */
 
-import { createClient, createReconnectManager } from '../../../src/index.js';
+import { ClientBuilder, createReconnectManager } from '../../../src/index.js';
 
 // ============================================================================
 // Example 1: Built-in Auto-Reconnection (Recommended)
 // ============================================================================
 
 async function builtinReconnection() {
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'example-client',
-    auth: {
-      token: 'your-auth-token',
-    },
-    // Enable auto-reconnection via connection config
-    connection: {
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+    .withAuth('your-auth-token')
+    .withReconnect({
       autoReconnect: true,
       maxReconnectAttempts: 5,
       reconnectDelayMs: 1000,
-    },
-  });
+    })
+    .build();
 
   // Listen to connection state changes
-  client.on('connectionStateChange', state => {
+  client.onStateChange(state => {
     console.log('Connection state:', state);
   });
 
@@ -70,18 +65,14 @@ async function standaloneReconnection() {
 // ============================================================================
 
 async function customReconnection() {
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'example-client',
-    auth: {
-      token: 'your-auth-token',
-    },
-  });
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+    .withAuth('your-auth-token')
+    .build();
 
   await client.connect();
 
   // Listen to disconnection events
-  client.on('disconnect', async () => {
+  client.onClosed(async () => {
     console.log('Disconnected, attempting manual reconnection...');
 
     let attempts = 0;

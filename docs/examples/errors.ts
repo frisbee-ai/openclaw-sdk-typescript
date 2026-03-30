@@ -9,7 +9,7 @@
  */
 
 import {
-  createClient,
+  ClientBuilder,
   isAuthError,
   isConnectionError,
   isTimeoutError,
@@ -18,13 +18,9 @@ import {
 } from '../../src/index.js';
 
 async function comprehensiveErrorHandling() {
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'example-client',
-    auth: {
-      token: 'invalid-token',
-    },
-  });
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+    .withAuth('invalid-token')
+    .build();
 
   try {
     await client.connect();
@@ -47,16 +43,10 @@ async function comprehensiveErrorHandling() {
 }
 
 async function requestTimeoutExample() {
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'example-client',
-    auth: {
-      token: 'your-auth-token',
-    },
-    connection: {
-      requestTimeoutMs: 5000, // 5 second timeout
-    },
-  });
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+    .withAuth('your-auth-token')
+    .withReconnect({ requestTimeoutMs: 5000 })
+    .build();
 
   await client.connect();
 
@@ -73,13 +63,9 @@ async function requestTimeoutExample() {
 }
 
 async function requestCancellationExample() {
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'example-client',
-    auth: {
-      token: 'your-auth-token',
-    },
-  });
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+    .withAuth('your-auth-token')
+    .build();
 
   await client.connect();
 

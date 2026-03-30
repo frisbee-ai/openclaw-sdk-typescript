@@ -7,16 +7,12 @@
  * - Pattern-based subscription
  */
 
-import { createClient, type EventFrame } from '../../src/index.js';
+import { ClientBuilder, type EventFrame } from '../../src/index.js';
 
 async function main() {
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'example-client',
-    auth: {
-      token: 'your-auth-token',
-    },
-  });
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+    .withAuth('your-auth-token')
+    .build();
 
   await client.connect();
   console.log('✓ Connected to OpenClaw Gateway');

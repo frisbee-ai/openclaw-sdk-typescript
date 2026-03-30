@@ -7,7 +7,7 @@
  */
 
 import {
-  createClient,
+  ClientBuilder,
   type CredentialsProvider,
   StaticCredentialsProvider,
 } from '../../src/index.js';
@@ -17,13 +17,9 @@ import {
 // ============================================================================
 
 async function staticTokenExample() {
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'example-client',
-    auth: {
-      token: 'your-auth-token',
-    },
-  });
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+    .withAuth('your-auth-token')
+    .build();
 
   await client.connect();
   console.log('✓ Connected with static token');
@@ -39,11 +35,9 @@ async function staticCredentialsProviderExample() {
     token: 'your-auth-token',
   });
 
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'example-client',
-    credentialsProvider: provider,
-  });
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+    .withAuth(provider)
+    .build();
 
   await client.connect();
   console.log('✓ Connected with StaticCredentialsProvider');
@@ -111,11 +105,9 @@ class TokenRefreshProvider implements CredentialsProvider {
 async function customCredentialsExample() {
   const provider = new TokenRefreshProvider();
 
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'example-client',
-    credentialsProvider: provider,
-  });
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+    .withAuth(provider)
+    .build();
 
   await client.connect();
   console.log('✓ Connected with custom credentials provider');

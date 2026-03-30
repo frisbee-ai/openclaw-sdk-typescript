@@ -8,7 +8,7 @@
 
 // Main client exports
 export { OpenClawClient } from './client.js';
-export { ClientBuilder, createClient } from './client-builder.js';
+export { ClientBuilder } from './client-builder.js';
 export type { ClientConfig, ConnectionConfig, RequestOptions } from './client.js';
 
 // ============================================================================

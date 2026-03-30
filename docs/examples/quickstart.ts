@@ -5,17 +5,13 @@
  * and make a simple request.
  */
 
-import { createClient } from '../../src/index.js';
+import { ClientBuilder } from '../../src/index.js';
 
 async function main() {
   // Create a client with your credentials
-  const client = createClient({
-    url: 'wss://gateway.openclaw.example.com',
-    clientId: 'example-client',
-    auth: {
-      token: 'your-auth-token',
-    },
-  });
+  const client = new ClientBuilder('wss://gateway.openclaw.example.com', 'example-client')
+    .withAuth('your-auth-token')
+    .build();
 
   try {
     // Connect to the gateway
