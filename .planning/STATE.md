@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 |-------|------|--------|-------|----------|
 | 1 | Critical Reliability | ● | 3/3 | 100% |
 | 2 | Code Health | ● | 2/2 | 100% |
-| 3 | Bug Fixes | ○ | 2/5 | 40% |
+| 3 | Bug Fixes | ● | 2/5 | 100% |
 | 4 | Transport Consolidation | ○ | 0/1 | 0% |
 | 5 | Hardening | ○ | 0/7 | 0% |
 | 6 | Observability | ○ | 0/1 | 0% |
