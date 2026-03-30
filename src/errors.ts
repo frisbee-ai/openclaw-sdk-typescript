@@ -126,7 +126,8 @@ export type ConnectionErrorCode =
   | 'CONNECTION_REFUSED'
   | 'NETWORK_ERROR'
   | 'PROTOCOL_ERROR'
-  | 'CONNECTION_SEND_FAILED';
+  | 'CONNECTION_SEND_FAILED'
+  | 'MESSAGE_TOO_LARGE';
 
 /**
  * Connection error.

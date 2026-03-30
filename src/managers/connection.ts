@@ -143,6 +143,9 @@ export class ConnectionManager {
   /** Auth handler for token refresh */
   private authHandler: AuthHandler | null = null;
 
+  /** Maximum payload size in bytes (from hello-ok policy) */
+  private _maxPayload?: number;
+
   /**
    * Create a new connection manager
    *
@@ -264,6 +267,12 @@ export class ConnectionManager {
 
       // Store server info
       this.serverInfo = helloOk;
+
+      // Store maxPayload and propagate to transport
+      this._maxPayload = helloOk.policy?.maxPayload;
+      if (this._maxPayload !== undefined) {
+        if (typeof (this.transport as any).setMaxPayload === 'function') { (this.transport as any).setMaxPayload(this._maxPayload); }
+      }
 
       // Transition to ready state
       this.setState('ready');

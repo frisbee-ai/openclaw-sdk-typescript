@@ -124,6 +124,8 @@ export interface WebSocketOpenEvent {
 export interface WebSocketTransportConfig {
   /** Connection timeout in milliseconds */
   connectTimeoutMs?: number;
+  /** Maximum payload size in bytes (from Gateway policy.maxPayload) */
+  maxPayload?: number;
 }
 
 // ============================================================================
@@ -170,6 +172,14 @@ export interface IWebSocketTransport {
    * @param reason - Optional close reason
    */
   close(code?: number, reason?: string): void;
+
+  /**
+   * Set the maximum payload size for outgoing messages.
+   * Must be called after connect() once policy.maxPayload is known from hello-ok.
+   *
+   * @param maxPayload - Maximum payload size in bytes
+   */
+  setMaxPayload(maxPayload: number): void;
 
   /**
    * Event handler called when the connection is established
@@ -237,11 +247,14 @@ export abstract class WebSocketTransport implements IWebSocketTransport {
   public onbinary: ((data: ArrayBuffer) => void) | null = null;
 
   /** Base config — subclasses extend this with additional options */
-  private config: Required<Pick<WebSocketTransportConfig, 'connectTimeoutMs'>>;
+  private config: Required<Pick<WebSocketTransportConfig, 'connectTimeoutMs'>> & {
+    maxPayload?: number;
+  };
 
   constructor(config: WebSocketTransportConfig = {}) {
     this.config = {
       connectTimeoutMs: config.connectTimeoutMs ?? 30000,
+      maxPayload: config.maxPayload,
     };
   }
 
@@ -443,6 +456,20 @@ export abstract class WebSocketTransport implements IWebSocketTransport {
       throw new Error(`Cannot send data: connection is ${this.readyStateString} (expected: open)`);
     }
 
+    // Validate payload size
+    if (this.config.maxPayload !== undefined) {
+      const byteLength =
+        typeof data === 'string' ? new TextEncoder().encode(data).length : data.byteLength;
+      if (byteLength > this.config.maxPayload) {
+        throw new ConnectionError({
+          code: 'MESSAGE_TOO_LARGE',
+          message: `Message size ${byteLength} bytes exceeds maximum allowed ${this.config.maxPayload} bytes`,
+          retryable: false,
+          details: { maxPayload: this.config.maxPayload, actualSize: byteLength },
+        });
+      }
+    }
+
     try {
       this.ws.send(this.serialize(data));
     } catch (err) {
@@ -480,6 +507,15 @@ export abstract class WebSocketTransport implements IWebSocketTransport {
       this._readyState = ReadyState.CLOSING;
       this.ws.close(code ?? 1000, reason ?? '');
     }
+  }
+
+  /**
+   * Set the maximum payload size for outgoing messages.
+   *
+   * @param maxPayload - Maximum payload size in bytes
+   */
+  setMaxPayload(maxPayload: number): void {
+    this.config.maxPayload = maxPayload;
   }
 
   // ========================================================================
