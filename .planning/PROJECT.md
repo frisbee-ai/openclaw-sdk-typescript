@@ -27,12 +27,12 @@ Validated in Phase 1: All 3 critical reliability requirements implemented and ve
 - [ ] **REF-01**: Extract API namespace initialization and connection handler setup from client.ts into separate modules
 - [ ] **REF-02**: Split api-params.ts into per-domain files (chat.ts, agents.ts, sessions.ts, etc.)
 
-#### Phase 3 — Bug Fixes
-- [ ] **BUG-01**: Fix EventManager once() off() cleanup — store original handler, match by reference in off()
-- [ ] **BUG-02**: Remove redundant cleanupAbortHandler — keep only finally block cleanup
-- [ ] **BUG-03**: Add reconnect delay before first attempt in ReconnectManager — prevent thundering herd
-- [ ] **BUG-04**: Make WebSocketTransport.send() throw typed ConnectionError instead of raw WebSocketError
-- [ ] **BUG-05**: RequestManager.resolveRequest() — return silently on duplicate response instead of throwing
+#### Phase 3 — Bug Fixes (COMPLETED)
+- [x] **BUG-01**: Fix EventManager once() off() cleanup — store original handler, match by reference in off()
+- [x] **BUG-02**: Remove redundant cleanupAbortHandler — keep only finally block cleanup
+- [x] **BUG-03**: Add reconnect delay before first attempt in ReconnectManager — prevent thundering herd
+- [x] **BUG-04**: Make WebSocketTransport.send() throw typed ConnectionError instead of raw WebSocketError
+- [x] **BUG-05**: RequestManager.resolveRequest() — return silently on duplicate response instead of throwing
 
 #### Phase 4 — Transport Consolidation
 - [ ] **TRANS-01**: Extract shared logic from Node and Browser transports into base WebSocketTransport
@@ -85,4 +85,4 @@ Key existing patterns:
 
 ---
 
-*Last updated: 2026-03-29 after initial codebase analysis*
+*Last updated: 2026-03-30 after Phase 3 bug fixes completion*
