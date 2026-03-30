@@ -502,6 +502,13 @@ export type { TimeoutHandle, TimeoutManagerConfig } from './utils/timeoutManager
 export type { Logger, LogLevel } from './types/logger.js';
 export { isLogger, ConsoleLogger } from './types/logger.js';
 
+// ============================================================================
+// Metrics Collector (Observability)
+// ============================================================================
+
+export type { MetricsCollector } from './metrics/collector.js';
+export { isMetricsCollector } from './metrics/collector.js';
+
 // Re-export default
 export { default } from './client.js';
 
