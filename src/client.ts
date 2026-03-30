@@ -232,6 +232,35 @@ export class OpenClawClient {
       this.policyManager = _internal.policyManager!;
       this.stateMachine = _internal.stateMachine!;
       this.authHandler = _internal.authHandler ?? null;
+
+      // Set up 'request.cancelled' event handler on eventManager
+      this.eventManager.on(
+        'request.cancelled',
+        (frame: { payload?: { requestId?: string; reason?: string } }) => {
+          const requestId = frame.payload?.requestId;
+          if (requestId) {
+            this.requestManager.rejectRequest(
+              requestId,
+              new Error(`Request cancelled by server: ${frame.payload?.reason ?? 'unknown'}`)
+            );
+          }
+        }
+      );
+
+      // Initialize API namespaces
+      const requestFn = <T = unknown>(method: string, params?: unknown): Promise<T> =>
+        this.request<T>(method, params);
+      this._chatAPI = new ChatAPI(requestFn);
+      this._agentsAPI = new AgentsAPI(requestFn);
+      this._sessionsAPI = new SessionsAPI(requestFn);
+      this._configAPI = new ConfigAPI(requestFn);
+      this._cronAPI = new CronAPI(requestFn);
+      this._nodesAPI = new NodesAPI(requestFn);
+      this._skillsAPI = new SkillsAPI(requestFn);
+      this._devicePairingAPI = new DevicePairingAPI(requestFn);
+
+      // Set up connection handlers
+      this.setupConnectionHandlers();
     } else {
       // Backward-compatible path: create managers
       const normalizedConfig = this._normalizedConfig;
@@ -286,22 +315,22 @@ export class OpenClawClient {
       this.protocolNegotiator = createProtocolNegotiator({ min: 3, max: 3 });
       this.policyManager = createPolicyManager();
       this.stateMachine = createConnectionStateMachine(this.logger);
+
+      // Initialize API namespaces
+      const requestFn = <T = unknown>(method: string, params?: unknown): Promise<T> =>
+        this.request<T>(method, params);
+      this._chatAPI = new ChatAPI(requestFn);
+      this._agentsAPI = new AgentsAPI(requestFn);
+      this._sessionsAPI = new SessionsAPI(requestFn);
+      this._configAPI = new ConfigAPI(requestFn);
+      this._cronAPI = new CronAPI(requestFn);
+      this._nodesAPI = new NodesAPI(requestFn);
+      this._skillsAPI = new SkillsAPI(requestFn);
+      this._devicePairingAPI = new DevicePairingAPI(requestFn);
+
+      // Set up connection handlers
+      this.setupConnectionHandlers();
     }
-
-    // Initialize API namespaces
-    const requestFn = <T = unknown>(method: string, params?: unknown): Promise<T> =>
-      this.request<T>(method, params);
-    this._chatAPI = new ChatAPI(requestFn);
-    this._agentsAPI = new AgentsAPI(requestFn);
-    this._sessionsAPI = new SessionsAPI(requestFn);
-    this._configAPI = new ConfigAPI(requestFn);
-    this._cronAPI = new CronAPI(requestFn);
-    this._nodesAPI = new NodesAPI(requestFn);
-    this._skillsAPI = new SkillsAPI(requestFn);
-    this._devicePairingAPI = new DevicePairingAPI(requestFn);
-
-    // Set up connection handlers
-    this.setupConnectionHandlers();
   }
 
   /**

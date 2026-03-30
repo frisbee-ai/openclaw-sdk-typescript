@@ -8,11 +8,21 @@
  */
 
 import type { CredentialsProvider } from './auth/provider.js';
+import { createAuthHandler } from './auth/provider.js';
 import type { TickMonitorConfig } from './events/tick.js';
 import type { GapDetectorConfig } from './events/gap.js';
 import { type Logger, LogLevel } from './types/logger.js';
 import type { ConnectionConfig, ClientConfig } from './client.js';
 import { OpenClawClient } from './client.js';
+import { WebSocketTransport } from './transport/websocket.js';
+import type { IWebSocketTransport } from './transport/websocket.js';
+import { createConnectionManager } from './managers/connection.js';
+import { createRequestManager } from './managers/request.js';
+import { createEventManager } from './managers/event.js';
+import { createReconnectManager } from './managers/reconnect.js';
+import { createProtocolNegotiator } from './connection/protocol.js';
+import { createPolicyManager } from './connection/policies.js';
+import { createConnectionStateMachine } from './connection/state.js';
 
 // ============================================================================
 // Default Configuration Constants
@@ -175,6 +185,9 @@ export class ClientBuilder {
   /**
    * Build the OpenClawClient instance.
    *
+   * Creates all managers and passes them to OpenClawClient via _internal,
+   * making client.ts a thin facade.
+   *
    * @returns A configured OpenClawClient instance
    * @throws Error if required configuration is missing or invalid
    */
@@ -218,8 +231,57 @@ export class ClientBuilder {
       clientConfig.auth = { token: authToken };
     }
 
-    // Create and return the client instance
-    return new OpenClawClient(clientConfig);
+    // Create all managers (extracted from client.ts constructor)
+    const transport: IWebSocketTransport = new WebSocketTransport({
+      connectTimeoutMs: normalizedConfig.connectTimeoutMs,
+    });
+
+    let authHandler: ReturnType<typeof createAuthHandler> | null = null;
+    if (credentialsProvider) {
+      authHandler = createAuthHandler(credentialsProvider);
+    }
+
+    const reconnectMgr = createReconnectManager(
+      {
+        maxAttempts: normalizedConfig.maxReconnectAttempts,
+        initialDelayMs: normalizedConfig.reconnectDelayMs,
+        maxDelayMs: 30000,
+        pauseOnAuthError: true,
+        maxAuthRetries: 3,
+        jitterFactor: 0.3,
+      },
+      this.logger
+    );
+
+    const connectionManager = createConnectionManager(
+      transport,
+      {
+        defaultRequestTimeout: normalizedConfig.requestTimeoutMs,
+        autoReconnect: normalizedConfig.autoReconnect,
+        reconnectDelayMs: normalizedConfig.reconnectDelayMs,
+        maxReconnectAttempts: normalizedConfig.maxReconnectAttempts,
+      },
+      reconnectMgr,
+      authHandler ?? undefined
+    );
+
+    const requestManager = createRequestManager();
+    const eventManager = createEventManager(this.logger);
+    const protocolNegotiator = createProtocolNegotiator({ min: 3, max: 3 });
+    const policyManager = createPolicyManager();
+    const stateMachine = createConnectionStateMachine(this.logger);
+
+    // Create and return the client instance with pre-built managers
+    return new OpenClawClient(clientConfig, {
+      connectionManager,
+      requestManager,
+      eventManager,
+      protocolNegotiator,
+      policyManager,
+      stateMachine,
+      authHandler: authHandler ?? undefined,
+      logger: this.logger,
+    });
   }
 
   /**
