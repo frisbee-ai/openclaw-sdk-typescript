@@ -102,7 +102,7 @@ Plans:
 
 ### Requirements
 
-- [ ] **TRANS-01**: Extract shared logic from Node and Browser transports into base WebSocketTransport
+- [x] **TRANS-01**: Extract shared logic from Node and Browser transports into base WebSocketTransport
 
 ### Success Criteria
 
@@ -110,6 +110,12 @@ Plans:
 2. Node transport and browser transport are thin wrappers differing only in `getDefaultWebSocket()`
 3. No logic divergence between the two transports
 4. All transport tests still pass
+
+**Plans:** 1/1 plan executed
+
+Plans:
+- [x] 04-01-PLAN.md — Create WebSocketTransport abstract base class (TRANS-01)
+- [x] 04-02-PLAN.md — Gap closure: refactor BrowserWebSocketTransport to thin subclass
 
 ---
 

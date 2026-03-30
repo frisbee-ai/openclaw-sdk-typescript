@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: Executing Phase 04
-last_updated: "2026-03-30T15:37:15.604Z"
+last_updated: "2026-03-30T15:51:29.141Z"
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 10
+  completed_plans: 10
 ---
 
 # State: OpenClaw SDK TypeScript v2.0
@@ -34,7 +34,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 1 | Critical Reliability | ● | 3/3 | 100% |
 | 2 | Code Health | ● | 2/2 | 100% |
 | 3 | Bug Fixes | ● | 2/5 | 100% |
-| 4 | Transport Consolidation | ○ | 0/1 | 0% |
+| 4 | Transport Consolidation | ● | 1/1 | 100% |
 | 5 | Hardening | ○ | 0/7 | 0% |
 | 6 | Observability | ○ | 0/1 | 0% |
 
@@ -50,7 +50,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 - [Phase 02-code-health]: ClientBuilder uses ClientConfig imported from client.ts (avoids circular deps)
 - [Phase 02-code-health]: createClient kept as backward-compatible factory (not removed to avoid breaking examples)
 - [Phase 02-code-health]: Types co-located next to their API classes (D-04); Shared types stay in api-common.ts (D-05); api-params.ts deleted after migration (D-06)
-- [Phase 04-transport-consolidation]: TRANS-01 complete: WebSocketTransport abstract base class with NodeWebSocketTransport and BrowserWebSocketTransport thin subclasses (only createWebSocketInstance and serialize overrides)
+- [Phase 04-transport-consolidation]: TRANS-01 complete: WebSocketTransport abstract base class with NodeWebSocketTransport and BrowserWebSocketTransport thin subclasses (only createWebSocketInstance and serialize overrides); gap closure: browser.ts refactored to thin subclass (plan 02)
 
 ## Open Issues
 
@@ -70,5 +70,6 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2026-03-29 | Phase 2 plan 01 | Completed REF-01: ClientBuilder extraction with fluent API |
 | 2026-03-30 | Phase 3 plan 01 | Completed BUG-01 (EventManager once() token cleanup) and BUG-02 (redundant abort handler cleanup) |
 | 2026-03-30 | Phase 3 plan 02 | Completed BUG-03 (reconnect initial delay), BUG-04 (WebSocket send typed error), BUG-05 (silent duplicate response handling) |
+| 2026-03-30 | Phase 4 plan 02 | Completed TRANS-01 gap closure: refactored BrowserWebSocketTransport to thin subclass extending WebSocketTransport |
 
-*Last updated: 2026-03-30 after plan 03-02 completion*
+*Last updated: 2026-03-30 after plan 04-02 completion*
