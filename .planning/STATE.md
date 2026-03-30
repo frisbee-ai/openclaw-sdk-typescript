@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
-status: Ready to plan
-last_updated: "2026-03-30T02:09:02.212Z"
+status: Executing Phase 03
+last_updated: "2026-03-30T02:58:36.716Z"
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 6
+  total_plans: 8
   completed_plans: 6
 ---
 
@@ -19,7 +19,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** The SDK must reliably maintain a WebSocket connection with the Gateway, automatically recovering from all common failure modes.
 
-**Current focus:** Phase 03 — Bug Fixes
+**Current focus:** Phase 03 — bug-fixes
 
 ## Milestone
 
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 |-------|------|--------|-------|----------|
 | 1 | Critical Reliability | ● | 3/3 | 100% |
 | 2 | Code Health | ● | 2/2 | 100% |
-| 3 | Bug Fixes | ○ | 0/5 | 0% |
+| 3 | Bug Fixes | ○ | 1/5 | 20% |
 | 4 | Transport Consolidation | ○ | 0/1 | 0% |
 | 5 | Hardening | ○ | 0/7 | 0% |
 | 6 | Observability | ○ | 0/1 | 0% |
@@ -67,5 +67,6 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 | 2026-03-29 | Phase 1 plan 03 | Completed REL-03: GapDetector gap event listener with mode-based recovery dispatch |
 | 2026-03-29 | Phase 2 plan 02 | Completed REF-02: Split api-params.ts into 15 per-domain type files |
 | 2026-03-29 | Phase 2 plan 01 | Completed REF-01: ClientBuilder extraction with fluent API |
+| 2026-03-30 | Phase 3 plan 01 | Completed BUG-01 (EventManager once() token cleanup) and BUG-02 (redundant abort handler cleanup) |
 
-*Last updated: 2026-03-30 after Phase 3 context capture*
+*Last updated: 2026-03-30 after plan 03-01 completion*

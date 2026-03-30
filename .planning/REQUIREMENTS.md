@@ -20,8 +20,8 @@ Requirements for v2.0 hardening release. Each maps to roadmap phases.
 
 ### Bug Fixes
 
-- [ ] **BUG-01**: Fix EventManager once() off() cleanup — store original handler, match by reference in off()
-- [ ] **BUG-02**: Remove redundant cleanupAbortHandler — keep only finally block cleanup
+- [x] **BUG-01**: Fix EventManager once() off() cleanup — store original handler, match by reference in off()
+- [x] **BUG-02**: Remove redundant cleanupAbortHandler — keep only finally block cleanup
 - [ ] **BUG-03**: Add reconnect delay before first attempt in ReconnectManager — prevent thundering herd
 - [ ] **BUG-04**: Make WebSocketTransport.send() throw typed ConnectionError instead of raw WebSocketError
 - [ ] **BUG-05**: RequestManager.resolveRequest() — return silently on duplicate response instead of throwing
@@ -63,8 +63,8 @@ Requirements for v2.0 hardening release. Each maps to roadmap phases.
 | REL-03 | Phase 1 | Pending |
 | REF-01 | Phase 2 | Pending |
 | REF-02 | Phase 2 | Complete |
-| BUG-01 | Phase 3 | Pending |
-| BUG-02 | Phase 3 | Pending |
+| BUG-01 | Phase 3 | Complete |
+| BUG-02 | Phase 3 | Complete |
 | BUG-03 | Phase 3 | Pending |
 | BUG-04 | Phase 3 | Pending |
 | BUG-05 | Phase 3 | Pending |
