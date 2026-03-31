@@ -11,6 +11,18 @@ import {
 
 // Mock the ws module - must be before any imports that use it
 vi.mock('ws', () => {
+  // CloseEvent is browser-only, so we need to mock it for Node.js environment
+  class MockCloseEvent {
+    readonly code: number;
+    readonly reason: string;
+    readonly wasClean = true;
+    readonly type = 'close';
+    constructor(type: string, init?: { code?: number; reason?: string }) {
+      this.code = init?.code ?? 1000;
+      this.reason = init?.reason ?? '';
+    }
+  }
+
   class MockWebSocket {
     private _handlers: Map<string, Function[]> = new Map();
     private _url: string;
@@ -89,7 +101,7 @@ vi.mock('ws', () => {
           break;
         case 'close':
           this.onclose?.(
-            new CloseEvent('close', { code: args[0] as number, reason: args[1] as string })
+            new MockCloseEvent('close', { code: args[0] as number, reason: args[1] as string })
           );
           break;
         case 'error':
