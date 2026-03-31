@@ -84,6 +84,7 @@ export default [
         AbortSignal: 'readonly',
         URL: 'readonly',
         crypto: 'readonly',
+        TextEncoder: 'readonly',
         // Node.js globals
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
@@ -93,6 +94,7 @@ export default [
         console: 'readonly',
         process: 'readonly',
         require: 'readonly',
+        performance: 'readonly',
       },
     },
     plugins: {
