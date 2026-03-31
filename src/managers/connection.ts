@@ -177,6 +177,7 @@ export class ConnectionManager {
 
     // Wire metrics collector to transport
     if (metricsCollector) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const transportAny = this.transport as any;
       if (typeof transportAny.setMetricsCollector === 'function') {
         transportAny.setMetricsCollector(metricsCollector);
@@ -281,7 +282,11 @@ export class ConnectionManager {
       // Store maxPayload and propagate to transport
       this._maxPayload = helloOk.policy?.maxPayload;
       if (this._maxPayload !== undefined) {
-        if (typeof (this.transport as any).setMaxPayload === 'function') { (this.transport as any).setMaxPayload(this._maxPayload); }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (typeof (this.transport as any).setMaxPayload === 'function') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (this.transport as any).setMaxPayload(this._maxPayload);
+        }
       }
 
       // Transition to ready state
